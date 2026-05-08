@@ -8,6 +8,7 @@ export async function onRequestPost(context) {
     const phone = String(body.phone || "").trim();
     const category = String(body.category || "").trim();
     const tshirt_size = String(body.tshirt_size || "").trim();
+    const recreate = body.recreate === true;
 
     if (!name || !ic || !phone || !category) {
       return Response.json(
@@ -38,19 +39,83 @@ export async function onRequestPost(context) {
     }
 
     const existing = await context.env.DB
-      .prepare("SELECT id, reg_no FROM registrations WHERE ic = ? LIMIT 1")
+      .prepare(`
+        SELECT
+          id,
+          reg_no,
+          name,
+          ic,
+          category,
+          amount,
+          payment_status,
+          payment_url,
+          payment_ref
+        FROM registrations
+        WHERE ic = ?
+        LIMIT 1
+      `)
       .bind(ic)
       .first();
 
     if (existing) {
-      return Response.json(
-        {
-          success: false,
-          error: "IC already registered",
-          existing
-        },
-        { status: 409 }
-      );
+      const existingStatus = String(existing.payment_status || "").toUpperCase();
+
+      if (existingStatus === "PAID") {
+        return Response.json(
+          {
+            success: false,
+            error: "This IC is already registered and paid.",
+            existing: {
+              reg_no: existing.reg_no,
+              name: existing.name,
+              category: existing.category,
+              payment_status: existing.payment_status
+            }
+          },
+          { status: 409 }
+        );
+      }
+
+      if (existingStatus === "PENDING_PAYMENT") {
+        if (!recreate) {
+          return Response.json({
+            success: true,
+            duplicate_pending: true,
+            message: "Pending registration found.",
+            payment_url: existing.payment_url,
+            registration: {
+              reg_no: existing.reg_no,
+              name: existing.name,
+              ic: existing.ic,
+              category: existing.category,
+              amount: existing.amount,
+              payment_status: existing.payment_status,
+              payment_ref: existing.payment_ref
+            }
+          });
+        }
+
+        await context.env.DB
+          .prepare(`
+            DELETE FROM registrations
+            WHERE ic = ?
+              AND payment_status = 'PENDING_PAYMENT'
+          `)
+          .bind(ic)
+          .run();
+      } else {
+        return Response.json(
+          {
+            success: false,
+            error: "This IC already has a registration. Please contact organizer.",
+            existing: {
+              reg_no: existing.reg_no,
+              payment_status: existing.payment_status
+            }
+          },
+          { status: 409 }
+        );
+      }
     }
 
     const id = crypto.randomUUID();
