@@ -2,6 +2,7 @@ const EVENTS = {
   "tanjong-karang-half-marathon-2026": {
     slug: "tanjong-karang-half-marathon-2026",
     name: "TANJONG KARANG HALF MARATHON 2026",
+    billName: "TKHM 2026",
     prefix: "TKHM",
     requireFinisherTee: true,
     categories: {
@@ -12,6 +13,7 @@ const EVENTS = {
   "lsptk": {
     slug: "lsptk",
     name: "WASIYYAH LARIAN SAWAH PADI TANJONG KARANG",
+    billName: "LSPTK 2026",
     prefix: "LSPTK",
     requireFinisherTee: false,
     categories: {
@@ -21,7 +23,32 @@ const EVENTS = {
   }
 };
 
+function json(data, status = 200) {
+  return Response.json(data, { status });
+}
+
+function limitText(value, max) {
+  return String(value || "").trim().slice(0, max);
+}
+
+function makeRegNo(prefix) {
+  return `${prefix}-${Date.now().toString(36).toUpperCase()}`;
+}
+
+async function deletePendingRow(context, id) {
+  await context.env.DB
+    .prepare(`
+      DELETE FROM registrations
+      WHERE id = ?
+        AND payment_status = 'PENDING_PAYMENT'
+    `)
+    .bind(id)
+    .run();
+}
+
 export async function onRequestPost(context) {
+  let insertedId = null;
+
   try {
     const body = await context.request.json();
 
@@ -29,12 +56,25 @@ export async function onRequestPost(context) {
     const EVENT = EVENTS[eventSlug];
 
     if (!EVENT) {
-      return Response.json(
+      return json(
         {
           success: false,
           error: "Invalid event."
         },
-        { status: 400 }
+        400
+      );
+    }
+
+    const secretKey = context.env.TOYYIBPAY_SECRET_KEY;
+    const categoryCode = context.env.TOYYIBPAY_CATEGORY_CODE;
+
+    if (!secretKey || !categoryCode) {
+      return json(
+        {
+          success: false,
+          error: "ToyyibPay environment variables are not set."
+        },
+        500
       );
     }
 
@@ -43,7 +83,7 @@ export async function onRequestPost(context) {
     const email = String(body.email || "").trim();
     const phone = String(body.phone || "").trim();
     const address = String(body.address || "").trim();
-    const category = String(body.category || "").trim();
+    const category = String(body.category || "").trim().toUpperCase();
     const event_tee_size = String(body.event_tee_size || "").trim();
 
     const finisher_tee_size = EVENT.requireFinisherTee
@@ -53,34 +93,34 @@ export async function onRequestPost(context) {
     const recreate = body.recreate === true;
 
     if (!name || !ic || !email || !phone || !address || !category || !event_tee_size) {
-      return Response.json(
+      return json(
         {
           success: false,
           error: "Please complete all required fields."
         },
-        { status: 400 }
+        400
       );
     }
 
     if (EVENT.requireFinisherTee && !finisher_tee_size) {
-      return Response.json(
+      return json(
         {
           success: false,
           error: "Please select Finisher Tee Size."
         },
-        { status: 400 }
+        400
       );
     }
 
     const amount = EVENT.categories[category];
 
     if (!amount) {
-      return Response.json(
+      return json(
         {
           success: false,
           error: "Invalid category."
         },
-        { status: 400 }
+        400
       );
     }
 
@@ -110,7 +150,7 @@ export async function onRequestPost(context) {
       const existingStatus = String(existing.payment_status || "").toUpperCase();
 
       if (existingStatus === "PAID") {
-        return Response.json(
+        return json(
           {
             success: false,
             error: "This IC / Passport is already registered and paid for this event.",
@@ -122,13 +162,15 @@ export async function onRequestPost(context) {
               payment_status: existing.payment_status
             }
           },
-          { status: 409 }
+          409
         );
       }
 
       if (existingStatus === "PENDING_PAYMENT") {
-        if (!recreate) {
-          return Response.json({
+        const hasPaymentLink = existing.payment_url && existing.payment_ref;
+
+        if (!recreate && hasPaymentLink) {
+          return json({
             success: true,
             duplicate_pending: true,
             message: "Pending registration found.",
@@ -147,6 +189,8 @@ export async function onRequestPost(context) {
           });
         }
 
+        // Kalau pending lama tiada payment link, atau user pilih CREATE NEW,
+        // buang rekod pending lama dan create registration baru.
         await context.env.DB
           .prepare(`
             DELETE FROM registrations
@@ -157,7 +201,7 @@ export async function onRequestPost(context) {
           .bind(EVENT.slug, ic)
           .run();
       } else {
-        return Response.json(
+        return json(
           {
             success: false,
             error: "This IC / Passport already has a registration for this event. Please contact organizer.",
@@ -166,13 +210,15 @@ export async function onRequestPost(context) {
               payment_status: existing.payment_status
             }
           },
-          { status: 409 }
+          409
         );
       }
     }
 
     const id = crypto.randomUUID();
-    const reg_no = EVENT.prefix + "-" + Date.now().toString(36).toUpperCase();
+    insertedId = id;
+
+    const reg_no = makeRegNo(EVENT.prefix);
     const now = new Date().toISOString();
 
     await context.env.DB
@@ -222,10 +268,15 @@ export async function onRequestPost(context) {
     const siteUrl = context.env.SITE_URL || new URL(context.request.url).origin;
 
     const billData = new URLSearchParams();
-    billData.append("userSecretKey", context.env.TOYYIBPAY_SECRET_KEY);
-    billData.append("categoryCode", context.env.TOYYIBPAY_CATEGORY_CODE);
-    billData.append("billName", EVENT.name);
-    billData.append("billDescription", `${category} registration fee`);
+    billData.append("userSecretKey", secretKey);
+    billData.append("categoryCode", categoryCode);
+
+    // ToyyibPay billName max 30 chars.
+    billData.append("billName", limitText(EVENT.billName, 30));
+
+    // Keep description short and safe.
+    billData.append("billDescription", limitText(`${EVENT.billName} ${category} Registration`, 100));
+
     billData.append("billPriceSetting", "1");
     billData.append("billPayorInfo", "1");
     billData.append("billAmount", String(amount));
@@ -250,13 +301,31 @@ export async function onRequestPost(context) {
     try {
       toyData = JSON.parse(toyText);
     } catch (e) {
-      throw new Error("ToyyibPay returned invalid response: " + toyText);
+      await deletePendingRow(context, id);
+
+      return json(
+        {
+          success: false,
+          error: "ToyyibPay returned invalid response.",
+          detail: toyText
+        },
+        502
+      );
     }
 
     const billCode = toyData?.[0]?.BillCode;
 
     if (!billCode) {
-      throw new Error("ToyyibPay bill creation failed: " + toyText);
+      await deletePendingRow(context, id);
+
+      return json(
+        {
+          success: false,
+          error: "ToyyibPay bill creation failed.",
+          detail: toyText
+        },
+        502
+      );
     }
 
     const paymentUrl = `https://toyyibpay.com/${billCode}`;
@@ -278,7 +347,7 @@ export async function onRequestPost(context) {
       )
       .run();
 
-    return Response.json({
+    return json({
       success: true,
       message: "Registration saved. Redirecting to payment.",
       payment_url: paymentUrl,
@@ -302,12 +371,16 @@ export async function onRequestPost(context) {
     });
 
   } catch (err) {
-    return Response.json(
+    if (insertedId) {
+      await deletePendingRow(context, insertedId).catch(() => {});
+    }
+
+    return json(
       {
         success: false,
         error: err.message
       },
-      { status: 500 }
+      500
     );
   }
 }
