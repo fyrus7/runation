@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Status</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+  <div id="statusBox">
+    <h1>Checking Payment...</h1>
+    <p>Please wait.</p>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+
+  const ref = params.get("ref") || params.get("order_id") || "";
+  const statusId = params.get("status_id") || "";
+  const msg = params.get("msg") || "";
+  const transactionId = params.get("transaction_id") || "";
+  const billcode = params.get("billcode") || "";
+
+  const box = document.getElementById("statusBox");
+
+  if (statusId === "1" && msg.toLowerCase() === "ok") {
+    box.innerHTML = `
+      <div class="success-box">
+        <h1>Payment Successful</h1>
+        <p><b>Registration No:</b> ${ref}</p>
+        <p><b>Transaction ID:</b> ${transactionId}</p>
+        <p><b>Bill Code:</b> ${billcode}</p>
+        <p>Your registration has been received.</p>
+      </div>
+    `;
+  } else if (statusId === "2") {
+    box.innerHTML = `
+      <div class="success-box">
+        <h1>Payment Pending</h1>
+        <p><b>Registration No:</b> ${ref}</p>
+        <p>Your payment is still pending verification.</p>
+      </div>
+    `;
+  } else {
+    box.innerHTML = `
+      <div class="error-box">
+        <h1>Payment Failed / Cancelled</h1>
+        <p><b>Registration No:</b> ${ref || "-"}</p>
+        <p>Please try again or contact the organizer.</p>
+      </div>
+    `;
+  }
+</script>
+
+</body>
+</html>

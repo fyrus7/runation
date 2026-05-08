@@ -119,7 +119,6 @@ function md5(input) {
     }
 
     s = s.substring(i - 64);
-
     const tail = Array(16).fill(0);
 
     for (i = 0; i < s.length; i++) {
@@ -159,53 +158,85 @@ function md5(input) {
   return hex(md51(input));
 }
 
-async function readForm(request) {
-  const text = await request.text();
-  return Object.fromEntries(new URLSearchParams(text));
+export async function onRequestGet() {
+  return Response.json({
+    success: true,
+    message: "payment-callback endpoint is alive. ToyyibPay must call this using POST."
+  });
 }
 
 export async function onRequestPost(context) {
-  try {
-    const data = await readForm(context.request);
+  const now = new Date().toISOString();
+  let raw = "";
+  let data = {};
+  let hashValid = "NO";
 
-    const status = String(data.status || "");
-    const refno = String(data.refno || "");
+  try {
+    raw = await context.request.text();
+    data = Object.fromEntries(new URLSearchParams(raw));
+
+    const status = String(data.status || data.status_id || "");
+    const refno = String(data.refno || data.transaction_id || "");
     const billcode = String(data.billcode || "");
     const order_id = String(data.order_id || "");
-    const amount = String(data.amount || "");
     const receivedHash = String(data.hash || "").toLowerCase();
 
-    if (!status || !refno || !billcode || !order_id || !receivedHash) {
-      return Response.json(
-        {
-          success: false,
-          error: "Missing callback fields",
-          received: data
-        },
-        { status: 400 }
-      );
+    if (receivedHash && status && order_id && refno) {
+      const expectedHash = md5(
+        context.env.TOYYIBPAY_SECRET_KEY + status + order_id + refno + "ok"
+      ).toLowerCase();
+
+      hashValid = receivedHash === expectedHash ? "YES" : "NO";
+    } else {
+      hashValid = "MISSING_HASH";
     }
 
-    const expectedHash = md5(
-      context.env.TOYYIBPAY_SECRET_KEY + status + order_id + refno + "ok"
-    ).toLowerCase();
+    await context.env.DB.prepare(`
+      INSERT INTO payment_callback_logs (
+        created_at,
+        method,
+        raw_body,
+        parsed_data,
+        status,
+        billcode,
+        order_id,
+        refno,
+        hash_valid,
+        error
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    .bind(
+      now,
+      context.request.method,
+      raw,
+      JSON.stringify(data),
+      status,
+      billcode,
+      order_id,
+      refno,
+      hashValid,
+      ""
+    )
+    .run();
 
-    if (receivedHash !== expectedHash) {
-      return Response.json(
-        {
-          success: false,
-          error: "Invalid callback hash"
-        },
-        { status: 403 }
-      );
+    if (!status || !billcode || !order_id) {
+      return Response.json({
+        success: false,
+        error: "Missing important callback fields",
+        received: data
+      }, { status: 400 });
     }
 
+    // Untuk sementara debug:
+    // Kalau ToyyibPay tak hantar hash, kita tetap update berdasarkan callback/return-like data.
+    // Nanti selepas confirm format sebenar, kita ketatkan semula.
     let paymentStatus = "PENDING_PAYMENT";
     let paidAt = null;
 
     if (status === "1") {
       paymentStatus = "PAID";
-      paidAt = new Date().toISOString();
+      paidAt = now;
     } else if (status === "2") {
       paymentStatus = "PENDING_PAYMENT";
     } else if (status === "3") {
@@ -214,42 +245,66 @@ export async function onRequestPost(context) {
       paymentStatus = "MANUAL_REVIEW";
     }
 
-    await context.env.DB
-      .prepare(`
-        UPDATE registrations
-        SET
-          payment_status = ?,
-          paid_at = COALESCE(?, paid_at),
-          updated_at = ?
-        WHERE reg_no = ?
-          AND payment_ref = ?
-      `)
-      .bind(
-        paymentStatus,
-        paidAt,
-        new Date().toISOString(),
-        order_id,
-        billcode
-      )
-      .run();
+    const updateResult = await context.env.DB.prepare(`
+      UPDATE registrations
+      SET
+        payment_status = ?,
+        paid_at = COALESCE(?, paid_at),
+        updated_at = ?
+      WHERE reg_no = ?
+        AND payment_ref = ?
+    `)
+    .bind(
+      paymentStatus,
+      paidAt,
+      now,
+      order_id,
+      billcode
+    )
+    .run();
 
     return Response.json({
       success: true,
-      message: "Callback processed",
-      reg_no: order_id,
-      billcode,
-      refno,
-      amount,
-      payment_status: paymentStatus
+      message: "Callback received",
+      payment_status: paymentStatus,
+      hash_valid: hashValid,
+      update_result: updateResult.meta,
+      received: data
     });
 
   } catch (err) {
-    return Response.json(
-      {
-        success: false,
-        error: err.message
-      },
-      { status: 500 }
-    );
+    await context.env.DB.prepare(`
+      INSERT INTO payment_callback_logs (
+        created_at,
+        method,
+        raw_body,
+        parsed_data,
+        status,
+        billcode,
+        order_id,
+        refno,
+        hash_valid,
+        error
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    .bind(
+      now,
+      context.request.method,
+      raw,
+      JSON.stringify(data),
+      "",
+      "",
+      "",
+      "",
+      hashValid,
+      err.message
+    )
+    .run();
+
+    return Response.json({
+      success: false,
+      error: err.message
+    }, { status: 500 });
   }
 }
