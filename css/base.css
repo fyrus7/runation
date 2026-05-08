@@ -1,0 +1,31 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #222;
+}
+
+.success-box {
+  padding: 15px;
+  background: #e9f8ee;
+  border: 1px solid #34a853;
+  border-radius: 10px;
+}
+
+.error-box {
+  padding: 15px;
+  background: #fdeaea;
+  border: 1px solid #d93025;
+  color: #b00020;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

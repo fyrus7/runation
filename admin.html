@@ -3,85 +3,133 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard - Registration</title>
+  <title>RUNATION Admin Dashboard</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="admin-page">
 
-<div class="admin-container">
-  <div class="admin-header">
-    <div>
-      <h1>Registration Admin</h1>
-      <p>Manage event registrations and payment status</p>
+<div class="admin-shell">
+  <aside class="admin-sidebar">
+    <div class="admin-logo">
+      <div class="logo-mark">R</div>
+      <div>
+        <strong>RUNATION</strong>
+        <span>Race Admin</span>
+      </div>
     </div>
 
-    <div class="admin-actions">
-  <button id="refreshBtn" class="small-btn">Refresh</button>
-  <button id="logoutBtn" class="secondary-btn">Logout</button>
-</div>
-  </div>
-
-  <div class="admin-controls">
-    <input
-      type="text"
-      id="searchInput"
-      placeholder="Search name, IC, phone, email, reg no..."
-    >
-
-    <select id="statusFilter">
-      <option value="">All Status</option>
-      <option value="PAID">PAID</option>
-      <option value="PENDING_PAYMENT">PENDING PAYMENT</option>
-      <option value="FAILED">FAILED</option>
-    </select>
-
-    <button id="searchBtn">Search</button>
-    <button id="clearBtn" class="secondary-btn">Clear</button>
-  </div>
-
-  <div class="summary-row">
-    <div class="summary-box">
-      <span>Total</span>
-      <strong id="totalCount">0</strong>
+    <div class="side-menu">
+      <div class="side-item active">Registrations</div>
+      <div class="side-item muted">Payments</div>
+      <div class="side-item muted">Reports</div>
     </div>
 
-    <div class="summary-box paid">
-      <span>Showing</span>
-      <strong id="showingCount">0</strong>
+    <div class="side-footer">
+      <span>Admin Panel</span>
+      <strong>2026</strong>
     </div>
-  </div>
+  </aside>
 
-  <div id="message"></div>
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <p class="admin-kicker">EVENT REGISTRATION</p>
+        <h1>Registration Dashboard</h1>
+        <p class="admin-subtitle">Monitor participants, payment status, and export registration data.</p>
+      </div>
 
-  <div class="table-wrap">
-    <table class="admin-table">
-      <thead>
-        <tr>
-          <th>Reg No</th>
-          <th>Name</th>
-          <th>IC</th>
-          <th>Phone</th>
-          <th>Email</th>
-          <th>Category</th>
-          <th>Size</th>
-          <th>Amount</th>
-          <th>Status</th>
-          <th>Paid At</th>
-        </tr>
-      </thead>
-      <tbody id="participantsBody">
-        <tr>
-          <td colspan="10" class="empty-cell">Loading...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+      <div class="admin-actions">
+        <button id="refreshBtn" class="ghost-btn">Refresh</button>
+        <button id="exportBtn" class="primary-btn">Export CSV</button>
+        <button id="logoutBtn" class="danger-outline-btn">Logout</button>
+      </div>
+    </div>
 
-  <div class="pagination">
-    <button id="prevBtn" class="secondary-btn">Previous</button>
-    <span id="pageInfo">Page 1</span>
-    <button id="nextBtn" class="secondary-btn">Next</button>
-  </div>
+    <div class="admin-stat-grid">
+      <div class="admin-stat-card">
+        <span>Filtered Total</span>
+        <strong id="totalCount">0</strong>
+        <small>Total records matching current filter</small>
+      </div>
+
+      <div class="admin-stat-card">
+        <span>Current Page</span>
+        <strong id="showingCount">0</strong>
+        <small>Records displayed right now</small>
+      </div>
+
+      <div class="admin-stat-card paid-card">
+        <span>Paid On Page</span>
+        <strong id="paidCount">0</strong>
+        <small>Confirmed paid records shown</small>
+      </div>
+
+      <div class="admin-stat-card pending-card">
+        <span>Pending On Page</span>
+        <strong id="pendingCount">0</strong>
+        <small>Unpaid records shown</small>
+      </div>
+    </div>
+
+    <div class="admin-panel">
+      <div class="panel-head">
+        <div>
+          <h2>Participants</h2>
+          <p>Search by registration number, name, IC, email, or phone.</p>
+        </div>
+      </div>
+
+      <div class="admin-controls premium-controls">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search name, IC, phone, email, reg no..."
+        >
+
+        <select id="statusFilter">
+          <option value="">All Status</option>
+          <option value="PAID">PAID</option>
+          <option value="PENDING_PAYMENT">PENDING PAYMENT</option>
+          <option value="FAILED">FAILED</option>
+        </select>
+
+        <button id="searchBtn" class="primary-btn">Search</button>
+        <button id="clearBtn" class="ghost-btn">Clear</button>
+      </div>
+
+      <div id="message"></div>
+
+      <div class="table-wrap premium-table-wrap">
+        <table class="admin-table premium-table">
+          <thead>
+            <tr>
+              <th>Reg No</th>
+              <th>Name</th>
+              <th>IC</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Category</th>
+              <th>Size</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Paid At</th>
+            </tr>
+          </thead>
+          <tbody id="participantsBody">
+            <tr>
+              <td colspan="10" class="empty-cell">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination premium-pagination">
+        <button id="prevBtn" class="ghost-btn">Previous</button>
+        <span id="pageInfo">Page 1</span>
+        <button id="nextBtn" class="ghost-btn">Next</button>
+      </div>
+    </div>
+  </main>
 </div>
 
 <script src="js/admin.js"></script>

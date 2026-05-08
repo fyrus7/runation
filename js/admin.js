@@ -11,10 +11,13 @@ const searchBtn = document.getElementById("searchBtn");
 const clearBtn = document.getElementById("clearBtn");
 const refreshBtn = document.getElementById("refreshBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+const exportBtn = document.getElementById("exportBtn");
 const message = document.getElementById("message");
 
 const totalCount = document.getElementById("totalCount");
 const showingCount = document.getElementById("showingCount");
+const paidCount = document.getElementById("paidCount");
+const pendingCount = document.getElementById("pendingCount");
 
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
@@ -23,6 +26,7 @@ const pageInfo = document.getElementById("pageInfo");
 let limit = 50;
 let offset = 0;
 let total = 0;
+let currentParticipants = [];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -71,7 +75,7 @@ function statusBadge(status) {
 function setLoading() {
   participantsBody.innerHTML = `
     <tr>
-      <td colspan="10" class="empty-cell">Loading...</td>
+      <td colspan="10" class="empty-cell">Loading registrations...</td>
     </tr>
   `;
 }
@@ -88,20 +92,49 @@ function clearMessage() {
   message.innerHTML = "";
 }
 
+function getCurrentParams() {
+  const q = searchInput.value.trim();
+  const status = statusFilter.value;
+
+  const params = new URLSearchParams();
+  params.set("limit", limit);
+  params.set("offset", offset);
+
+  if (q) params.set("q", q);
+  if (status) params.set("status", status);
+
+  return params;
+}
+
+function getExportParams() {
+  const q = searchInput.value.trim();
+  const status = statusFilter.value;
+
+  const params = new URLSearchParams();
+
+  if (q) params.set("q", q);
+  if (status) params.set("status", status);
+
+  return params;
+}
+
 function renderRows(participants) {
+  currentParticipants = participants;
+
   if (!participants.length) {
     participantsBody.innerHTML = `
       <tr>
         <td colspan="10" class="empty-cell">No registration found</td>
       </tr>
     `;
+    updateVisibleStats();
     return;
   }
 
   participantsBody.innerHTML = participants.map(p => {
     return `
       <tr>
-        <td>${escapeHtml(p.reg_no)}</td>
+        <td><strong>${escapeHtml(p.reg_no)}</strong></td>
         <td class="name-cell">${escapeHtml(p.name)}</td>
         <td>${escapeHtml(p.ic)}</td>
         <td>${escapeHtml(p.phone)}</td>
@@ -114,6 +147,17 @@ function renderRows(participants) {
       </tr>
     `;
   }).join("");
+
+  updateVisibleStats();
+}
+
+function updateVisibleStats() {
+  const paid = currentParticipants.filter(p => p.payment_status === "PAID").length;
+  const pending = currentParticipants.filter(p => p.payment_status === "PENDING_PAYMENT").length;
+
+  showingCount.textContent = currentParticipants.length;
+  paidCount.textContent = paid;
+  pendingCount.textContent = pending;
 }
 
 function updatePagination() {
@@ -130,22 +174,15 @@ async function loadParticipants() {
   clearMessage();
   setLoading();
 
-  const q = searchInput.value.trim();
-  const status = statusFilter.value;
-
-  const params = new URLSearchParams();
-  params.set("limit", limit);
-  params.set("offset", offset);
-
-  if (q) params.set("q", q);
-  if (status) params.set("status", status);
+  const params = getCurrentParams();
 
   try {
     const res = await fetch(`/api/participants?${params.toString()}`, {
-  headers: {
-    Authorization: `Bearer ${adminToken}`
-  }
-});
+      headers: {
+        Authorization: `Bearer ${adminToken}`
+      }
+    });
+
     const data = await res.json();
 
     if (!res.ok || !data.success) {
@@ -155,9 +192,8 @@ async function loadParticipants() {
     total = Number(data.total) || 0;
 
     totalCount.textContent = total;
-    showingCount.textContent = data.participants.length;
 
-    renderRows(data.participants);
+    renderRows(data.participants || []);
     updatePagination();
 
   } catch (err) {
@@ -168,11 +204,63 @@ async function loadParticipants() {
     `;
 
     if (err.message === "Unauthorized") {
-  localStorage.removeItem("adminToken");
-  window.location.href = "login.html";
-} else {
-  showError(err.message);
+      localStorage.removeItem("adminToken");
+      window.location.href = "login.html";
+    } else {
+      showError(err.message);
+    }
+  }
 }
+
+async function exportCsv() {
+  clearMessage();
+
+  exportBtn.disabled = true;
+  exportBtn.textContent = "Exporting...";
+
+  const params = getExportParams();
+
+  try {
+    const res = await fetch(`/api/export?${params.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${adminToken}`
+      }
+    });
+
+    if (!res.ok) {
+      let errText = await res.text();
+
+      try {
+        const parsed = JSON.parse(errText);
+        errText = parsed.error || errText;
+      } catch (e) {}
+
+      throw new Error(errText || "Export failed");
+    }
+
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    const date = new Date().toISOString().slice(0, 10);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `runation-registrations-${date}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    if (err.message === "Unauthorized") {
+      localStorage.removeItem("adminToken");
+      window.location.href = "login.html";
+    } else {
+      showError(err.message);
+    }
+  } finally {
+    exportBtn.disabled = false;
+    exportBtn.textContent = "Export CSV";
   }
 }
 
@@ -190,6 +278,10 @@ clearBtn.addEventListener("click", () => {
 
 refreshBtn.addEventListener("click", () => {
   loadParticipants();
+});
+
+exportBtn.addEventListener("click", () => {
+  exportCsv();
 });
 
 logoutBtn.addEventListener("click", () => {

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RUNATION 2026 Registration</title>
+  <link rel="stylesheet" href="../css/base.css">
+<link rel="stylesheet" href="../css/event.css">
+</head>
+<body class="event-page">
+
+<header class="event-header">
+  <div class="event-header-inner">
+    <a href="../index.html" class="back-link">← Events</a>
+    <div class="event-brand">RUNATION</div>
+  </div>
+</header>
+
+<main>
+  <section class="event-hero">
+    <div class="event-hero-inner">
+      <div class="event-copy">
+        <p class="event-kicker">OFFICIAL REGISTRATION</p>
+        <h1>RUNATION 2026</h1>
+        <p>
+          Choose your distance, complete your registration, and secure your slot
+          through online payment.
+        </p>
+
+        <div class="event-pill-row">
+          <span>5KM</span>
+          <span>10KM</span>
+          <span>21KM</span>
+        </div>
+
+        <div class="event-detail-strip">
+          <div>
+            <small>Date</small>
+            <strong>30 August 2026</strong>
+          </div>
+          <div>
+            <small>Venue</small>
+            <strong>Kuala Lumpur</strong>
+          </div>
+          <div>
+            <small>Flag-Off</small>
+            <strong>6:30 AM</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-register-panel">
+        <div class="register-card-head">
+          <h2>Register Now</h2>
+          <p>Fill in your details and continue to secure payment.</p>
+        </div>
+
+        <form id="registrationForm">
+          <label>Name</label>
+          <input type="text" id="name" required>
+
+          <label>IC / Passport</label>
+          <input type="text" id="ic" required>
+
+          <label>Email</label>
+          <input type="email" id="email">
+
+          <label>Phone</label>
+          <input type="tel" id="phone" required>
+
+          <label>Category</label>
+          <select id="category" required>
+            <option value="">Select category</option>
+            <option value="5KM">5KM - RM1.00</option>
+            <option value="10KM">10KM - RM10.00</option>
+            <option value="21KM">21KM - RM50.00</option>
+          </select>
+
+          <label>T-Shirt Size</label>
+          <select id="tshirt_size">
+            <option value="">Select size</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="2XL">2XL</option>
+            <option value="3XL">3XL</option>
+          </select>
+
+          <button type="submit" id="submitBtn">REGISTER NOW</button>
+        </form>
+
+        <div class="continue-payment-box">
+          <h3>Already Registered?</h3>
+          <p>Enter your IC / Passport or Registration No to continue payment.</p>
+
+          <form id="continuePaymentForm">
+            <input
+              type="text"
+              id="continueRef"
+              placeholder="IC / Passport or REG-XXXX"
+              required
+            >
+            <button type="submit" id="continueBtn">CONTINUE PAYMENT</button>
+          </form>
+        </div>
+
+        <div id="message"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="race-overview">
+    <div class="race-wrap">
+      <div class="section-head-left">
+        <p>RACE CATEGORIES</p>
+        <h2>Select Your Distance</h2>
+      </div>
+
+      <div class="race-category-grid">
+        <div class="race-box">
+          <strong>5KM</strong>
+          <span>RM1.00</span>
+          <p>Fun run distance, suitable for beginners and casual runners.</p>
+        </div>
+
+        <div class="race-box featured-race">
+          <small>POPULAR</small>
+          <strong>10KM</strong>
+          <span>RM10.00</span>
+          <p>A balanced distance for runners looking for a stronger challenge.</p>
+        </div>
+
+        <div class="race-box">
+          <strong>21KM</strong>
+          <span>RM50.00</span>
+          <p>Half marathon challenge for experienced and endurance-focused runners.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="event-notes">
+    <div class="race-wrap notes-grid">
+      <div>
+        <p class="event-kicker dark">IMPORTANT</p>
+        <h2>Before You Register</h2>
+      </div>
+
+      <div class="note-list">
+        <div>
+          <strong>Payment Confirmation</strong>
+          <p>Registration is confirmed only after successful online payment.</p>
+        </div>
+
+        <div>
+          <strong>Duplicate Registration</strong>
+          <p>If your IC already has pending payment, you may continue payment or create a new registration.</p>
+        </div>
+
+        <div>
+          <strong>Contact Information</strong>
+          <p>Use a valid phone number and email so payment details can be traced properly.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="../js/register.js"></script>
+</body>
+</html>
