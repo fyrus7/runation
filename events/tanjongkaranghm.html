@@ -5,38 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TANJONG KARANG HALF MARATHON 2026</title>
   <link rel="stylesheet" href="../css/base.css">
-<link rel="stylesheet" href="../css/event.css">
+  <link rel="stylesheet" href="../css/event.css">
 </head>
-<body class="event-page">
+<body class="event-page tkhm-page">
 
 <header class="event-header">
   <div class="event-header-inner">
-    <a href="../index.html" class="back-link">← Events</a>
-    <div class="event-brand">RUNATION</div>
+    <a href="../index.html" class="event-brand">
+      <span class="event-logo">R</span>
+      <span>RUNATION</span>
+    </a>
   </div>
 </header>
 
 <main>
   <section class="event-hero">
     <div class="event-hero-inner">
-      <div class="event-copy">
-        <p class="event-kicker">OFFICIAL REGISTRATION</p>
-        <h1>TANJONG KARANG HALF MARATHON 2026</h1>
-        <p>
-          Choose your distance, complete your registration, and secure your slot
-          through online payment.
+      <div class="event-hero-copy">
+        <div class="event-status-pill">Registration Open</div>
+
+        <p class="event-kicker">HALF MARATHON</p>
+        <h1>Tanjong Karang Half Marathon 2026</h1>
+        <p class="event-hero-desc">
+          21KM through Tanjong Karang. Start early, run strong, finish proud.
         </p>
 
-        <div class="event-pill-row">
-        <!--  <span>5KM</span>
-          <span>10KM</span> -->
-          <span>21KM</span>
-        </div>
-
-        <div class="event-detail-strip">
+        <div class="event-facts">
           <div>
             <small>Date</small>
-            <strong>5 September 2026</strong>
+            <strong>5 Sep 2026</strong>
           </div>
           <div>
             <small>Venue</small>
@@ -47,108 +44,116 @@
             <strong>4:00 AM</strong>
           </div>
         </div>
+
+        <a href="#register" class="hero-register-btn">Register Now</a>
       </div>
-
-      <div class="event-register-panel">
-  <div class="register-card-head">
-    <h2>Register Now</h2>
-    <p>Fill in your details and continue to secure payment.</p>
-  </div>
-
-  <form id="registrationForm">
-    <input type="hidden" id="event_slug" value="tanjong-karang-half-marathon-2026">
-
-    <label>Name</label>
-    <input type="text" id="name" required>
-
-    <label>IC / Passport</label>
-    <input type="text" id="ic" required>
-
-    <label>Email</label>
-    <input type="email" id="email" required>
-
-    <label>Phone</label>
-    <input type="tel" id="phone" required>
-
-    <label>Address</label>
-    <textarea id="address" rows="3" required></textarea>
-
-    <label>Category</label>
-    <select id="category" required>
-      <option value="">Select category</option>
-      <option value="21KM">21KM - RM88</option>
-    </select>
-
-    <label>Event Tee Size</label>
-    <select id="event_tee_size" required>
-      <option value="">Select size</option>
-      <option value="XS">XS</option>
-      <option value="S">S</option>
-      <option value="M">M</option>
-      <option value="L">L</option>
-      <option value="XL">XL</option>
-      <option value="2XL">2XL</option>
-      <option value="3XL">3XL</option>
-    </select>
-
-    <label>Finisher Tee Size</label>
-    <select id="finisher_tee_size" required>
-      <option value="">Select size</option>
-      <option value="XS">XS</option>
-      <option value="S">S</option>
-      <option value="M">M</option>
-      <option value="L">L</option>
-      <option value="XL">XL</option>
-      <option value="2XL">2XL</option>
-      <option value="3XL">3XL</option>
-    </select>
-
-    <button type="submit" id="submitBtn">REGISTER NOW</button>
-  </form>
-
-  <div id="message"></div>
-</div>
     </div>
   </section>
 
-<section class="race-overview">
-  <div class="race-wrap">
-    <div class="section-head-left">
-      <p>RACE CATEGORIES</p>
-      <h2>Select Your Distance</h2>
-    </div>
+  <section class="registration-section" id="register">
+    <div class="event-wrap event-layout">
 
-    <div class="race-category-grid">
-      <div class="race-box">
-        <strong>21KM</strong>
-        <span>RM88.00</span>
-        <p>Half marathon challenge for experienced and endurance-focused runners.</p>
+      <div class="event-info-panel">
+        <p class="section-kicker">RACE ENTRY</p>
+        <h2>21KM Category</h2>
+
+        <div class="price-card">
+          <span>21KM</span>
+          <strong>RM88</strong>
+        </div>
+
+        <div class="entitlement-list">
+          <div>
+            <strong>Event Tee</strong>
+            <p>Included with your race entry.</p>
+          </div>
+          <div>
+            <strong>Finisher Tee</strong>
+            <p>For official 21KM finishers.</p>
+          </div>
+          <div>
+            <strong>Payment Confirmation</strong>
+            <p>Registration is confirmed after successful payment.</p>
+          </div>
+        </div>
       </div>
+
+      <div class="event-register-panel">
+        <div class="register-card-head">
+          <p>SECURE YOUR SLOT</p>
+          <h2>Register Now</h2>
+        </div>
+
+        <form id="registrationForm">
+          <input type="hidden" id="event_slug" value="tanjong-karang-half-marathon-2026">
+
+          <label>Name</label>
+          <input type="text" id="name" required>
+
+          <label>IC / Passport</label>
+          <input type="text" id="ic" required>
+
+          <label>Email</label>
+          <input type="email" id="email" required>
+
+          <label>Phone</label>
+          <input type="tel" id="phone" required>
+
+          <label>Address</label>
+          <textarea id="address" rows="3" required></textarea>
+
+          <label>Category</label>
+          <select id="category" required>
+            <option value="">Select category</option>
+            <option value="21KM">21KM - RM88</option>
+          </select>
+
+          <label>Event Tee Size</label>
+          <select id="event_tee_size" required>
+            <option value="">Select size</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="2XL">2XL</option>
+            <option value="3XL">3XL</option>
+          </select>
+
+          <label>Finisher Tee Size</label>
+          <select id="finisher_tee_size" required>
+            <option value="">Select size</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="2XL">2XL</option>
+            <option value="3XL">3XL</option>
+          </select>
+
+          <button type="submit" id="submitBtn">REGISTER NOW</button>
+        </form>
+
+        <div id="message"></div>
+      </div>
+
     </div>
-  </div>
-</section>
+  </section>
 
   <section class="event-notes">
-    <div class="race-wrap notes-grid">
-      <div>
-        <p class="event-kicker dark">IMPORTANT</p>
-        <h2>Before You Register</h2>
-      </div>
+    <div class="event-wrap">
+      <p class="section-kicker">IMPORTANT</p>
+      <h2>Before You Register</h2>
 
-      <div class="note-list">
-        <div>
-          <strong>Payment Confirmation</strong>
-          <p>Registration is confirmed only after successful online payment.</p>
-        </div>
-
+      <div class="note-grid">
         <div>
           <strong>Duplicate Registration</strong>
-          <p>If your IC already has pending payment, you may continue payment or create a new registration.</p>
+          <p>If your IC has pending payment, you can continue payment or create a new registration.</p>
         </div>
-
         <div>
-          <strong>Contact Information</strong>
-          <p>Use a valid phone number and email so payment details can be traced properly.</p>
+          <strong>Valid Details</strong>
+          <p>Use a valid phone number and email so your registration can be traced properly.</p>
         </div>
       </div>
     </div>
