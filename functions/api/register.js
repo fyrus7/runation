@@ -2,28 +2,40 @@ export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
 
+    const EVENT_SLUG = "tanjong-karang-half-marathon-2026";
+    const EVENT_NAME = "TANJONG KARANG HALF MARATHON 2026";
+
     const name = String(body.name || "").trim();
     const ic = String(body.ic || "").trim();
     const email = String(body.email || "").trim();
     const phone = String(body.phone || "").trim();
+    const address = String(body.address || "").trim();
     const category = String(body.category || "").trim();
-    const tshirt_size = String(body.tshirt_size || "").trim();
+    const event_tee_size = String(body.event_tee_size || "").trim();
+    const finisher_tee_size = String(body.finisher_tee_size || "").trim();
     const recreate = body.recreate === true;
 
-    if (!name || !ic || !phone || !category) {
+    if (
+      !name ||
+      !ic ||
+      !email ||
+      !phone ||
+      !address ||
+      !category ||
+      !event_tee_size ||
+      !finisher_tee_size
+    ) {
       return Response.json(
         {
           success: false,
-          error: "Name, IC, phone and category are required"
+          error: "Please complete all required fields."
         },
         { status: 400 }
       );
     }
 
     const categoryPrices = {
-      "5KM": 100,
-      "10KM": 1000,
-      "21KM": 5000
+      "21KM": 8800
     };
 
     const amount = categoryPrices[category];
@@ -51,10 +63,11 @@ export async function onRequestPost(context) {
           payment_url,
           payment_ref
         FROM registrations
-        WHERE ic = ?
+        WHERE event_slug = ?
+          AND ic = ?
         LIMIT 1
       `)
-      .bind(ic)
+      .bind(EVENT_SLUG, ic)
       .first();
 
     if (existing) {
@@ -64,7 +77,7 @@ export async function onRequestPost(context) {
         return Response.json(
           {
             success: false,
-            error: "This IC is already registered and paid.",
+            error: "This IC / Passport is already registered and paid for this event.",
             existing: {
               reg_no: existing.reg_no,
               name: existing.name,
@@ -98,16 +111,17 @@ export async function onRequestPost(context) {
         await context.env.DB
           .prepare(`
             DELETE FROM registrations
-            WHERE ic = ?
+            WHERE event_slug = ?
+              AND ic = ?
               AND payment_status = 'PENDING_PAYMENT'
           `)
-          .bind(ic)
+          .bind(EVENT_SLUG, ic)
           .run();
       } else {
         return Response.json(
           {
             success: false,
-            error: "This IC already has a registration. Please contact organizer.",
+            error: "This IC / Passport already has a registration for this event. Please contact organizer.",
             existing: {
               reg_no: existing.reg_no,
               payment_status: existing.payment_status
@@ -119,7 +133,7 @@ export async function onRequestPost(context) {
     }
 
     const id = crypto.randomUUID();
-    const reg_no = "REG-" + Date.now().toString(36).toUpperCase();
+    const reg_no = "TKHM-" + Date.now().toString(36).toUpperCase();
     const now = new Date().toISOString();
 
     await context.env.DB
@@ -127,29 +141,37 @@ export async function onRequestPost(context) {
         INSERT INTO registrations (
           id,
           reg_no,
+          event_slug,
+          event_name,
           name,
           ic,
           email,
           phone,
+          address,
           category,
-          tshirt_size,
+          event_tee_size,
+          finisher_tee_size,
           amount,
           payment_status,
           payment_gateway,
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .bind(
         id,
         reg_no,
+        EVENT_SLUG,
+        EVENT_NAME,
         name,
         ic,
         email,
         phone,
+        address,
         category,
-        tshirt_size,
+        event_tee_size,
+        finisher_tee_size,
         amount,
         "PENDING_PAYMENT",
         "TOYYIBPAY",
@@ -163,7 +185,7 @@ export async function onRequestPost(context) {
     const billData = new URLSearchParams();
     billData.append("userSecretKey", context.env.TOYYIBPAY_SECRET_KEY);
     billData.append("categoryCode", context.env.TOYYIBPAY_CATEGORY_CODE);
-    billData.append("billName", "Running Event Registration");
+    billData.append("billName", EVENT_NAME);
     billData.append("billDescription", `${category} registration fee`);
     billData.append("billPriceSetting", "1");
     billData.append("billPayorInfo", "1");
@@ -172,7 +194,7 @@ export async function onRequestPost(context) {
     billData.append("billCallbackUrl", `${siteUrl}/api/payment-callback`);
     billData.append("billExternalReferenceNo", reg_no);
     billData.append("billTo", name);
-    billData.append("billEmail", email || "noemail@example.com");
+    billData.append("billEmail", email);
     billData.append("billPhone", phone);
     billData.append("billSplitPayment", "0");
     billData.append("billSplitPaymentArgs", "");
@@ -224,12 +246,16 @@ export async function onRequestPost(context) {
       registration: {
         id,
         reg_no,
+        event_slug: EVENT_SLUG,
+        event_name: EVENT_NAME,
         name,
         ic,
         email,
         phone,
+        address,
         category,
-        tshirt_size,
+        event_tee_size,
+        finisher_tee_size,
         amount,
         payment_status: "PENDING_PAYMENT",
         payment_ref: billCode

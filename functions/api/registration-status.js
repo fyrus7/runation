@@ -50,10 +50,11 @@ export async function onRequestPost(context) {
             payment_ref,
             paid_at
           FROM registrations
-          WHERE ic = ?
+          WHERE event_slug = ?
+		    AND ic = ?
           LIMIT 1
         `)
-        .bind(ic)
+        .bind("tanjong-karang-half-marathon-2026", ic)
         .first();
     }
 

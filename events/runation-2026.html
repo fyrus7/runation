@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RUNATION 2026 Registration</title>
+  <title>TANJONG KARANG HALF MARATHON 2026</title>
   <link rel="stylesheet" href="../css/base.css">
 <link rel="stylesheet" href="../css/event.css">
 </head>
@@ -21,7 +21,7 @@
     <div class="event-hero-inner">
       <div class="event-copy">
         <p class="event-kicker">OFFICIAL REGISTRATION</p>
-        <h1>RUNATION 2026</h1>
+        <h1>TANJONG KARANG HALF MARATHON 2026</h1>
         <p>
           Choose your distance, complete your registration, and secure your slot
           through online payment.
@@ -36,15 +36,15 @@
         <div class="event-detail-strip">
           <div>
             <small>Date</small>
-            <strong>30 August 2026</strong>
+            <strong>5 September 2026</strong>
           </div>
           <div>
             <small>Venue</small>
-            <strong>Kuala Lumpur</strong>
+            <strong>Tanjong Karang</strong>
           </div>
           <div>
             <small>Flag-Off</small>
-            <strong>6:30 AM</strong>
+            <strong>4:00 AM</strong>
           </div>
         </div>
       </div>
@@ -56,54 +56,53 @@
         </div>
 
         <form id="registrationForm">
-          <label>Name</label>
-          <input type="text" id="name" required>
+  <label>Name</label>
+  <input type="text" id="name" required>
 
-          <label>IC / Passport</label>
-          <input type="text" id="ic" required>
+  <label>IC / Passport</label>
+  <input type="text" id="ic" required>
 
-          <label>Email</label>
-          <input type="email" id="email">
+  <label>Email</label>
+  <input type="email" id="email" required>
 
-          <label>Phone</label>
-          <input type="tel" id="phone" required>
+  <label>Phone</label>
+  <input type="tel" id="phone" required>
 
-          <label>Category</label>
-          <select id="category" required>
-            <option value="">Select category</option>
-            <option value="5KM">5KM - RM1.00</option>
-            <option value="10KM">10KM - RM10.00</option>
-            <option value="21KM">21KM - RM50.00</option>
-          </select>
+  <label>Address</label>
+  <textarea id="address" rows="3" required></textarea>
 
-          <label>T-Shirt Size</label>
-          <select id="tshirt_size">
-            <option value="">Select size</option>
-            <option value="XS">XS</option>
-            <option value="S">S</option>
-            <option value="M">M</option>
-            <option value="L">L</option>
-            <option value="XL">XL</option>
-            <option value="2XL">2XL</option>
-            <option value="3XL">3XL</option>
-          </select>
+  <label>Category</label>
+  <select id="category" required>
+    <option value="">Select category</option>
+    <option value="21KM">21KM - RM88</option>
+  </select>
 
-          <button type="submit" id="submitBtn">REGISTER NOW</button>
-        </form>
+  <label>Event Tee Size</label>
+  <select id="event_tee_size" required>
+    <option value="">Select size</option>
+    <option value="XS">XS</option>
+    <option value="S">S</option>
+    <option value="M">M</option>
+    <option value="L">L</option>
+    <option value="XL">XL</option>
+    <option value="2XL">2XL</option>
+    <option value="3XL">3XL</option>
+  </select>
 
-        <div class="continue-payment-box">
-          <h3>Already Registered?</h3>
-          <p>Enter your IC / Passport or Registration No to continue payment.</p>
+  <label>Finisher Tee Size</label>
+  <select id="finisher_tee_size" required>
+    <option value="">Select size</option>
+    <option value="XS">XS</option>
+    <option value="S">S</option>
+    <option value="M">M</option>
+    <option value="L">L</option>
+    <option value="XL">XL</option>
+    <option value="2XL">2XL</option>
+    <option value="3XL">3XL</option>
+  </select>
 
-          <form id="continuePaymentForm">
-            <input
-              type="text"
-              id="continueRef"
-              placeholder="IC / Passport or REG-XXXX"
-              required
-            >
-            <button type="submit" id="continueBtn">CONTINUE PAYMENT</button>
-          </form>
+  <button type="submit" id="submitBtn">REGISTER NOW</button>
+</form>
         </div>
 
         <div id="message"></div>

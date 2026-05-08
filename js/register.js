@@ -12,8 +12,10 @@ function getFormData(extra = {}) {
     ic: document.getElementById("ic").value.trim(),
     email: document.getElementById("email").value.trim(),
     phone: document.getElementById("phone").value.trim(),
+    address: document.getElementById("address").value.trim(),
     category: document.getElementById("category").value,
-    tshirt_size: document.getElementById("tshirt_size").value,
+    event_tee_size: document.getElementById("event_tee_size").value,
+    finisher_tee_size: document.getElementById("finisher_tee_size").value,
     ...extra
   };
 }
