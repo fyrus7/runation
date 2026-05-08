@@ -38,9 +38,23 @@ export async function onRequestPost(context) {
     const id = crypto.randomUUID();
     const reg_no = "REG-" + Date.now().toString(36).toUpperCase();
 
-    // sementara fixed amount dulu
-    // RM50.00 = 5000 sen
-    const amount = 5000;
+    const categoryPrices = {
+  "5KM": 5000,
+  "10KM": 7000,
+  "21KM": 10000
+};
+
+const amount = categoryPrices[category];
+
+if (!amount) {
+  return Response.json(
+    {
+      success: false,
+      error: "Invalid category"
+    },
+    { status: 400 }
+  );
+}
 
     const now = new Date().toISOString();
 
