@@ -50,96 +50,83 @@
       </div>
 
       <div class="event-register-panel">
-        <div class="register-card-head">
-          <h2>Register Now</h2>
-          <p>Fill in your details and continue to secure payment.</p>
-        </div>
+  <div class="register-card-head">
+    <h2>Register Now</h2>
+    <p>Fill in your details and continue to secure payment.</p>
+  </div>
 
-        <form id="registrationForm">
-  <label>Name</label>
-  <input type="text" id="name" required>
+  <form id="registrationForm">
+    <input type="hidden" id="event_slug" value="tanjong-karang-half-marathon-2026">
 
-  <label>IC / Passport</label>
-  <input type="text" id="ic" required>
+    <label>Name</label>
+    <input type="text" id="name" required>
 
-  <label>Email</label>
-  <input type="email" id="email" required>
+    <label>IC / Passport</label>
+    <input type="text" id="ic" required>
 
-  <label>Phone</label>
-  <input type="tel" id="phone" required>
+    <label>Email</label>
+    <input type="email" id="email" required>
 
-  <label>Address</label>
-  <textarea id="address" rows="3" required></textarea>
+    <label>Phone</label>
+    <input type="tel" id="phone" required>
 
-  <label>Category</label>
-  <select id="category" required>
-    <option value="">Select category</option>
-    <option value="21KM">21KM - RM88</option>
-  </select>
+    <label>Address</label>
+    <textarea id="address" rows="3" required></textarea>
 
-  <label>Event Tee Size</label>
-  <select id="event_tee_size" required>
-    <option value="">Select size</option>
-    <option value="XS">XS</option>
-    <option value="S">S</option>
-    <option value="M">M</option>
-    <option value="L">L</option>
-    <option value="XL">XL</option>
-    <option value="2XL">2XL</option>
-    <option value="3XL">3XL</option>
-  </select>
+    <label>Category</label>
+    <select id="category" required>
+      <option value="">Select category</option>
+      <option value="21KM">21KM - RM88</option>
+    </select>
 
-  <label>Finisher Tee Size</label>
-  <select id="finisher_tee_size" required>
-    <option value="">Select size</option>
-    <option value="XS">XS</option>
-    <option value="S">S</option>
-    <option value="M">M</option>
-    <option value="L">L</option>
-    <option value="XL">XL</option>
-    <option value="2XL">2XL</option>
-    <option value="3XL">3XL</option>
-  </select>
+    <label>Event Tee Size</label>
+    <select id="event_tee_size" required>
+      <option value="">Select size</option>
+      <option value="XS">XS</option>
+      <option value="S">S</option>
+      <option value="M">M</option>
+      <option value="L">L</option>
+      <option value="XL">XL</option>
+      <option value="2XL">2XL</option>
+      <option value="3XL">3XL</option>
+    </select>
 
-  <button type="submit" id="submitBtn">REGISTER NOW</button>
-</form>
-<input type="hidden" id="event_slug" value="tanjong-karang-half-marathon-2026">
-        </div>
+    <label>Finisher Tee Size</label>
+    <select id="finisher_tee_size" required>
+      <option value="">Select size</option>
+      <option value="XS">XS</option>
+      <option value="S">S</option>
+      <option value="M">M</option>
+      <option value="L">L</option>
+      <option value="XL">XL</option>
+      <option value="2XL">2XL</option>
+      <option value="3XL">3XL</option>
+    </select>
 
-        <div id="message"></div>
-      </div>
+    <button type="submit" id="submitBtn">REGISTER NOW</button>
+  </form>
+
+  <div id="message"></div>
+</div>
     </div>
   </section>
 
-  <section class="race-overview">
-    <div class="race-wrap">
-      <div class="section-head-left">
-        <p>RACE CATEGORIES</p>
-        <h2>Select Your Distance</h2>
-      </div>
-<!--
-      <div class="race-category-grid">
-        <div class="race-box">
-          <strong>5KM</strong>
-          <span>RM1.00</span>
-          <p>Fun run distance, suitable for beginners and casual runners.</p>
-        </div>
+<section class="race-overview">
+  <div class="race-wrap">
+    <div class="section-head-left">
+      <p>RACE CATEGORIES</p>
+      <h2>Select Your Distance</h2>
+    </div>
 
-        <div class="race-box featured-race">
-          <small>POPULAR</small>
-          <strong>10KM</strong>
-          <span>RM10.00</span>
-          <p>A balanced distance for runners looking for a stronger challenge.</p>
-        </div>
--->
-        <div class="race-box">
-          <strong>21KM</strong>
-          <span>RM88.00</span>
-          <p>Half marathon challenge for experienced and endurance-focused runners.</p>
-        </div>
+    <div class="race-category-grid">
+      <div class="race-box">
+        <strong>21KM</strong>
+        <span>RM88.00</span>
+        <p>Half marathon challenge for experienced and endurance-focused runners.</p>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 
   <section class="event-notes">
     <div class="race-wrap notes-grid">
