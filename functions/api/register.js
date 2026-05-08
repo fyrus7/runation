@@ -20,9 +20,9 @@ export async function onRequestPost(context) {
     }
 
     const categoryPrices = {
-      "5KM": 5000,
-      "10KM": 7000,
-      "21KM": 10000
+      "5KM": 100,
+      "10KM": 500,
+      "21KM": 1000
     };
 
     const amount = categoryPrices[category];
