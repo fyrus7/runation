@@ -3,6 +3,8 @@ const adminToken = localStorage.getItem("adminToken");
 if (!adminToken) {
   window.location.href = "login.html";
 }
+const eventTabs = document.querySelectorAll(".event-tab");
+let activeEventSlug = "";
 
 const participantsBody = document.getElementById("participantsBody");
 const searchInput = document.getElementById("searchInput");
@@ -102,6 +104,7 @@ function getCurrentParams() {
 
   if (q) params.set("q", q);
   if (status) params.set("status", status);
+  if (activeEventSlug) params.set("event_slug", activeEventSlug);
 
   return params;
 }
@@ -114,6 +117,8 @@ function getExportParams() {
 
   if (q) params.set("q", q);
   if (status) params.set("status", status);
+  if (activeEventSlug) params.set("event_slug", activeEventSlug);
+  if (activeEventSlug) params.set("event_slug", activeEventSlug);
 
   return params;
 }
@@ -311,6 +316,17 @@ nextBtn.addEventListener("click", () => {
   if (offset + limit >= total) return;
   offset += limit;
   loadParticipants();
+});
+
+eventTabs.forEach(btn => {
+  btn.addEventListener("click", () => {
+    eventTabs.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    activeEventSlug = btn.dataset.event || "";
+    offset = 0;
+    loadParticipants();
+  });
 });
 
 loadParticipants();

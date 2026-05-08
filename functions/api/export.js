@@ -99,6 +99,7 @@ export async function onRequestGet(context) {
 
     const q = String(url.searchParams.get("q") || "").trim();
     const status = String(url.searchParams.get("status") || "").trim();
+	const eventSlug = String(url.searchParams.get("event_slug") || "").trim();
 
     const where = [];
     const binds = [];
@@ -122,26 +123,34 @@ export async function onRequestGet(context) {
       where.push(`payment_status = ?`);
       binds.push(status);
     }
+	if (eventSlug) {
+     where.push(`event_slug = ?`);
+	 binds.push(eventSlug);
+	}
 
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 
     let stmt = context.env.DB.prepare(`
       SELECT
-        reg_no,
-        name,
-        ic,
-        email,
-        phone,
-        category,
-        tshirt_size,
-        amount,
-        payment_status,
-        payment_gateway,
-        payment_ref,
-        payment_url,
-        created_at,
-        paid_at,
-        updated_at
+	  event_name,
+	  event_slug,
+	  reg_no,
+	  name,
+	  ic,
+	  email,
+	  phone,
+	  address,
+	  category,
+	  event_tee_size,
+	  finisher_tee_size,
+	  amount,
+	  payment_status,
+	  payment_gateway,
+	  payment_ref,
+	  payment_url,
+	  created_at,
+	  paid_at,
+	  updated_at
       FROM registrations
       ${whereSql}
       ORDER BY created_at DESC
@@ -156,22 +165,26 @@ export async function onRequestGet(context) {
     const rows = result.results || [];
 
     const header = [
-      "Reg No",
-      "Name",
-      "IC / Passport",
-      "Email",
-      "Phone",
-      "Category",
-      "T-Shirt Size",
-      "Amount RM",
-      "Payment Status",
-      "Payment Gateway",
-      "Payment Ref",
-      "Payment URL",
-      "Created At",
-      "Paid At",
-      "Updated At"
-    ];
+    	"Event",
+		"Event Slug",
+		"Reg No",
+		"Name",
+		"IC / Passport",
+		"Email",
+		"Phone",
+		"Address",
+		"Category",
+		"Event Tee Size",
+		"Finisher Tee Size",
+		"Amount RM",
+		"Payment Status",
+		"Payment Gateway",
+		"Payment Ref",
+		"Payment URL",
+		"Created At",
+		"Paid At",
+		"Updated At"
+	];
 
     const csvRows = [
       header.map(csvEscape).join(",")
@@ -179,22 +192,26 @@ export async function onRequestGet(context) {
 
     for (const r of rows) {
       csvRows.push([
-        r.reg_no,
-        r.name,
-        r.ic,
-        r.email,
-        r.phone,
-        r.category,
-        r.tshirt_size,
-        formatAmount(r.amount),
-        r.payment_status,
-        r.payment_gateway,
-        r.payment_ref,
-        r.payment_url,
-        r.created_at,
-        r.paid_at,
-        r.updated_at
-      ].map(csvEscape).join(","));
+    	r.event_name,
+		r.event_slug,
+		r.reg_no,
+		r.name,
+		r.ic,
+		r.email,
+		r.phone,
+		r.address,
+		r.category,
+		r.event_tee_size,
+		r.finisher_tee_size,
+		formatAmount(r.amount),
+		r.payment_status,
+		r.payment_gateway,
+		r.payment_ref,
+		r.payment_url,
+		r.created_at,
+		r.paid_at,
+		r.updated_at
+		].map(csvEscape).join(","));
     }
 
     const csv = csvRows.join("\r\n");

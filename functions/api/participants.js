@@ -89,6 +89,7 @@ export async function onRequestGet(context) {
 
     const q = String(url.searchParams.get("q") || "").trim();
     const status = String(url.searchParams.get("status") || "").trim();
+	const eventSlug = String(url.searchParams.get("event_slug") || "").trim();
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10), 200);
     const offset = Math.max(parseInt(url.searchParams.get("offset") || "0", 10), 0);
 
@@ -114,6 +115,10 @@ export async function onRequestGet(context) {
       where.push(`payment_status = ?`);
       binds.push(status);
     }
+	if (eventSlug) {
+  where.push(`event_slug = ?`);
+  binds.push(eventSlug);
+}
 
     const whereSql = where.length ? `WHERE ${where.join(" AND ")}` : "";
 

@@ -6,16 +6,22 @@ const continuePaymentForm = document.getElementById("continuePaymentForm");
 const continueRef = document.getElementById("continueRef");
 const continueBtn = document.getElementById("continueBtn");
 
+function val(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
+}
+
 function getFormData(extra = {}) {
   return {
-    name: document.getElementById("name").value.trim(),
-    ic: document.getElementById("ic").value.trim(),
-    email: document.getElementById("email").value.trim(),
-    phone: document.getElementById("phone").value.trim(),
-    address: document.getElementById("address").value.trim(),
-    category: document.getElementById("category").value,
-    event_tee_size: document.getElementById("event_tee_size").value,
-    finisher_tee_size: document.getElementById("finisher_tee_size").value,
+    event_slug: val("event_slug"),
+    name: val("name"),
+    ic: val("ic"),
+    email: val("email"),
+    phone: val("phone"),
+    address: val("address"),
+    category: val("category"),
+    event_tee_size: val("event_tee_size"),
+    finisher_tee_size: val("finisher_tee_size"),
     ...extra
   };
 }
@@ -27,7 +33,7 @@ function showDuplicatePending(result, originalData) {
       <p><b>Registration No:</b> ${result.registration.reg_no}</p>
       <p><b>Name:</b> ${result.registration.name}</p>
       <p><b>Category:</b> ${result.registration.category}</p>
-      <p>This IC already has an unpaid registration.</p>
+      <p>This IC / Passport already has an unpaid registration for this event.</p>
 
       <div class="duplicate-actions">
         <button type="button" id="dupContinueBtn">CONTINUE PAYMENT</button>
@@ -42,7 +48,7 @@ function showDuplicatePending(result, originalData) {
 
   document.getElementById("dupCreateNewBtn").addEventListener("click", async () => {
     const confirmNew = confirm(
-      "Create new registration? The old pending registration will be deleted."
+      "Create new registration? The old pending registration for this event will be deleted."
     );
 
     if (!confirmNew) return;
@@ -79,29 +85,12 @@ async function submitRegistration(data) {
       return;
     }
 
-    if (result.continue_payment && result.payment_url) {
-      message.innerHTML = `
-        <div class="success-box">
-          <h3>Pending Registration Found</h3>
-          <p><b>Registration No:</b> ${result.registration.reg_no}</p>
-          <p><b>Name:</b> ${result.registration.name}</p>
-          <p><b>Category:</b> ${result.registration.category}</p>
-          <p>Redirecting to payment...</p>
-        </div>
-      `;
-
-      setTimeout(() => {
-        window.location.href = result.payment_url;
-      }, 800);
-
-      return;
-    }
-
     message.innerHTML = `
       <div class="success-box">
         <h3>Registration Saved</h3>
         <p><b>Registration No:</b> ${result.registration.reg_no}</p>
         <p><b>Name:</b> ${result.registration.name}</p>
+        <p><b>Event:</b> ${result.registration.event_name || "-"}</p>
         <p><b>Category:</b> ${result.registration.category}</p>
         <p><b>Status:</b> Redirecting to payment...</p>
       </div>
@@ -123,10 +112,12 @@ async function submitRegistration(data) {
   }
 }
 
-form.addEventListener("submit", async function (e) {
-  e.preventDefault();
-  await submitRegistration(getFormData());
-});
+if (form) {
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    await submitRegistration(getFormData());
+  });
+}
 
 if (continuePaymentForm) {
   continuePaymentForm.addEventListener("submit", async e => {
@@ -137,11 +128,12 @@ if (continuePaymentForm) {
     continueBtn.textContent = "CHECKING...";
 
     const value = continueRef.value.trim();
+    const eventSlug = val("event_slug");
 
     try {
-      const payload = value.toUpperCase().startsWith("REG-")
-        ? { ref: value.toUpperCase() }
-        : { ic: value };
+      const payload = value.toUpperCase().startsWith("REG-") || value.toUpperCase().startsWith("TKHM-") || value.toUpperCase().startsWith("LSPTK-")
+        ? { ref: value.toUpperCase(), event_slug: eventSlug }
+        : { ic: value, event_slug: eventSlug };
 
       const res = await fetch("/api/registration-status", {
         method: "POST",
@@ -165,6 +157,7 @@ if (continuePaymentForm) {
             <h3>Registration Already Paid</h3>
             <p><b>Registration No:</b> ${reg.reg_no}</p>
             <p><b>Name:</b> ${reg.name}</p>
+            <p><b>Event:</b> ${reg.event_name || "-"}</p>
             <p><b>Category:</b> ${reg.category}</p>
           </div>
         `;
@@ -177,6 +170,7 @@ if (continuePaymentForm) {
             <h3>Pending Payment Found</h3>
             <p><b>Registration No:</b> ${reg.reg_no}</p>
             <p><b>Name:</b> ${reg.name}</p>
+            <p><b>Event:</b> ${reg.event_name || "-"}</p>
             <p><b>Category:</b> ${reg.category}</p>
             <p>Redirecting to payment...</p>
           </div>

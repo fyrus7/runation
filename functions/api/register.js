@@ -1,9 +1,42 @@
+const EVENTS = {
+  "tanjong-karang-half-marathon-2026": {
+    slug: "tanjong-karang-half-marathon-2026",
+    name: "TANJONG KARANG HALF MARATHON 2026",
+    prefix: "TKHM",
+    requireFinisherTee: true,
+    categories: {
+      "21KM": 8800
+    }
+  },
+
+  "lsptk": {
+    slug: "lsptk",
+    name: "WASIYYAH LARIAN SAWAH PADI TANJONG KARANG",
+    prefix: "LSPTK",
+    requireFinisherTee: false,
+    categories: {
+      "5KM": 6500,
+      "8KM": 7500
+    }
+  }
+};
+
 export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
 
-    const EVENT_SLUG = "tanjong-karang-half-marathon-2026";
-    const EVENT_NAME = "TANJONG KARANG HALF MARATHON 2026";
+    const eventSlug = String(body.event_slug || "").trim();
+    const EVENT = EVENTS[eventSlug];
+
+    if (!EVENT) {
+      return Response.json(
+        {
+          success: false,
+          error: "Invalid event."
+        },
+        { status: 400 }
+      );
+    }
 
     const name = String(body.name || "").trim();
     const ic = String(body.ic || "").trim();
@@ -12,19 +45,14 @@ export async function onRequestPost(context) {
     const address = String(body.address || "").trim();
     const category = String(body.category || "").trim();
     const event_tee_size = String(body.event_tee_size || "").trim();
-    const finisher_tee_size = String(body.finisher_tee_size || "").trim();
+
+    const finisher_tee_size = EVENT.requireFinisherTee
+      ? String(body.finisher_tee_size || "").trim()
+      : "";
+
     const recreate = body.recreate === true;
 
-    if (
-      !name ||
-      !ic ||
-      !email ||
-      !phone ||
-      !address ||
-      !category ||
-      !event_tee_size ||
-      !finisher_tee_size
-    ) {
+    if (!name || !ic || !email || !phone || !address || !category || !event_tee_size) {
       return Response.json(
         {
           success: false,
@@ -34,17 +62,23 @@ export async function onRequestPost(context) {
       );
     }
 
-    const categoryPrices = {
-      "21KM": 8800
-    };
+    if (EVENT.requireFinisherTee && !finisher_tee_size) {
+      return Response.json(
+        {
+          success: false,
+          error: "Please select Finisher Tee Size."
+        },
+        { status: 400 }
+      );
+    }
 
-    const amount = categoryPrices[category];
+    const amount = EVENT.categories[category];
 
     if (!amount) {
       return Response.json(
         {
           success: false,
-          error: "Invalid category"
+          error: "Invalid category."
         },
         { status: 400 }
       );
@@ -55,6 +89,8 @@ export async function onRequestPost(context) {
         SELECT
           id,
           reg_no,
+          event_slug,
+          event_name,
           name,
           ic,
           category,
@@ -67,7 +103,7 @@ export async function onRequestPost(context) {
           AND ic = ?
         LIMIT 1
       `)
-      .bind(EVENT_SLUG, ic)
+      .bind(EVENT.slug, ic)
       .first();
 
     if (existing) {
@@ -80,6 +116,7 @@ export async function onRequestPost(context) {
             error: "This IC / Passport is already registered and paid for this event.",
             existing: {
               reg_no: existing.reg_no,
+              event_name: existing.event_name,
               name: existing.name,
               category: existing.category,
               payment_status: existing.payment_status
@@ -98,6 +135,8 @@ export async function onRequestPost(context) {
             payment_url: existing.payment_url,
             registration: {
               reg_no: existing.reg_no,
+              event_slug: existing.event_slug,
+              event_name: existing.event_name,
               name: existing.name,
               ic: existing.ic,
               category: existing.category,
@@ -115,7 +154,7 @@ export async function onRequestPost(context) {
               AND ic = ?
               AND payment_status = 'PENDING_PAYMENT'
           `)
-          .bind(EVENT_SLUG, ic)
+          .bind(EVENT.slug, ic)
           .run();
       } else {
         return Response.json(
@@ -133,7 +172,7 @@ export async function onRequestPost(context) {
     }
 
     const id = crypto.randomUUID();
-    const reg_no = "TKHM-" + Date.now().toString(36).toUpperCase();
+    const reg_no = EVENT.prefix + "-" + Date.now().toString(36).toUpperCase();
     const now = new Date().toISOString();
 
     await context.env.DB
@@ -162,8 +201,8 @@ export async function onRequestPost(context) {
       .bind(
         id,
         reg_no,
-        EVENT_SLUG,
-        EVENT_NAME,
+        EVENT.slug,
+        EVENT.name,
         name,
         ic,
         email,
@@ -185,7 +224,7 @@ export async function onRequestPost(context) {
     const billData = new URLSearchParams();
     billData.append("userSecretKey", context.env.TOYYIBPAY_SECRET_KEY);
     billData.append("categoryCode", context.env.TOYYIBPAY_CATEGORY_CODE);
-    billData.append("billName", EVENT_NAME);
+    billData.append("billName", EVENT.name);
     billData.append("billDescription", `${category} registration fee`);
     billData.append("billPriceSetting", "1");
     billData.append("billPayorInfo", "1");
@@ -246,8 +285,8 @@ export async function onRequestPost(context) {
       registration: {
         id,
         reg_no,
-        event_slug: EVENT_SLUG,
-        event_name: EVENT_NAME,
+        event_slug: EVENT.slug,
+        event_name: EVENT.name,
         name,
         ic,
         email,

@@ -442,3 +442,33 @@
     border-radius: 18px;
   }
 }
+
+
+.admin-page .event-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.admin-page .event-tab {
+  width: auto;
+  margin-top: 0;
+  padding: 11px 16px;
+  border-radius: 999px;
+  border: 1px solid #dbe2ea;
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 900;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.admin-page .event-tab.active {
+  background: linear-gradient(135deg, #2563eb, #0f172a);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 10px 24px rgba(37,99,235,0.22);
+}

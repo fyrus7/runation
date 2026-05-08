@@ -4,6 +4,7 @@ export async function onRequestPost(context) {
 
     const ref = String(body.ref || "").trim();
     const ic = String(body.ic || "").trim();
+    const event_slug = String(body.event_slug || "").trim();
 
     if (!ref && !ic) {
       return Response.json(
@@ -22,6 +23,8 @@ export async function onRequestPost(context) {
         .prepare(`
           SELECT
             reg_no,
+            event_slug,
+            event_name,
             name,
             ic,
             category,
@@ -37,10 +40,22 @@ export async function onRequestPost(context) {
         .bind(ref)
         .first();
     } else {
+      if (!event_slug) {
+        return Response.json(
+          {
+            success: false,
+            error: "Missing event."
+          },
+          { status: 400 }
+        );
+      }
+
       row = await context.env.DB
         .prepare(`
           SELECT
             reg_no,
+            event_slug,
+            event_name,
             name,
             ic,
             category,
@@ -51,10 +66,10 @@ export async function onRequestPost(context) {
             paid_at
           FROM registrations
           WHERE event_slug = ?
-		    AND ic = ?
+            AND ic = ?
           LIMIT 1
         `)
-        .bind("tanjong-karang-half-marathon-2026", ic)
+        .bind(event_slug, ic)
         .first();
     }
 
@@ -72,6 +87,8 @@ export async function onRequestPost(context) {
       success: true,
       registration: {
         reg_no: row.reg_no,
+        event_slug: row.event_slug,
+        event_name: row.event_name,
         name: row.name,
         category: row.category,
         amount: row.amount,
