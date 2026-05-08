@@ -21,8 +21,8 @@ export async function onRequestPost(context) {
 
     const categoryPrices = {
       "5KM": 100,
-      "10KM": 500,
-      "21KM": 1000
+      "10KM": 1000,
+      "21KM": 5000
     };
 
     const amount = categoryPrices[category];

@@ -3,52 +3,165 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Event Registration</title>
+  <title>RUNATION - Event Registration</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="registration-page">
 
-<div class="container">
-  <h1>Running Event Registration</h1>
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">RUNATION</div>
+    <div class="header-tag">Official Running Event Registration</div>
+  </div>
+</header>
 
-  <form id="registrationForm">
-    <label>Name</label>
-    <input type="text" id="name" required>
+<section class="hero-section">
+  <div class="hero-overlay"></div>
 
-    <label>IC / Passport</label>
-    <input type="text" id="ic" required>
+  <div class="hero-content">
+    <div class="hero-left">
+      <p class="eyebrow">RUN WITH PURPOSE</p>
+      <h1>Join The Next Great<br>Running Experience</h1>
+      <p class="hero-desc">
+        Register now for a professionally organized running event with smooth registration,
+        secure payment, and a race-day experience designed for every runner.
+      </p>
 
-    <label>Email</label>
-    <input type="email" id="email">
+      <div class="hero-badges">
+        <div class="hero-badge">
+          <span class="badge-label">Categories</span>
+          <strong>5KM · 10KM · 21KM</strong>
+        </div>
+        <div class="hero-badge">
+          <span class="badge-label">Venue</span>
+          <strong>City Run Experience</strong>
+        </div>
+        <div class="hero-badge">
+          <span class="badge-label">Registration</span>
+          <strong>Fast & Secure</strong>
+        </div>
+      </div>
+    </div>
 
-    <label>Phone</label>
-    <input type="tel" id="phone" required>
+    <div class="hero-right">
+      <div class="register-card">
+        <div class="register-card-head">
+          <h2>Register Now</h2>
+          <p>Complete your entry in a few simple steps.</p>
+        </div>
 
-    <label>Category</label>
-    <select id="category" required>
-      <option value="">Select category</option>
-      <option value="5KM">5KM - RM1</option>
-      <option value="10KM">10KM - RM5</option>
-      <option value="21KM">21KM - RM10</option>
-    </select>
+        <form id="registrationForm">
+          <label>Name</label>
+          <input type="text" id="name" required>
 
-    <label>T-Shirt Size</label>
-    <select id="tshirt_size">
-      <option value="">Select size</option>
-      <option value="XS">XS</option>
-      <option value="S">S</option>
-      <option value="M">M</option>
-      <option value="L">L</option>
-      <option value="XL">XL</option>
-      <option value="2XL">2XL</option>
-      <option value="3XL">3XL</option>
-    </select>
+          <label>IC / Passport</label>
+          <input type="text" id="ic" required>
 
-    <button type="submit" id="submitBtn">REGISTER</button>
-  </form>
+          <label>Email</label>
+          <input type="email" id="email">
 
-  <div id="message"></div>
-</div>
+          <label>Phone</label>
+          <input type="tel" id="phone" required>
+
+          <label>Category</label>
+          <select id="category" required>
+            <option value="">Select category</option>
+            <option value="5KM">5KM - RM1</option>
+            <option value="10KM">10KM - RM10</option>
+            <option value="21KM">21KM - RM80</option>
+          </select>
+
+          <label>T-Shirt Size</label>
+          <select id="tshirt_size">
+            <option value="">Select size</option>
+            <option value="XS">XS</option>
+            <option value="S">S</option>
+            <option value="M">M</option>
+            <option value="L">L</option>
+            <option value="XL">XL</option>
+            <option value="2XL">2XL</option>
+            <option value="3XL">3XL</option>
+          </select>
+
+          <button type="submit" id="submitBtn">REGISTER NOW</button>
+        </form>
+
+        <div id="message"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="info-section">
+  <div class="info-wrap">
+    <div class="section-title">
+      <p class="mini-title">EVENT HIGHLIGHTS</p>
+      <h2>Why Runners Choose RUNATION</h2>
+    </div>
+
+    <div class="feature-grid">
+      <div class="feature-card">
+        <h3>Well-Organized Race Flow</h3>
+        <p>Designed for a smooth registration and event-day experience from sign-up to finish line.</p>
+      </div>
+
+      <div class="feature-card">
+        <h3>Secure Online Payment</h3>
+        <p>Complete your registration confidently with integrated payment confirmation.</p>
+      </div>
+
+      <div class="feature-card">
+        <h3>Multiple Distances</h3>
+        <p>Choose the category that matches your fitness level, race goal, or weekend challenge.</p>
+      </div>
+
+      <div class="feature-card">
+        <h3>Runner Essentials</h3>
+        <p>Race entry, event coordination, and registration data handled in a clean and professional system.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="categories-section">
+  <div class="info-wrap">
+    <div class="section-title">
+      <p class="mini-title">RACE CATEGORIES</p>
+      <h2>Pick Your Distance</h2>
+    </div>
+
+    <div class="category-grid">
+      <div class="category-card">
+        <div class="cat-km">5KM</div>
+        <div class="cat-price">RM1</div>
+        <p>Perfect for beginners, fun runners, and casual participants.</p>
+      </div>
+
+      <div class="category-card featured">
+        <div class="featured-tag">POPULAR</div>
+        <div class="cat-km">10KM</div>
+        <div class="cat-price">RM10</div>
+        <p>Ideal for committed runners aiming for a stronger challenge.</p>
+      </div>
+
+      <div class="category-card">
+        <div class="cat-km">21KM</div>
+        <div class="cat-price">RM50</div>
+        <p>For runners ready to push endurance and achieve a bigger goal.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="bottom-cta">
+  <div class="info-wrap cta-box">
+    <h2>Ready To Run?</h2>
+    <p>Secure your slot today and be part of the RUNATION experience.</p>
+    <a href="#top" class="cta-link" onclick="window.scrollTo({ top: 0, behavior: 'smooth' }); return false;">
+      Go To Registration
+    </a>
+  </div>
+</section>
 
 <script src="js/register.js"></script>
 </body>

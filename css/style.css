@@ -284,3 +284,454 @@ button:disabled {
     width: 100%;
   }
 }
+
+/* INDEX PAGE */
+
+.registration-page {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6fa;
+  color: #1d2433;
+}
+
+.registration-page * {
+  box-sizing: border-box;
+}
+
+.registration-page .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(11, 18, 32, 0.88);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.registration-page .header-inner {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 18px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.registration-page .brand {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #fff;
+}
+
+.registration-page .header-tag {
+  color: rgba(255,255,255,0.8);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.registration-page .hero-section {
+  position: relative;
+  min-height: 760px;
+  background:
+    linear-gradient(135deg, rgba(8,15,28,0.85), rgba(24,44,92,0.72)),
+    url("https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1600&q=80") center/cover no-repeat;
+  display: flex;
+  align-items: center;
+}
+
+.registration-page .hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.10), rgba(0,0,0,0.18));
+}
+
+.registration-page .hero-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 70px 20px;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 34px;
+  align-items: center;
+}
+
+.registration-page .hero-left {
+  color: #fff;
+}
+
+.registration-page .eyebrow {
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.16);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.registration-page .hero-left h1 {
+  margin: 0 0 18px;
+  font-size: 56px;
+  line-height: 1.05;
+  text-align: left;
+  color: #fff;
+}
+
+.registration-page .hero-desc {
+  max-width: 680px;
+  font-size: 17px;
+  line-height: 1.8;
+  color: rgba(255,255,255,0.88);
+  margin-bottom: 28px;
+}
+
+.registration-page .hero-badges {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  max-width: 760px;
+}
+
+.registration-page .hero-badge {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(6px);
+}
+
+.registration-page .badge-label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.72);
+  margin-bottom: 6px;
+}
+
+.registration-page .hero-badge strong {
+  color: #fff;
+  font-size: 15px;
+}
+
+.registration-page .hero-right {
+  display: flex;
+  justify-content: center;
+}
+
+.registration-page .register-card {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(255,255,255,0.96);
+  border-radius: 24px;
+  padding: 26px 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+}
+
+.registration-page .register-card-head {
+  margin-bottom: 18px;
+}
+
+.registration-page .register-card-head h2 {
+  margin: 0 0 6px;
+  font-size: 28px;
+  color: #111827;
+}
+
+.registration-page .register-card-head p {
+  margin: 0;
+  color: #667085;
+  font-size: 14px;
+}
+
+.registration-page label {
+  display: block;
+  margin-top: 14px;
+  margin-bottom: 6px;
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.registration-page input,
+.registration-page select {
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #d7dce5;
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  background: #fff;
+  transition: 0.2s ease;
+}
+
+.registration-page input:focus,
+.registration-page select:focus {
+  border-color: #2547d0;
+  box-shadow: 0 0 0 4px rgba(37,71,208,0.10);
+}
+
+.registration-page button {
+  width: 100%;
+  margin-top: 22px;
+  padding: 15px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1d4ed8, #0f172a);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(29,78,216,0.22);
+}
+
+.registration-page button:hover {
+  transform: translateY(-1px);
+}
+
+.registration-page button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.registration-page #message {
+  margin-top: 18px;
+}
+
+.registration-page .info-section,
+.registration-page .categories-section,
+.registration-page .bottom-cta {
+  padding: 70px 20px;
+}
+
+.registration-page .categories-section {
+  background: #f8fafc;
+}
+
+.registration-page .info-wrap {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.registration-page .section-title {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.registration-page .mini-title {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  color: #1d4ed8;
+}
+
+.registration-page .section-title h2 {
+  margin: 0;
+  font-size: 34px;
+  color: #111827;
+}
+
+.registration-page .feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.registration-page .feature-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.07);
+  border: 1px solid #edf0f5;
+}
+
+.registration-page .feature-card h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #111827;
+}
+
+.registration-page .feature-card p {
+  margin: 0;
+  color: #5f6b7a;
+  line-height: 1.7;
+  font-size: 14px;
+}
+
+.registration-page .category-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.registration-page .category-card {
+  position: relative;
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px 24px;
+  text-align: center;
+  border: 1px solid #e6ebf2;
+  box-shadow: 0 12px 26px rgba(15,23,42,0.06);
+}
+
+.registration-page .category-card.featured {
+  border: 2px solid #1d4ed8;
+  transform: translateY(-4px);
+}
+
+.registration-page .featured-tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: #1d4ed8;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 999px;
+}
+
+.registration-page .cat-km {
+  font-size: 38px;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.registration-page .cat-price {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1d4ed8;
+  margin-bottom: 12px;
+}
+
+.registration-page .category-card p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.registration-page .cta-box {
+  background: linear-gradient(135deg, #0f172a, #1e3a8a);
+  color: #fff;
+  text-align: center;
+  padding: 48px 24px;
+  border-radius: 24px;
+  box-shadow: 0 16px 36px rgba(15,23,42,0.18);
+}
+
+.registration-page .cta-box h2 {
+  margin: 0 0 12px;
+  font-size: 34px;
+}
+
+.registration-page .cta-box p {
+  margin: 0 0 22px;
+  color: rgba(255,255,255,0.86);
+}
+
+.registration-page .cta-link {
+  display: inline-block;
+  padding: 14px 22px;
+  border-radius: 999px;
+  background: #fff;
+  color: #0f172a;
+  text-decoration: none;
+  font-weight: 800;
+}
+
+.registration-page .success-box {
+  padding: 15px;
+  background: #e9f8ee;
+  border: 1px solid #34a853;
+  border-radius: 12px;
+}
+
+.registration-page .error-box {
+  padding: 15px;
+  background: #fdeaea;
+  border: 1px solid #d93025;
+  color: #b00020;
+  border-radius: 12px;
+  font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+  .registration-page .hero-content {
+    grid-template-columns: 1fr;
+  }
+
+  .registration-page .hero-left h1 {
+    font-size: 46px;
+  }
+
+  .registration-page .hero-badges {
+    grid-template-columns: 1fr;
+  }
+
+  .registration-page .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .registration-page .category-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .registration-page .register-card {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .registration-page .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .registration-page .brand {
+    font-size: 24px;
+  }
+
+  .registration-page .hero-section {
+    min-height: auto;
+  }
+
+  .registration-page .hero-content {
+    padding: 42px 16px;
+  }
+
+  .registration-page .hero-left h1 {
+    font-size: 34px;
+  }
+
+  .registration-page .hero-desc {
+    font-size: 15px;
+  }
+
+  .registration-page .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .registration-page .section-title h2 {
+    font-size: 28px;
+  }
+
+  .registration-page .cat-km {
+    font-size: 32px;
+  }
+
+  .registration-page .cta-box h2 {
+    font-size: 28px;
+  }
+}
