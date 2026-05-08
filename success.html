@@ -26,33 +26,71 @@
 
   const box = document.getElementById("statusBox");
 
-  if (statusId === "1" && msg.toLowerCase() === "ok") {
-    box.innerHTML = `
-      <div class="success-box">
-        <h1>Payment Successful</h1>
-        <p><b>Registration No:</b> ${ref}</p>
-        <p><b>Transaction ID:</b> ${transactionId}</p>
-        <p><b>Bill Code:</b> ${billcode}</p>
-        <p>Your registration has been received.</p>
-      </div>
-    `;
-  } else if (statusId === "2") {
-    box.innerHTML = `
-      <div class="success-box">
-        <h1>Payment Pending</h1>
-        <p><b>Registration No:</b> ${ref}</p>
-        <p>Your payment is still pending verification.</p>
-      </div>
-    `;
-  } else {
-    box.innerHTML = `
-      <div class="error-box">
-        <h1>Payment Failed / Cancelled</h1>
-        <p><b>Registration No:</b> ${ref || "-"}</p>
-        <p>Please try again or contact the organizer.</p>
-      </div>
-    `;
+  async function verifyPayment() {
+    try {
+      if (!ref || !billcode) {
+        throw new Error("Missing registration reference or bill code.");
+      }
+
+      const res = await fetch("/api/payment-verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          reg_no: ref,
+          billcode: billcode
+        })
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || "Payment verification failed.");
+      }
+
+      if (result.paid) {
+        box.innerHTML = `
+          <div class="success-box">
+            <h1>Payment Successful</h1>
+            <p><b>Registration No:</b> ${ref}</p>
+            <p><b>Transaction ID:</b> ${result.transaction_id || transactionId || "-"}</p>
+            <p><b>Bill Code:</b> ${billcode}</p>
+            <p>Your registration has been confirmed.</p>
+          </div>
+        `;
+      } else if (statusId === "1" && msg.toLowerCase() === "ok") {
+        box.innerHTML = `
+          <div class="success-box">
+            <h1>Payment Received</h1>
+            <p><b>Registration No:</b> ${ref}</p>
+            <p><b>Bill Code:</b> ${billcode}</p>
+            <p>Payment was returned as successful, but verification is still pending.</p>
+          </div>
+        `;
+      } else {
+        box.innerHTML = `
+          <div class="error-box">
+            <h1>Payment Pending / Failed</h1>
+            <p><b>Registration No:</b> ${ref || "-"}</p>
+            <p>Please contact the organizer if payment was deducted.</p>
+          </div>
+        `;
+      }
+
+    } catch (err) {
+      box.innerHTML = `
+        <div class="error-box">
+          <h1>Verification Error</h1>
+          <p>${err.message}</p>
+          <p><b>Registration No:</b> ${ref || "-"}</p>
+          <p><b>Bill Code:</b> ${billcode || "-"}</p>
+        </div>
+      `;
+    }
   }
+
+  verifyPayment();
 </script>
 
 </body>
