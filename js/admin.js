@@ -1,9 +1,16 @@
+const adminToken = localStorage.getItem("adminToken");
+
+if (!adminToken) {
+  window.location.href = "login.html";
+}
+
 const participantsBody = document.getElementById("participantsBody");
 const searchInput = document.getElementById("searchInput");
 const statusFilter = document.getElementById("statusFilter");
 const searchBtn = document.getElementById("searchBtn");
 const clearBtn = document.getElementById("clearBtn");
 const refreshBtn = document.getElementById("refreshBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 const message = document.getElementById("message");
 
 const totalCount = document.getElementById("totalCount");
@@ -134,7 +141,11 @@ async function loadParticipants() {
   if (status) params.set("status", status);
 
   try {
-    const res = await fetch(`/api/participants?${params.toString()}`);
+    const res = await fetch(`/api/participants?${params.toString()}`, {
+  headers: {
+    Authorization: `Bearer ${adminToken}`
+  }
+});
     const data = await res.json();
 
     if (!res.ok || !data.success) {
@@ -156,7 +167,12 @@ async function loadParticipants() {
       </tr>
     `;
 
-    showError(err.message);
+    if (err.message === "Unauthorized") {
+  localStorage.removeItem("adminToken");
+  window.location.href = "login.html";
+} else {
+  showError(err.message);
+}
   }
 }
 
@@ -174,6 +190,11 @@ clearBtn.addEventListener("click", () => {
 
 refreshBtn.addEventListener("click", () => {
   loadParticipants();
+});
+
+logoutBtn.addEventListener("click", () => {
+  localStorage.removeItem("adminToken");
+  window.location.href = "login.html";
 });
 
 searchInput.addEventListener("keydown", e => {

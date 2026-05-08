@@ -260,3 +260,27 @@ button:disabled {
     padding: 10px 8px;
   }
 }
+
+
+
+/* ADMIN PAGE */
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-actions button {
+  margin-top: 0;
+  min-width: 100px;
+}
+
+@media (max-width: 768px) {
+  .admin-actions {
+    width: 100%;
+  }
+
+  .admin-actions button {
+    width: 100%;
+  }
+}
