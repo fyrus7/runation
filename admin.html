@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Registration</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="admin-container">
+  <div class="admin-header">
+    <div>
+      <h1>Registration Admin</h1>
+      <p>Manage event registrations and payment status</p>
+    </div>
+
+    <button id="refreshBtn" class="small-btn">Refresh</button>
+  </div>
+
+  <div class="admin-controls">
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search name, IC, phone, email, reg no..."
+    >
+
+    <select id="statusFilter">
+      <option value="">All Status</option>
+      <option value="PAID">PAID</option>
+      <option value="PENDING_PAYMENT">PENDING PAYMENT</option>
+      <option value="FAILED">FAILED</option>
+    </select>
+
+    <button id="searchBtn">Search</button>
+    <button id="clearBtn" class="secondary-btn">Clear</button>
+  </div>
+
+  <div class="summary-row">
+    <div class="summary-box">
+      <span>Total</span>
+      <strong id="totalCount">0</strong>
+    </div>
+
+    <div class="summary-box paid">
+      <span>Showing</span>
+      <strong id="showingCount">0</strong>
+    </div>
+  </div>
+
+  <div id="message"></div>
+
+  <div class="table-wrap">
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Reg No</th>
+          <th>Name</th>
+          <th>IC</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Category</th>
+          <th>Size</th>
+          <th>Amount</th>
+          <th>Status</th>
+          <th>Paid At</th>
+        </tr>
+      </thead>
+      <tbody id="participantsBody">
+        <tr>
+          <td colspan="10" class="empty-cell">Loading...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button id="prevBtn" class="secondary-btn">Previous</button>
+    <span id="pageInfo">Page 1</span>
+    <button id="nextBtn" class="secondary-btn">Next</button>
+  </div>
+</div>
+
+<script src="js/admin.js"></script>
+</body>
+</html>
