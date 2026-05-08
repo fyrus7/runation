@@ -34,16 +34,18 @@ form.addEventListener("submit", async function (e) {
     }
 
     message.innerHTML = `
-      <div class="success-box">
-        <h3>Registration Saved</h3>
-        <p><b>Registration No:</b> ${result.registration.reg_no}</p>
-        <p><b>Name:</b> ${result.registration.name}</p>
-        <p><b>Category:</b> ${result.registration.category}</p>
-        <p><b>Status:</b> ${result.registration.payment_status}</p>
-      </div>
-    `;
+  <div class="success-box">
+    <h3>Registration Saved</h3>
+    <p><b>Registration No:</b> ${result.registration.reg_no}</p>
+    <p><b>Name:</b> ${result.registration.name}</p>
+    <p><b>Category:</b> ${result.registration.category}</p>
+    <p><b>Status:</b> Redirecting to payment...</p>
+  </div>
+`;
 
-    form.reset();
+setTimeout(() => {
+  window.location.href = result.payment_url;
+}, 800);
 
   } catch (err) {
     message.innerHTML = `

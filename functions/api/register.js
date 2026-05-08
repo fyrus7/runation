@@ -19,6 +19,24 @@ export async function onRequestPost(context) {
       );
     }
 
+    const categoryPrices = {
+      "5KM": 5000,
+      "10KM": 7000,
+      "21KM": 10000
+    };
+
+    const amount = categoryPrices[category];
+
+    if (!amount) {
+      return Response.json(
+        {
+          success: false,
+          error: "Invalid category"
+        },
+        { status: 400 }
+      );
+    }
+
     const existing = await context.env.DB
       .prepare("SELECT id, reg_no FROM registrations WHERE ic = ? LIMIT 1")
       .bind(ic)
@@ -37,25 +55,6 @@ export async function onRequestPost(context) {
 
     const id = crypto.randomUUID();
     const reg_no = "REG-" + Date.now().toString(36).toUpperCase();
-
-    const categoryPrices = {
-  "5KM": 5000,
-  "10KM": 7000,
-  "21KM": 10000
-};
-
-const amount = categoryPrices[category];
-
-if (!amount) {
-  return Response.json(
-    {
-      success: false,
-      error: "Invalid category"
-    },
-    { status: 400 }
-  );
-}
-
     const now = new Date().toISOString();
 
     await context.env.DB
@@ -94,9 +93,69 @@ if (!amount) {
       )
       .run();
 
+    const siteUrl = context.env.SITE_URL || new URL(context.request.url).origin;
+
+    const billData = new URLSearchParams();
+    billData.append("userSecretKey", context.env.TOYYIBPAY_SECRET_KEY);
+    billData.append("categoryCode", context.env.TOYYIBPAY_CATEGORY_CODE);
+    billData.append("billName", "Running Event Registration");
+    billData.append("billDescription", `${category} registration fee`);
+    billData.append("billPriceSetting", "1");
+    billData.append("billPayorInfo", "1");
+    billData.append("billAmount", String(amount));
+    billData.append("billReturnUrl", `${siteUrl}/success.html?ref=${encodeURIComponent(reg_no)}`);
+    billData.append("billCallbackUrl", `${siteUrl}/api/payment-callback`);
+    billData.append("billExternalReferenceNo", reg_no);
+    billData.append("billTo", name);
+    billData.append("billEmail", email || "noemail@example.com");
+    billData.append("billPhone", phone);
+    billData.append("billSplitPayment", "0");
+    billData.append("billSplitPaymentArgs", "");
+    billData.append("billPaymentChannel", "0");
+
+    const toyRes = await fetch("https://toyyibpay.com/index.php/api/createBill", {
+      method: "POST",
+      body: billData
+    });
+
+    const toyText = await toyRes.text();
+
+    let toyData;
+    try {
+      toyData = JSON.parse(toyText);
+    } catch (e) {
+      throw new Error("ToyyibPay returned invalid response: " + toyText);
+    }
+
+    const billCode = toyData?.[0]?.BillCode;
+
+    if (!billCode) {
+      throw new Error("ToyyibPay bill creation failed: " + toyText);
+    }
+
+    const paymentUrl = `https://toyyibpay.com/${billCode}`;
+
+    await context.env.DB
+      .prepare(`
+        UPDATE registrations
+        SET
+          payment_ref = ?,
+          payment_url = ?,
+          updated_at = ?
+        WHERE id = ?
+      `)
+      .bind(
+        billCode,
+        paymentUrl,
+        new Date().toISOString(),
+        id
+      )
+      .run();
+
     return Response.json({
       success: true,
-      message: "Registration saved",
+      message: "Registration saved. Redirecting to payment.",
+      payment_url: paymentUrl,
       registration: {
         id,
         reg_no,
@@ -107,7 +166,8 @@ if (!amount) {
         category,
         tshirt_size,
         amount,
-        payment_status: "PENDING_PAYMENT"
+        payment_status: "PENDING_PAYMENT",
+        payment_ref: billCode
       }
     });
 
