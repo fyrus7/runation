@@ -66,6 +66,29 @@ body.event-page * {
   color: #fff;
 }
 
+
+.event-form-banner {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 18px;
+
+  border-radius: 22px;
+  overflow: hidden;
+
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  box-shadow: 0 14px 34px rgba(15,23,42,0.16);
+}
+
+@media (max-width: 640px) {
+  .event-form-banner {
+    border-radius: 18px;
+    margin-bottom: 14px;
+  }
+}
+
 .event-hero-inner {
   width: 100%;
   max-width: 1120px;

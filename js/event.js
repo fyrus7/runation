@@ -16,6 +16,26 @@ function formatDate(value) {
   });
 }
 
+
+function applyEventFormBanner(event) {
+  const banner = document.getElementById("eventFormBanner");
+  if (!banner) return;
+
+  const imageUrl = event.event_image || "";
+
+  if (!imageUrl) {
+    banner.hidden = true;
+    banner.style.backgroundImage = "";
+    return;
+  }
+
+  banner.hidden = false;
+  banner.style.backgroundImage = `
+    url("${imageUrl}")
+  `;
+}
+
+
 function setText(id, value) {
   const el = document.getElementById(id);
   if (el) el.textContent = value || "";
@@ -268,6 +288,7 @@ async function loadEvent() {
     }
 
     const event = data.event;
+	applyEventFormBanner(event);
     const categories = data.categories || [];
 
     document.title = `${event.title} | Runation`;
