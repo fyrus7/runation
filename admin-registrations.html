@@ -195,6 +195,11 @@
       color: #64748b;
       font-size: 12px;
     }
+	
+	button.danger {
+      background: #ef4444;
+	  color: #fff;
+	}
 
     #adminMessage {
       margin-top: 12px;
@@ -267,8 +272,9 @@
 
     <div class="button-row">
       <button onclick="saveToken()">Save Token</button>
-      <button class="secondary" onclick="loadRegistrations()">Refresh</button>
-      <button class="secondary" onclick="exportCsv()">Export CSV</button>
+	  <button class="secondary" onclick="loadRegistrations()">Refresh</button>
+	  <button class="secondary" onclick="exportCsv()">Export CSV</button>
+	  <button class="danger" onclick="logoutAdmin()">Logout</button>
     </div>
 
     <div id="adminMessage"></div>

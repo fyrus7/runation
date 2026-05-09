@@ -6,15 +6,28 @@ function setMessage(message) {
 }
 
 function getToken() {
-  return localStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
+  return sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
 }
 
 function saveToken() {
   const token = document.getElementById("adminToken").value.trim();
-  localStorage.setItem("RUNATION_ADMIN_TOKEN", token);
-  setMessage("Token saved.");
+  sessionStorage.setItem("RUNATION_ADMIN_TOKEN", token);
+  setMessage("Token saved for this session.");
   loadEventsForFilter();
   loadRegistrations();
+}
+
+function logoutAdmin() {
+  sessionStorage.removeItem("RUNATION_ADMIN_TOKEN");
+
+  const input = document.getElementById("adminToken");
+  if (input) input.value = "";
+
+  CURRENT_ROWS = [];
+  renderRows([]);
+  updateSummary([]);
+
+  setMessage("Logged out.");
 }
 
 function adminHeaders() {
