@@ -177,8 +177,8 @@ export async function onRequestPost(context) {
 
     const status = String(data.status || data.status_id || "");
     const refno = String(data.refno || data.transaction_id || "");
-    const billcode = String(data.billcode || "");
-    const order_id = String(data.order_id || "");
+    const billcode = String(data.billcode || data.billCode || data.BillCode || "");
+    const order_id = String(data.order_id || data.orderId || data.billExternalReferenceNo || "");
     const receivedHash = String(data.hash || "").toLowerCase();
 
     if (receivedHash && status && order_id && refno) {
