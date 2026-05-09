@@ -115,6 +115,7 @@ export async function onRequestPatch(context) {
 	  show_slot_counter = ?,
       is_visible = ?,
       sort_order = ?,
+	  event_image = ?,
       updated_at = CURRENT_TIMESTAMP
     WHERE id = ?
   `).bind(
@@ -131,6 +132,7 @@ export async function onRequestPatch(context) {
 	Number(body.show_slot_counter || 0),
     Number(body.is_visible ?? 1),
     Number(body.sort_order || 0),
+	 cleanText(body.event_image),
     id
   ).run();
 

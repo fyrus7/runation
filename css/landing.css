@@ -171,16 +171,14 @@
   background: linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.72));
 }
 
-.tk-event {
+.event-card {
   background-image:
     linear-gradient(135deg, rgba(37,99,235,0.08), rgba(15,23,42,0.1)),
     url("https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=80");
-}
 
-.sawah-event {
-  background-image:
-    linear-gradient(135deg, rgba(34,197,94,0.08), rgba(15,23,42,0.1)),
-    url("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .event-status {

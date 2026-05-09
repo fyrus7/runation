@@ -72,8 +72,13 @@ async function loadEvents() {
   const eventType = event.event_type || "Running Event";
   const categories = event.categories_text || "-";
   const feeFrom = money(event.fee_from);
-  const imageClass = getImageClass(event);
   const featuredClass = index === 0 ? " featured-event" : "";
+  
+  const imageStyle = event.event_image
+    ? `style="background-image:
+      linear-gradient(135deg, rgba(37,99,235,0.08), rgba(15,23,42,0.1)),
+      url('${event.event_image}')"`
+    : "";
 
   const totalLimit = Number(event.total_limit || 0);
   const usedSlots = Number(event.used_slots || 0);
@@ -85,7 +90,7 @@ async function loadEvents() {
 
   return `
     <article class="event-card${featuredClass}">
-      <div class="event-image ${imageClass}">
+      <div class="event-image" ${imageStyle}>
         <div class="event-status">${getStatusText(status)}</div>
       </div>
 

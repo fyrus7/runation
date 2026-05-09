@@ -99,41 +99,43 @@ export async function onRequestPost(context) {
     }, 400);
   }
 
-  const result = await context.env.DB.prepare(`
-    INSERT INTO events (
-      slug,
-      title,
-      event_type,
-      short_description,
-      venue,
-      event_date,
-      status_mode,
-      open_at,
-      close_at,
-      total_limit,
-      used_slots,
-	  show_slot_counter,
-      is_visible,
-      sort_order,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-  `).bind(
+const result = await context.env.DB.prepare(`
+  INSERT INTO events (
     slug,
     title,
-    cleanText(body.event_type),
-    cleanText(body.short_description),
-    cleanText(body.venue),
-    cleanText(body.event_date),
-    cleanText(body.status_mode || "force_closed"),
-    cleanText(body.open_at),
-    cleanText(body.close_at),
-    Number(body.total_limit || 0),
-	Number(body.show_slot_counter || 0),
-    Number(body.is_visible ?? 1),
-    Number(body.sort_order || 0)
-  ).run();
+    event_type,
+    short_description,
+    venue,
+    event_date,
+    status_mode,
+    open_at,
+    close_at,
+    total_limit,
+    used_slots,
+    show_slot_counter,
+    is_visible,
+    sort_order,
+    event_image,
+    created_at,
+    updated_at
+  )
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+`).bind(
+  slug,
+  title,
+  cleanText(body.event_type),
+  cleanText(body.short_description),
+  cleanText(body.venue),
+  cleanText(body.event_date),
+  cleanText(body.status_mode || "force_closed"),
+  cleanText(body.open_at),
+  cleanText(body.close_at),
+  Number(body.total_limit || 0),
+  Number(body.show_slot_counter || 0),
+  Number(body.is_visible ?? 1),
+  Number(body.sort_order || 0),
+  cleanText(body.event_image)
+).run();
 
   const eventId = result.meta.last_row_id;
 
