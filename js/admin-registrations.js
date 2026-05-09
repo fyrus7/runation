@@ -1,3 +1,9 @@
+const ADMIN_TOKEN_NOW = sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
+
+if (!ADMIN_TOKEN_NOW) {
+  location.replace(`login.html?next=${encodeURIComponent("admin-registrations.html")}`);
+}
+
 let CURRENT_ROWS = [];
 
 function setMessage(message) {
@@ -19,15 +25,7 @@ function saveToken() {
 
 function logoutAdmin() {
   sessionStorage.removeItem("RUNATION_ADMIN_TOKEN");
-
-  const input = document.getElementById("adminToken");
-  if (input) input.value = "";
-
-  CURRENT_ROWS = [];
-  renderRows([]);
-  updateSummary([]);
-
-  setMessage("Logged out.");
+  location.href = "login.html";
 }
 
 function adminHeaders() {
