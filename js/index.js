@@ -37,6 +37,11 @@ function money(value) {
   return `RM${num.toFixed(2)}`;
 }
 
+function getCardClass(status) {
+  if (status === "OPEN") return "event-card active-event";
+  return "event-card";
+}
+
 async function loadEvents() {
   const box = document.getElementById("eventList");
   if (!box) return;
@@ -62,13 +67,13 @@ async function loadEvents() {
 
     box.innerHTML = events.map(event => {
       const status = event.status || "";
-      const year = getYear(event.event_date) || event.year || "";
-      const eventType = event.event_type || event.short_type || "Running Event";
-      const categories = event.categories_text || event.categories || "-";
-      const feeFrom = event.fee_from ? money(event.fee_from) : "-";
+      const year = getYear(event.event_date);
+      const eventType = event.event_type || "Running Event";
+      const categories = event.categories_text || "-";
+      const feeFrom = money(event.fee_from);
 
       return `
-        <article class="event-card active-event">
+        <article class="${getCardClass(status)}">
           <div class="event-status">${getStatusText(status)}</div>
 
           <div class="event-card-top">
@@ -76,7 +81,8 @@ async function loadEvents() {
               <p class="event-type">${eventType}</p>
               <h3>${event.title || "-"}</h3>
             </div>
-            <div class="event-year">${year}</div>
+
+            <div class="event-year">${year || ""}</div>
           </div>
 
           <div class="event-mapline">

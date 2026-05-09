@@ -273,6 +273,28 @@ body.event-page {
   box-sizing: border-box;
 }
 
+.form-group textarea {
+  width: 100%;
+  min-height: 92px;
+  border: 1px solid #dbe3ea;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 15px;
+  outline: none;
+  background: #fff;
+  box-sizing: border-box;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.form-group textarea:focus {
+  border-color: #0f172a;
+}
+
+.form-group-full {
+  grid-column: 1 / -1;
+}
+
 .form-group input:focus,
 .form-group select:focus {
   border-color: #0f172a;

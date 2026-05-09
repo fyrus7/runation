@@ -76,15 +76,46 @@ function renderCategories(categories) {
 
     const label = isFull
       ? `${cat.name} - FULL`
-      : `${cat.name} - RM${cat.price}`;
+      : `${cat.name} - RM${Number(cat.price || 0).toFixed(2)}`;
 
     return `
-      <option value="${cat.id}" ${isFull ? "disabled" : ""}>
+      <option 
+        value="${cat.id}" 
+        data-name="${cat.name}"
+        ${isFull ? "disabled" : ""}
+      >
         ${label}
       </option>
     `;
   }).join("");
+
+  toggleFinisherTee();
 }
+
+function toggleFinisherTee() {
+  const select = document.getElementById("categorySelect");
+  const box = document.getElementById("finisherTeeBox");
+  const finisherSelect = document.getElementById("finisherTeeSize");
+
+  if (!select || !box) return;
+
+  const selectedOption = select.options[select.selectedIndex];
+  const categoryName = String(selectedOption?.dataset?.name || "").toUpperCase();
+
+  const needFinisherTee = categoryName.includes("21KM");
+
+  box.style.display = needFinisherTee ? "block" : "none";
+
+  if (!needFinisherTee && finisherSelect) {
+    finisherSelect.value = "";
+  }
+}
+
+document.addEventListener("change", function (e) {
+  if (e.target && e.target.id === "categorySelect") {
+    toggleFinisherTee();
+  }
+});
 
 async function loadEvent() {
   const slug = getSlug();
@@ -109,6 +140,8 @@ async function loadEvent() {
     document.title = `${event.title} | Runation`;
 
     setText("eventTitle", event.title);
+	setText("eventVisualTitle", event.title);
+	setText("eventVisualStatus", event.status);
     setText("eventDescription", event.short_description);
     setText("eventVenue", event.venue || "-");
     setText("eventDate", formatDate(event.event_date));
