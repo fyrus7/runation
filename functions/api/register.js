@@ -10,6 +10,27 @@ function cleanText(value) {
   return String(value || "").trim();
 }
 
+function getToyyibPayExpiryDateAfterOneHour() {
+  const now = new Date();
+  const expiry = new Date(now.getTime() + 60 * 60 * 1000);
+
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kuala_Lumpur",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false
+  }).formatToParts(expiry);
+
+  const get = type => parts.find(p => p.type === type)?.value || "00";
+
+  return `${get("day")}-${get("month")}-${get("year")} ${get("hour")}:${get("minute")}:${get("second")}`;
+}
+
+
 function isValidEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 }
@@ -451,6 +472,7 @@ export async function onRequestPost(context) {
     billData.append("billSplitPayment", "0");
     billData.append("billSplitPaymentArgs", "");
     billData.append("billPaymentChannel", "0");
+	billData.append("billExpiryDate", getToyyibPayExpiryDateAfterOneHour());
 
     const toyRes = await fetch("https://toyyibpay.com/index.php/api/createBill", {
       method: "POST",
