@@ -130,7 +130,7 @@ async function loadEvents() {
           <strong>${feeFrom}</strong>
         </div>
 
-        <a href="event.html?event=${encodeURIComponent(event.slug)}" class="event-btn">
+        <a href="/event/${encodeURIComponent(event.slug)}" class="event-btn">
           ${getButtonText(status)}
         </a>
       </div>

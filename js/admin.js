@@ -545,7 +545,7 @@ async function loadEvents() {
           <div class="button-row">
     	    <button type="button" onclick="editEvent(${Number(event.id)})">Edit</button>
 
-			<a href="event.html?event=${encodeURIComponent(event.slug)}" target="_blank">
+			<a href="/event/${encodeURIComponent(event.slug)}" target="_blank">
 			  <button class="secondary" type="button">Open Page</button>
 			</a>
 			

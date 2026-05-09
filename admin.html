@@ -361,7 +361,13 @@
   font-size: 13px;
   font-weight: 900;
 }
-
+.field-hint {
+  display: block;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.35;
+}
   </style>
 </head>
 
@@ -442,8 +448,11 @@
 
     <div class="form-grid">
       <div class="form-group">
-        <label>Slug</label>
-        <input id="slug" placeholder="example: lsptk">
+        <label>Event URL</label>
+        <input id="slug" placeholder="example: berlari">
+		<small class="field-hint">
+		  This will become: /event/berlari
+		  </small>
       </div>
 
       <div class="form-group">
