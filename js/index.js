@@ -68,69 +68,70 @@ async function loadEvents() {
     }
 
     box.innerHTML = events.map((event, index) => {
-      const status = event.status || "";
-      const eventType = event.event_type || "Running Event";
-      const categories = event.categories_text || "-";
-      const feeFrom = money(event.fee_from);
-      const imageClass = getImageClass(event);
-      const featuredClass = index === 0 ? " featured-event" : "";
+  const status = event.status || "";
+  const eventType = event.event_type || "Running Event";
+  const categories = event.categories_text || "-";
+  const feeFrom = money(event.fee_from);
+  const imageClass = getImageClass(event);
+  const featuredClass = index === 0 ? " featured-event" : "";
 
-      return `
-        <article class="event-card${featuredClass}">
-          <div class="event-image ${imageClass}">
-            <div class="event-status">${getStatusText(status)}</div>
+  const totalLimit = Number(event.total_limit || 0);
+  const usedSlots = Number(event.used_slots || 0);
+  const showCounter = Number(event.show_slot_counter || 0) === 1;
+
+  const slotText = totalLimit > 0
+    ? (showCounter ? `${usedSlots} / ${totalLimit}` : `${totalLimit} slots`)
+    : "Unlimited";
+
+  return `
+    <article class="event-card${featuredClass}">
+      <div class="event-image ${imageClass}">
+        <div class="event-status">${getStatusText(status)}</div>
+      </div>
+
+      <div class="event-content">
+        <p class="event-type">${eventType}</p>
+
+        <h3>${event.title || "-"}</h3>
+
+        <div class="event-info-grid">
+          <div>
+            <small>Date</small>
+            <strong>${formatDate(event.event_date)}</strong>
           </div>
 
-          <div class="event-content">
-            <p class="event-type">${eventType}</p>
-
-            <h3>${event.title || "-"}</h3>
-
-            <div class="event-info-grid">
-              <div>
-                <small>Date</small>
-                <strong>${formatDate(event.event_date)}</strong>
-              </div>
-
-              <div>
-                <small>Venue</small>
-                <strong>${event.venue || "-"}</strong>
-              </div>
-
-              <div>
-                <small>Categories</small>
-                <strong>${categories}</strong>
-              </div>
-
-              <div>
-                <small>Slots</small>
-				<strong>${slotText}</strong>
-                const totalLimit = Number(event.total_limit || 0);
-				const usedSlots = Number(event.used_slots || 0);
-				const showCounter = Number(event.show_slot_counter || 0) === 1;
-				
-				const slotText = totalLimit > 0
-				  ? (showCounter ? `${usedSlots} / ${totalLimit}` : `${totalLimit} slots`)
-				  : "Unlimited";
-              </div>
-            </div>
-
-            <p class="event-desc">
-              ${event.short_description || ""}
-            </p>
-
-            <div class="event-price-row">
-              <span>Fee From</span>
-              <strong>${feeFrom}</strong>
-            </div>
-
-            <a href="event.html?event=${encodeURIComponent(event.slug)}" class="event-btn">
-              ${getButtonText(status)}
-            </a>
+          <div>
+            <small>Venue</small>
+            <strong>${event.venue || "-"}</strong>
           </div>
-        </article>
-      `;
-    }).join("");
+
+          <div>
+            <small>Categories</small>
+            <strong>${categories}</strong>
+          </div>
+
+          <div>
+            <small>Slots</small>
+            <strong>${slotText}</strong>
+          </div>
+        </div>
+
+        <p class="event-desc">
+          ${event.short_description || ""}
+        </p>
+
+        <div class="event-price-row">
+          <span>Fee From</span>
+          <strong>${feeFrom}</strong>
+        </div>
+
+        <a href="event.html?event=${encodeURIComponent(event.slug)}" class="event-btn">
+          ${getButtonText(status)}
+        </a>
+      </div>
+    </article>
+  `;
+}).join("");
 
   } catch (err) {
     console.error(err);
