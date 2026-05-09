@@ -190,47 +190,59 @@ export async function onRequestPatch(context) {
 
 
 export async function onRequestDelete(context) {
-  if (!isAdmin(context)) {
-    return json({ success: false, error: "UNAUTHORIZED" }, 401);
-  }
+  try {
+    if (!isAdmin(context)) {
+      return json({ success: false, error: "UNAUTHORIZED" }, 401);
+    }
 
-  const id = Number(context.params.id || 0);
+    const id = Number(context.params.id || 0);
 
-  const existing = await context.env.DB.prepare(`
-    SELECT id
-    FROM events
-    WHERE id = ?
-    LIMIT 1
-  `).bind(id).first();
+    if (!id) {
+      return json({ success: false, error: "INVALID_EVENT_ID" }, 400);
+    }
 
-  if (!existing) {
-    return json({ success: false, error: "EVENT_NOT_FOUND" }, 404);
-  }
+    const existing = await context.env.DB.prepare(`
+      SELECT id
+      FROM events
+      WHERE id = ?
+      LIMIT 1
+    `).bind(id).first();
 
-  const regCount = await context.env.DB.prepare(`
-    SELECT COUNT(*) AS total
-    FROM registrations
-    WHERE event_id = ?
-  `).bind(id).first();
+    if (!existing) {
+      return json({ success: false, error: "EVENT_NOT_FOUND" }, 404);
+    }
 
-  if (Number(regCount?.total || 0) > 0) {
+    const regCount = await context.env.DB.prepare(`
+      SELECT COUNT(*) AS total
+      FROM registrations
+      WHERE event_id = ?
+    `).bind(id).first();
+
+    if (Number(regCount?.total || 0) > 0) {
+      return json({
+        success: false,
+        error: "Cannot delete event with existing registrations. Hide the event instead."
+      }, 400);
+    }
+
+    await context.env.DB.prepare(`
+      DELETE FROM event_categories
+      WHERE event_id = ?
+    `).bind(id).run();
+
+    await context.env.DB.prepare(`
+      DELETE FROM events
+      WHERE id = ?
+    `).bind(id).run();
+
+    return json({
+      success: true
+    });
+
+  } catch (err) {
     return json({
       success: false,
-      error: "Cannot delete event with existing registrations. Hide the event instead."
-    }, 400);
+      error: err.message || "DELETE_EVENT_FAILED"
+    }, 500);
   }
-
-  await context.env.DB.prepare(`
-    DELETE FROM event_categories
-    WHERE event_id = ?
-  `).bind(id).run();
-
-  await context.env.DB.prepare(`
-    DELETE FROM events
-    WHERE id = ?
-  `).bind(id).run();
-
-  return json({
-    success: true
-  });
 }
