@@ -159,7 +159,7 @@
 
 .event-image {
   position: relative;
-  height: 240px;
+  height: 260px;
   background-size: cover;
   background-position: center;
 }
@@ -356,7 +356,7 @@
   }
 
   .event-image {
-    height: 210px;
+    height: 300px;
   }
 }
 
@@ -392,6 +392,10 @@
 
   .event-btn:hover {
     filter: brightness(1.05);
+  }
+  
+  .event-image{
+	  height: 340px;
   }
 }
 
