@@ -10,6 +10,10 @@ function cleanText(value) {
   return String(value || "").trim();
 }
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
 function makeRegNo(prefix) {
   const safePrefix = String(prefix || "RUN")
     .toUpperCase()
@@ -138,6 +142,13 @@ export async function onRequestPost(context) {
         error: "Please complete all required fields."
       }, 400);
     }
+	
+	if (!isValidEmail(email)) {
+	  return json({
+		success: false,
+		error: "Please enter a valid email address."
+	  }, 400);
+	}
 
     const event = await context.env.DB
       .prepare(`

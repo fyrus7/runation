@@ -130,6 +130,7 @@ function validateRegistrationForm() {
     ["participantIc", "IC / Passport is required."],
     ["participantPhone", "Phone number is required."],
     ["participantGender", "Gender is required."],
+	["participantEmail", "Email is required."],
     ["categorySelect", "Category is required."],
     ["participantAddress", "Address is required."],
     ["teeSize", "T-shirt size is required."],
@@ -142,6 +143,13 @@ function validateRegistrationForm() {
       setEventMessage(message);
       return false;
     }
+  }
+  
+  const email = getValue("participantEmail");
+  
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+	setEventMessage("Please enter a valid email address.");
+	return false;
   }
 
   const categoryName = getSelectedCategoryName().toUpperCase();
