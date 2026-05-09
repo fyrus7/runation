@@ -287,7 +287,7 @@ export async function onRequestPost(context) {
           payment_status,
 		  payment_gateway,
           payment_ref,
-		  payment_url,
+		  payment_url
         FROM registrations
         WHERE event_slug = ?
           AND ic = ?
