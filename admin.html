@@ -197,24 +197,16 @@
 
 <main class="admin-wrap">
 
-  <section class="admin-card">
-    <h2>Admin Login</h2>
+<section class="admin-card">
+  <h2>Admin Session</h2>
 
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Admin Token</label>
-        <input id="adminToken" type="password" placeholder="Enter admin token">
-      </div>
-    </div>
+  <div class="button-row">
+    <button class="secondary" onclick="loadEvents()">Refresh Events</button>
+    <button class="danger" onclick="logoutAdmin()">Logout</button>
+  </div>
 
-    <div class="button-row">
-      <button onclick="saveToken()">Save Token</button>
-	  <button class="secondary" onclick="loadEvents()">Refresh Events</button>
-	  <button class="danger" onclick="logoutAdmin()">Logout</button>
-    </div>
-
-    <div id="adminMessage"></div>
-  </section>
+  <div id="adminMessage"></div>
+</section>
 
   <section class="admin-card">
     <h2 id="formTitle">Create Event</h2>

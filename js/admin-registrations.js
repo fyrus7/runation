@@ -15,14 +15,6 @@ function getToken() {
   return sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
 }
 
-function saveToken() {
-  const token = document.getElementById("adminToken").value.trim();
-  sessionStorage.setItem("RUNATION_ADMIN_TOKEN", token);
-  setMessage("Token saved for this session.");
-  loadEventsForFilter();
-  loadRegistrations();
-}
-
 function logoutAdmin() {
   sessionStorage.removeItem("RUNATION_ADMIN_TOKEN");
   location.href = "login.html";
@@ -256,7 +248,6 @@ function exportCsv() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  document.getElementById("adminToken").value = getToken();
 
   ["eventFilter", "statusFilter"].forEach(id => {
     document.getElementById(id).addEventListener("change", loadRegistrations);

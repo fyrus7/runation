@@ -13,12 +13,6 @@ function getToken() {
   return sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
 }
 
-function saveToken() {
-  const token = document.getElementById("adminToken").value.trim();
-  sessionStorage.setItem("RUNATION_ADMIN_TOKEN", token);
-  setMessage("Token saved for this session.");
-  loadEvents();
-}
 
 function logoutAdmin() {
   sessionStorage.removeItem("RUNATION_ADMIN_TOKEN");
@@ -254,7 +248,6 @@ async function loadEvents() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  document.getElementById("adminToken").value = getToken();
 
   resetForm();
 
