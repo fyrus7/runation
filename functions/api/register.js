@@ -474,7 +474,7 @@ export async function onRequestPost(context) {
     billData.append("billPaymentChannel", "0");
 	billData.append("billExpiryDate", getToyyibPayExpiryDateAfterOneHour());
 
-    const toyRes = await fetch("https://toyyibpay.com/index.php/api/createBill", {
+    const toyRes = await fetch("https://dev.toyyibpay.com/index.php/api/createBill", {
       method: "POST",
       body: billData
     });
@@ -508,7 +508,7 @@ export async function onRequestPost(context) {
       }, 502);
     }
 
-    const paymentUrl = `https://toyyibpay.com/${billCode}`;
+    const paymentUrl = `https://dev.toyyibpay.com/${billCode}`;
 
     await context.env.DB
       .prepare(`
