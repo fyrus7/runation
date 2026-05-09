@@ -407,64 +407,66 @@ export async function onRequestPost(context) {
     insertedRegNo = regNo;
 
     await context.env.DB
-      .prepare(`
-        INSERT INTO registrations (
-          reg_no,
-          name,
-          ic,
-          email,
-          phone,
-          gender,
-          category,
+  .prepare(`
+    INSERT INTO registrations (
+      reg_no,
+      name,
+      ic,
+      email,
+      phone,
+      gender,
+      category,
 
-          address,
-          event_tee_size,
-          finisher_tee_size,
-          emergency_name,
-          emergency_phone,
+      address,
+      event_tee_size,
+      finisher_tee_size,
+      emergency_name,
+      emergency_phone,
 
-          event_slug,
-          event_name,
+      event_slug,
+      event_name,
 
-          amount,
-          payment_status,
-          payment_gateway,
-          payment_ref,
-          payment_url,
+      amount,
+      delivery_method,
+      postage_fee,
+      payment_status,
+      payment_gateway,
+      payment_ref,
+      payment_url,
 
-          created_at,
-          paid_at,
-          updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP)
-      `)
-      .bind(
-        regNo,
-        name,
-        ic,
-        email,
-        phone,
-        gender,
-        category,
+      created_at,
+      paid_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP)
+  `)
+  .bind(
+    regNo,
+    name,
+    ic,
+    email,
+    phone,
+    gender,
+    category,
 
-        address,
-        eventTeeSize,
-        finisherTeeSize,
-        emergencyName,
-        emergencyPhone,
+    address,
+    eventTeeSize,
+    finisherTeeSize,
+    emergencyName,
+    emergencyPhone,
 
-        event.slug,
-        event.title,
+    event.slug,
+    event.title,
 
-        amount,
-		deliveryMethod,
-		postageFeeRm,
-        "PENDING_PAYMENT",
-        "TOYYIBPAY",
-        "",
-        ""
-      )
-      .run();
+    amount,
+    deliveryMethod,
+    postageFeeRm,
+    "PENDING_PAYMENT",
+    "TOYYIBPAY",
+    "",
+    ""
+  )
+  .run();
 
     const secretKey = context.env.TOYYIBPAY_SECRET_KEY;
     const categoryCode = context.env.TOYYIBPAY_CATEGORY_CODE;
