@@ -28,7 +28,7 @@ loginForm.addEventListener("submit", async e => {
     }
 
     localStorage.setItem("adminToken", data.token);
-    window.location.href = "admin.html";
+    window.location.href = "admin2.html";
 
   } catch (err) {
     message.innerHTML = `
