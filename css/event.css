@@ -382,3 +382,14 @@ body.event-page * {
     font-size: 22px;
   }
 }
+
+.input-error {
+  border-color: #ef4444 !important;
+  background: #fff1f2 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+#eventMessage {
+  color: #dc2626;
+  font-weight: 800;
+}

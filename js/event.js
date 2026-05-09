@@ -144,41 +144,79 @@ function getSelectedCategoryName() {
   return String(option?.dataset?.name || option?.textContent || "").trim();
 }
 
+
+function clearInvalidFields() {
+  [
+    "participantName",
+    "participantIc",
+    "participantPhone",
+    "participantGender",
+    "participantEmail",
+    "categorySelect",
+    "participantAddress",
+    "teeSize",
+    "finisherTeeSize",
+    "emergencyName",
+    "emergencyPhone"
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove("input-error");
+  });
+}
+
+function markInvalidField(id) {
+  // Address masih required, tapi jangan merahkan field address
+  if (id === "participantAddress") return;
+
+  const el = document.getElementById(id);
+  if (el) el.classList.add("input-error");
+}
+
 function validateRegistrationForm() {
+  clearInvalidFields();
+
   const required = [
-    ["participantName", "Full name is required."],
-    ["participantIc", "IC / Passport is required."],
-    ["participantPhone", "Phone number is required."],
-    ["participantGender", "Gender is required."],
-	["participantEmail", "Email is required."],
-    ["categorySelect", "Category is required."],
-    ["participantAddress", "Address is required."],
-    ["teeSize", "T-shirt size is required."],
-    ["emergencyName", "Emergency contact name is required."],
-    ["emergencyPhone", "Emergency contact number is required."]
+    ["participantName", "Full name"],
+    ["participantIc", "IC / Passport"],
+    ["participantPhone", "Phone number"],
+    ["participantGender", "Gender"],
+    ["participantEmail", "Email"],
+    ["categorySelect", "Category"],
+    ["participantAddress", "Address"],
+    ["teeSize", "T-shirt size"],
+    ["emergencyName", "Emergency contact name"],
+    ["emergencyPhone", "Emergency contact number"]
   ];
 
-  for (const [id, message] of required) {
+  const missing = [];
+
+  for (const [id, label] of required) {
     if (!getValue(id)) {
-      setEventMessage(message);
-      return false;
+      missing.push(label);
+      markInvalidField(id);
     }
   }
-  
+
   const email = getValue("participantEmail");
-  
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-	setEventMessage("Please enter a valid email address.");
-	return false;
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    missing.push("valid email address");
+    markInvalidField("participantEmail");
   }
 
   const categoryName = getSelectedCategoryName().toUpperCase();
 
   if (categoryName.includes("21KM") && !getValue("finisherTeeSize")) {
-    setEventMessage("Finisher tee size is required for 21KM.");
+    missing.push("Finisher tee size");
+    markInvalidField("finisherTeeSize");
+  }
+
+  if (missing.length) {
+    setEventMessage("Please complete all required fields.");
     return false;
   }
 
+  setEventMessage("");
   return true;
 }
 
@@ -267,6 +305,22 @@ document.addEventListener("change", function (e) {
 document.addEventListener("click", function (e) {
   if (e.target && e.target.id === "registerBtn") {
     submitRegistration();
+  }
+});
+
+document.addEventListener("input", function (e) {
+  if (e.target && e.target.classList.contains("input-error")) {
+    if (String(e.target.value || "").trim()) {
+      e.target.classList.remove("input-error");
+    }
+  }
+});
+
+document.addEventListener("change", function (e) {
+  if (e.target && e.target.classList.contains("input-error")) {
+    if (String(e.target.value || "").trim()) {
+      e.target.classList.remove("input-error");
+    }
   }
 });
 
