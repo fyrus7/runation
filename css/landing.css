@@ -396,3 +396,12 @@
     filter: brightness(1.05);
   }
 }
+
+
+
+.event-desc {
+  margin: 0 0 12px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}

@@ -11,13 +11,6 @@ function formatDate(value) {
   });
 }
 
-function getYear(value) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.getFullYear();
-}
-
 function getStatusText(status) {
   if (status === "OPEN") return "Registration Open";
   if (status === "UPCOMING") return "Coming Soon";
@@ -37,9 +30,18 @@ function money(value) {
   return `RM${num.toFixed(2)}`;
 }
 
-function getCardClass(status) {
-  if (status === "OPEN") return "event-card active-event";
-  return "event-card";
+function getImageClass(event) {
+  const slug = String(event.slug || "").toLowerCase();
+
+  if (slug.includes("tanjongkarang") || slug.includes("tkhm")) {
+    return "tk-event";
+  }
+
+  if (slug.includes("lsptk") || slug.includes("sawah")) {
+    return "sawah-event";
+  }
+
+  return "tk-event";
 }
 
 async function loadEvents() {
@@ -65,61 +67,60 @@ async function loadEvents() {
       return;
     }
 
-    box.innerHTML = events.map(event => {
+    box.innerHTML = events.map((event, index) => {
       const status = event.status || "";
-      const year = getYear(event.event_date);
       const eventType = event.event_type || "Running Event";
       const categories = event.categories_text || "-";
       const feeFrom = money(event.fee_from);
+      const imageClass = getImageClass(event);
+      const featuredClass = index === 0 ? " featured-event" : "";
 
       return `
-        <article class="${getCardClass(status)}">
-          <div class="event-status">${getStatusText(status)}</div>
-
-          <div class="event-card-top">
-            <div>
-              <p class="event-type">${eventType}</p>
-              <h3>${event.title || "-"}</h3>
-            </div>
-
-            <div class="event-year">${year || ""}</div>
+        <article class="event-card${featuredClass}">
+          <div class="event-image ${imageClass}">
+            <div class="event-status">${getStatusText(status)}</div>
           </div>
 
-          <div class="event-mapline">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
+          <div class="event-content">
+            <p class="event-type">${eventType}</p>
 
-          <div class="event-info-grid">
-            <div>
-              <small>Date</small>
-              <strong>${formatDate(event.event_date)}</strong>
+            <h3>${event.title || "-"}</h3>
+
+            <div class="event-info-grid">
+              <div>
+                <small>Date</small>
+                <strong>${formatDate(event.event_date)}</strong>
+              </div>
+
+              <div>
+                <small>Venue</small>
+                <strong>${event.venue || "-"}</strong>
+              </div>
+
+              <div>
+                <small>Categories</small>
+                <strong>${categories}</strong>
+              </div>
+
+              <div>
+                <small>Slots</small>
+                <strong>${Number(event.used_slots || 0)} / ${event.total_limit || "Unlimited"}</strong>
+              </div>
             </div>
 
-            <div>
-              <small>Venue</small>
-              <strong>${event.venue || "-"}</strong>
-            </div>
+            <p class="event-desc">
+              ${event.short_description || ""}
+            </p>
 
-            <div>
-              <small>Categories</small>
-              <strong>${categories}</strong>
-            </div>
-
-            <div>
-              <small>Fee From</small>
+            <div class="event-price-row">
+              <span>Fee From</span>
               <strong>${feeFrom}</strong>
             </div>
+
+            <a href="event.html?event=${encodeURIComponent(event.slug)}" class="event-btn">
+              ${getButtonText(status)}
+            </a>
           </div>
-
-          <p class="event-desc">
-            ${event.short_description || ""}
-          </p>
-
-          <a href="event.html?event=${encodeURIComponent(event.slug)}" class="event-btn">
-            ${getButtonText(status)}
-          </a>
         </article>
       `;
     }).join("");
