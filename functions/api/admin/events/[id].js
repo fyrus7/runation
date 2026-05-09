@@ -201,22 +201,54 @@ export async function onRequestDelete(context) {
       return json({ success: false, error: "INVALID_EVENT_ID" }, 400);
     }
 
-    const existing = await context.env.DB.prepare(`
-      SELECT id
+    const event = await context.env.DB.prepare(`
+      SELECT id, slug
       FROM events
       WHERE id = ?
       LIMIT 1
     `).bind(id).first();
 
-    if (!existing) {
+    if (!event) {
       return json({ success: false, error: "EVENT_NOT_FOUND" }, 404);
     }
 
-    const regCount = await context.env.DB.prepare(`
-      SELECT COUNT(*) AS total
-      FROM registrations
-      WHERE event_id = ?
-    `).bind(id).first();
+    const regTableInfo = await context.env.DB.prepare(`
+      PRAGMA table_info(registrations)
+    `).all();
+
+    const regColumns = new Set(
+      (regTableInfo.results || []).map(col => col.name)
+    );
+
+    let regCount = { total: 0 };
+
+    if (regColumns.has("event_id")) {
+      regCount = await context.env.DB.prepare(`
+        SELECT COUNT(*) AS total
+        FROM registrations
+        WHERE event_id = ?
+      `).bind(id).first();
+
+    } else if (regColumns.has("event_slug")) {
+      regCount = await context.env.DB.prepare(`
+        SELECT COUNT(*) AS total
+        FROM registrations
+        WHERE event_slug = ?
+      `).bind(event.slug).first();
+
+    } else if (regColumns.has("slug")) {
+      regCount = await context.env.DB.prepare(`
+        SELECT COUNT(*) AS total
+        FROM registrations
+        WHERE slug = ?
+      `).bind(event.slug).first();
+
+    } else {
+      return json({
+        success: false,
+        error: "Cannot verify registrations. No event_id, event_slug, or slug column found in registrations table."
+      }, 400);
+    }
 
     if (Number(regCount?.total || 0) > 0) {
       return json({
