@@ -232,11 +232,13 @@ function resetForm() {
     "totalLimit",
     "sortOrder",
     "shortDescription"
+	"postageFee"
   ].forEach(id => setValue(id, ""));
 
   setValue("statusMode", "force_closed");
   setValue("isVisible", "1");
   setValue("showSlotCounter", "0");
+  setValue("postageEnabled", "0");
 
   clearEventImageInput();
 
@@ -262,6 +264,8 @@ function buildEventPayload() {
     is_visible: Number(getValue("isVisible") || 1),
     sort_order: Number(getValue("sortOrder") || 0),
     event_image: getValue("eventImage"),
+	postage_enabled: Number(getValue("postageEnabled") || 0),
+	postage_fee: Number(getValue("postageFee") || 0),
     categories: getCategoriesFromForm()
   };
 }
@@ -387,6 +391,8 @@ async function editEvent(id) {
     setValue("isVisible", String(event.is_visible ?? 1));
     setValue("sortOrder", event.sort_order || 0);
     setValue("shortDescription", event.short_description || "");
+	setValue("postageEnabled", String(event.postage_enabled ?? 0));
+	setValue("postageFee", event.postage_fee || "");
 
     setValue("eventImage", event.event_image || "");
     updateEventImagePreview(event.event_image || "");
@@ -524,6 +530,9 @@ async function loadEvents() {
       const visible = Number(event.is_visible) === 1 ? "Yes" : "No";
       const status = escapeHtml(event.status);
       const imageText = event.event_image ? "Yes" : "No";
+	  const postageText = Number(event.postage_enabled || 0) === 1
+	    ? `On - RM${Number(event.postage_fee || 0).toFixed(2)}`
+		: "Off";
 
       return `
         <div class="event-row">
@@ -535,6 +544,7 @@ async function loadEvents() {
               <div class="muted">Registered: ${usedSlots} / ${totalLimit}</div>
               <div class="muted">Visible: ${visible}</div>
               <div class="muted">Image: ${imageText}</div>
+			  <div class="muted">Postage: ${postageText}</div>
             </div>
 
             <div>

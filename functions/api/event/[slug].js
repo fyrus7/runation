@@ -64,13 +64,15 @@ export async function onRequestGet(context) {
     `).bind(event.id).all();
 
     return json({
-      success: true,
-      event: {
-        ...event,
-        status: calculateEventStatus(event)
-      },
-      categories: categories.results || []
-    });
+	  success: true,
+	  event: {
+		...event,
+		postage_enabled: Number(event.postage_enabled || 0),
+		postage_fee: Number(event.postage_fee || 0),
+		status: calculateEventStatus(event)
+	  },
+	  categories: categories.results || []
+	});
 
   } catch (err) {
     return json({

@@ -116,10 +116,12 @@ const result = await context.env.DB.prepare(`
     is_visible,
     sort_order,
     event_image,
+    postage_enabled,
+    postage_fee,
     created_at,
     updated_at
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 `).bind(
   slug,
   title,
@@ -134,7 +136,9 @@ const result = await context.env.DB.prepare(`
   Number(body.show_slot_counter || 0),
   Number(body.is_visible ?? 1),
   Number(body.sort_order || 0),
-  cleanText(body.event_image)
+  cleanText(body.event_image),
+  Number(body.postage_enabled || 0),
+  Number(body.postage_fee || 0)
 ).run();
 
   const eventId = result.meta.last_row_id;

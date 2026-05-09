@@ -35,6 +35,39 @@ function applyEventFormBanner(event) {
   `;
 }
 
+function applyPostageOption(event) {
+  const box = document.getElementById("postageOptionBox");
+  const delivery = document.getElementById("deliveryMethod");
+  const feeText = document.getElementById("postageFeeText");
+  const address = document.getElementById("participantAddress");
+
+  if (!box || !delivery) return;
+
+  const enabled = Number(event.postage_enabled || 0) === 1;
+  const fee = Number(event.postage_fee || 0);
+
+  if (!enabled) {
+    box.style.display = "none";
+    delivery.value = "pickup";
+
+    if (feeText) feeText.textContent = "";
+    if (address) address.placeholder = "Enter full address";
+    return;
+  }
+
+  box.style.display = "block";
+
+  if (feeText) {
+    feeText.textContent = fee > 0
+      ? `Postage charge: RM${fee.toFixed(2)}`
+      : "Postage available.";
+  }
+
+  if (address) {
+    address.placeholder = "Required if postage selected";
+  }
+}
+
 
 function setText(id, value) {
   const el = document.getElementById(id);
@@ -232,6 +265,7 @@ function clearInvalidFields() {
     "participantGender",
     "participantEmail",
     "categorySelect",
+	"deliveryMethod",
     "participantAddress",
     "teeSize",
     "finisherTeeSize",
@@ -260,7 +294,6 @@ function validateRegistrationForm() {
     ["participantGender", "Gender"],
     ["participantEmail", "Email"],
     ["categorySelect", "Category"],
-    ["participantAddress", "Address"],
     ["teeSize", "T-shirt size"],
     ["emergencyName", "Emergency contact name"],
     ["emergencyPhone", "Emergency contact number"]
@@ -273,6 +306,13 @@ function validateRegistrationForm() {
       missing.push(label);
       markInvalidField(id);
     }
+  }
+  
+  const deliveryMethod = getValue("deliveryMethod") || "pickup";
+  
+  if (deliveryMethod === "postage" && !getValue("participantAddress")) {
+    missing.push("Address");
+    markInvalidField("participantAddress");
   }
 
   const idType = getIdType();
@@ -347,6 +387,7 @@ async function submitRegistration() {
     phone: getValue("participantPhone"),
     gender: getValue("participantGender"),
     address: getValue("participantAddress"),
+	delivery_method: getValue("deliveryMethod") || "pickup",
 
     tee_size: getValue("teeSize"),
     finisher_tee_size: getValue("finisherTeeSize"),
@@ -474,6 +515,7 @@ async function loadEvent() {
 
     const event = data.event;
 	applyEventFormBanner(event);
+	applyPostageOption(event);
     const categories = data.categories || [];
 
     document.title = `${event.title} | Runation`;

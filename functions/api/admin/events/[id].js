@@ -99,42 +99,46 @@ export async function onRequestPatch(context) {
     return json({ success: false, error: "EVENT_NOT_FOUND" }, 404);
   }
 
-  await context.env.DB.prepare(`
-    UPDATE events
-    SET
-      slug = ?,
-      title = ?,
-      event_type = ?,
-      short_description = ?,
-      venue = ?,
-      event_date = ?,
-      status_mode = ?,
-      open_at = ?,
-      close_at = ?,
-      total_limit = ?,
-	  show_slot_counter = ?,
-      is_visible = ?,
-      sort_order = ?,
-	  event_image = ?,
-      updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).bind(
-    cleanText(body.slug).toLowerCase(),
-    cleanText(body.title),
-    cleanText(body.event_type),
-    cleanText(body.short_description),
-    cleanText(body.venue),
-    cleanText(body.event_date),
-    cleanText(body.status_mode || "force_closed"),
-    cleanText(body.open_at),
-    cleanText(body.close_at),
-    Number(body.total_limit || 0),
-	Number(body.show_slot_counter || 0),
-    Number(body.is_visible ?? 1),
-    Number(body.sort_order || 0),
-	 cleanText(body.event_image),
-    id
-  ).run();
+await context.env.DB.prepare(`
+  UPDATE events
+  SET
+    slug = ?,
+    title = ?,
+    event_type = ?,
+    short_description = ?,
+    venue = ?,
+    event_date = ?,
+    status_mode = ?,
+    open_at = ?,
+    close_at = ?,
+    total_limit = ?,
+    show_slot_counter = ?,
+    is_visible = ?,
+    sort_order = ?,
+    event_image = ?,
+    postage_enabled = ?,
+    postage_fee = ?,
+    updated_at = CURRENT_TIMESTAMP
+  WHERE id = ?
+`).bind(
+  cleanText(body.slug).toLowerCase(),
+  cleanText(body.title),
+  cleanText(body.event_type),
+  cleanText(body.short_description),
+  cleanText(body.venue),
+  cleanText(body.event_date),
+  cleanText(body.status_mode || "force_closed"),
+  cleanText(body.open_at),
+  cleanText(body.close_at),
+  Number(body.total_limit || 0),
+  Number(body.show_slot_counter || 0),
+  Number(body.is_visible ?? 1),
+  Number(body.sort_order || 0),
+  cleanText(body.event_image),
+  Number(body.postage_enabled || 0),
+  Number(body.postage_fee || 0),
+  id
+).run();
 
   const categories = body.categories || [];
 
