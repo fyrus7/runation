@@ -190,6 +190,11 @@
       background: #fee2e2;
       color: #991b1b;
     }
+	
+	.status-expired {
+      background: #e2e8f0;
+	  color: #475569;
+	}
 
     .muted {
       color: #64748b;
@@ -262,12 +267,14 @@
           <option value="PAID">PAID</option>
           <option value="PENDING_PAYMENT">PENDING_PAYMENT</option>
           <option value="FAILED">FAILED</option>
+		  <option value="EXPIRED">EXPIRED</option>
         </select>
       </div>
     </div>
 
     <div class="button-row">
 	  <button class="secondary" onclick="loadRegistrations()">Refresh</button>
+	  <button class="secondary" onclick="expirePending()">Expire Pending > 1 Hour</button>
 	  <button class="secondary" onclick="exportCsv()">Export CSV</button>
 	  <button class="danger" onclick="logoutAdmin()">Logout</button>
     </div>

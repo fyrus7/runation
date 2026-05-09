@@ -107,6 +107,7 @@ function updateSummary(rows) {
   const paid = rows.filter(r => String(r.payment_status).toUpperCase() === "PAID").length;
   const pending = rows.filter(r => String(r.payment_status).toUpperCase() === "PENDING_PAYMENT").length;
   const failed = rows.filter(r => String(r.payment_status).toUpperCase() === "FAILED").length;
+  const expired = rows.filter(r => String(r.payment_status).toUpperCase() === "EXPIRED").length;
 
   document.getElementById("sumTotal").textContent = total;
   document.getElementById("sumPaid").textContent = paid;
@@ -198,6 +199,28 @@ async function loadRegistrations() {
   setMessage(`${CURRENT_ROWS.length} registrations loaded.`);
 }
 
+async function expirePending() {
+  setMessage("Checking expired pending payments...");
+
+  const res = await fetch("/api/admin/expire-pending", {
+    method: "POST",
+    headers: adminHeaders()
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data.success) {
+    setMessage(data.error || "Failed to expire pending payments.");
+    return;
+  }
+
+  setMessage(
+    `Expired ${data.expired_count} pending registrations. Released ${data.released_event_slots} event slots and ${data.released_category_slots} category slots.`
+  );
+
+  loadRegistrations();
+}
+
 function exportCsv() {
   if (!CURRENT_ROWS.length) {
     setMessage("No data to export.");
@@ -261,6 +284,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (getToken()) {
     loadEventsForFilter();
-    loadRegistrations();
+    expirePending();
   }
 });
