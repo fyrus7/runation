@@ -231,7 +231,7 @@ function resetForm() {
     "closeAt",
     "totalLimit",
     "sortOrder",
-    "shortDescription"
+    "shortDescription",
 	"postageFee"
   ].forEach(id => setValue(id, ""));
 
