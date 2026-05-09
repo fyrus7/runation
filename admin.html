@@ -118,12 +118,21 @@
 
     button {
       border: none;
-      border-radius: 999px;
-      padding: 12px 16px;
-      font-weight: 900;
-      cursor: pointer;
-      background: #0f172a;
-      color: #fff;
+	  border-radius: 999px;
+	  padding: 8px 12px;
+	  min-height: 34px;
+	  font-size: 12px;
+	  font-weight: 900;
+	  cursor: pointer;
+	  background: #0f172a;
+	  color: #fff;
+	}
+	
+    .button-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
     }
 
     button.secondary {
@@ -134,13 +143,6 @@
     button.danger {
       background: #ef4444;
       color: #fff;
-    }
-
-    .button-row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 14px;
     }
 
     .image-upload-box {
@@ -309,6 +311,57 @@
         width: 100%;
       }
     }
+	
+	.admin-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.55);
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.admin-modal.show {
+  display: flex;
+}
+
+.admin-modal-box {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 24px 60px rgba(15,23,42,0.32);
+}
+
+.admin-modal-box h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.modal-warning {
+  color: #dc2626;
+  font-weight: 900;
+}
+
+.delete-id-box {
+  background: #f1f5f9;
+  border: 1px solid #dbe3ea;
+  border-radius: 14px;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+#deleteEventError {
+  margin-top: 8px;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 900;
+}
+
   </style>
 </head>
 
@@ -330,6 +383,44 @@
     </div>
   </div>
 </header>
+
+<div id="deleteEventModal" class="admin-modal">
+  <div class="admin-modal-box">
+    <h2>Delete Event</h2>
+
+    <p class="modal-warning">
+      This action cannot be undone.
+    </p>
+
+    <p>
+      To confirm delete, type this Event ID:
+    </p>
+
+    <div class="delete-id-box">
+      ID: <strong id="deleteEventIdText">-</strong>
+    </div>
+
+    <input
+      id="deleteEventConfirmInput"
+      type="text"
+      placeholder="Type Event ID here"
+      autocomplete="off"
+    >
+
+    <div id="deleteEventError"></div>
+
+    <div class="button-row">
+      <button type="button" class="danger" onclick="confirmDeleteEvent()">
+        Delete Event
+      </button>
+
+      <button type="button" class="secondary" onclick="closeDeleteEventModal()">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
 
 <main class="admin-wrap">
 

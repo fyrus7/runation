@@ -13,6 +13,7 @@ const ALLOWED_EVENT_IMAGE_TYPES = [
 ];
 
 let adminToastTimer = null;
+let pendingDeleteEventId = null;
 
 function closeAdminToast() {
   const toast = document.getElementById("adminToast");
@@ -67,7 +68,7 @@ function setMessage(message, type) {
 
   adminToastTimer = setTimeout(() => {
     closeAdminToast();
-  }, 6000);
+  }, 10000);
 }
 
 function setImageStatus(message, isError = false) {
@@ -410,10 +411,56 @@ async function editEvent(id) {
 }
 
 
-async function deleteEvent(id) {
-  const ok = confirm("Delete this event? This cannot be undone.");
+function deleteEvent(id) {
+  pendingDeleteEventId = Number(id || 0);
 
-  if (!ok) return;
+  const modal = document.getElementById("deleteEventModal");
+  const idText = document.getElementById("deleteEventIdText");
+  const input = document.getElementById("deleteEventConfirmInput");
+  const error = document.getElementById("deleteEventError");
+
+  if (!modal || !idText || !input) return;
+
+  idText.textContent = pendingDeleteEventId;
+  input.value = "";
+
+  if (error) error.textContent = "";
+
+  modal.classList.add("show");
+
+  setTimeout(() => {
+    input.focus();
+  }, 50);
+}
+
+function closeDeleteEventModal() {
+  pendingDeleteEventId = null;
+
+  const modal = document.getElementById("deleteEventModal");
+  const input = document.getElementById("deleteEventConfirmInput");
+  const error = document.getElementById("deleteEventError");
+
+  if (modal) modal.classList.remove("show");
+  if (input) input.value = "";
+  if (error) error.textContent = "";
+}
+
+async function confirmDeleteEvent() {
+  const id = Number(pendingDeleteEventId || 0);
+  const input = document.getElementById("deleteEventConfirmInput");
+  const error = document.getElementById("deleteEventError");
+
+  const typed = String(input?.value || "").trim();
+
+  if (!id) {
+    if (error) error.textContent = "Invalid event ID.";
+    return;
+  }
+
+  if (typed !== String(id)) {
+    if (error) error.textContent = `Type Event ID ${id} to confirm delete.`;
+    return;
+  }
 
   try {
     const res = await fetch(`/api/admin/events/${id}`, {
@@ -424,7 +471,7 @@ async function deleteEvent(id) {
     const data = await res.json().catch(() => null);
 
     if (!res.ok || !data || !data.success) {
-      setMessage(data?.error || "Delete failed.");
+      if (error) error.textContent = data?.error || "Delete failed.";
       return;
     }
 
@@ -434,12 +481,15 @@ async function deleteEvent(id) {
       resetForm();
     }
 
+    closeDeleteEventModal();
     setMessage("Event deleted.");
     loadEvents();
+
   } catch (err) {
-    setMessage(err.message || "Delete failed.");
+    if (error) error.textContent = err.message || "Delete failed.";
   }
 }
+
 
 
 async function loadEvents() {
