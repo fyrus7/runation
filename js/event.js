@@ -1,18 +1,6 @@
 function getSlug() {
   const params = new URLSearchParams(location.search);
-  const querySlug = params.get("event");
-
-  if (querySlug) return querySlug;
-
-  const parts = location.pathname
-    .split("/")
-    .filter(Boolean);
-
-  if (parts[0] === "event" && parts[1]) {
-    return decodeURIComponent(parts[1]);
-  }
-
-  return "";
+  return params.get("event") || "";
 }
 
 function formatDate(value) {
