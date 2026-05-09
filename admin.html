@@ -37,6 +37,19 @@
       font-size: 20px;
     }
 
+    .admin-nav {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .admin-nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
     .admin-wrap {
       max-width: 1120px;
       margin: 0 auto;
@@ -55,6 +68,11 @@
     .admin-card h2 {
       margin: 0 0 14px;
       font-size: 20px;
+    }
+
+    .admin-card h3 {
+      margin: 0 0 12px;
+      font-size: 17px;
     }
 
     .form-grid {
@@ -85,11 +103,17 @@
       padding: 10px 12px;
       font-size: 14px;
       font-family: inherit;
+      background: #fff;
     }
 
     textarea {
       min-height: 90px;
       resize: vertical;
+    }
+
+    input[type="file"] {
+      padding: 8px;
+      cursor: pointer;
     }
 
     button {
@@ -117,6 +141,40 @@
       gap: 8px;
       flex-wrap: wrap;
       margin-top: 14px;
+    }
+
+    .image-upload-box {
+      border: 1px solid #e6edf6;
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 4px;
+    }
+
+    .image-upload-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    #eventImageStatus {
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    #eventImagePreview {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      object-fit: cover;
+      aspect-ratio: 16 / 9;
+      background: #e2e8f0;
     }
 
     .event-row {
@@ -167,6 +225,11 @@
     }
 
     @media (max-width: 700px) {
+      .admin-header-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
       .form-grid,
       .cat-row {
         grid-template-columns: 1fr;
@@ -179,6 +242,15 @@
       .event-row-top {
         flex-direction: column;
       }
+
+      .image-upload-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .image-upload-actions button {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -188,25 +260,26 @@
 <header class="admin-header">
   <div class="admin-header-inner">
     <h1>RUNATION Admin</h1>
-    <div style="display:flex;gap:12px;flex-wrap:wrap;">
-  <a href="admin-registrations.html" style="color:#fff;text-decoration:none;font-weight:900;">Registrations</a>
-  <a href="index.html" style="color:#fff;text-decoration:none;font-weight:900;">View Site</a>
-</div>
+
+    <div class="admin-nav">
+      <a href="admin-registrations.html">Registrations</a>
+      <a href="index.html">View Site</a>
+    </div>
   </div>
 </header>
 
 <main class="admin-wrap">
 
-<section class="admin-card">
-  <h2>Admin Session</h2>
+  <section class="admin-card">
+    <h2>Admin Session</h2>
 
-  <div class="button-row">
-    <button class="secondary" onclick="loadEvents()">Refresh Events</button>
-    <button class="danger" onclick="logoutAdmin()">Logout</button>
-  </div>
+    <div class="button-row">
+      <button class="secondary" type="button" onclick="loadEvents()">Refresh Events</button>
+      <button class="danger" type="button" onclick="logoutAdmin()">Logout</button>
+    </div>
 
-  <div id="adminMessage"></div>
-</section>
+    <div id="adminMessage"></div>
+  </section>
 
   <section class="admin-card">
     <h2 id="formTitle">Create Event</h2>
@@ -262,14 +335,14 @@
         <label>Total Limit</label>
         <input id="totalLimit" type="number" placeholder="0 = unlimited">
       </div>
-	  
-	  <div class="form-group">
-	    <label>Slot Display</label>
-		<select id="showSlotCounter">
-		   <option value="0">Show total only</option>
-		   <option value="1">Show registered counter</option>
-		</select>
-	  </div>
+
+      <div class="form-group">
+        <label>Slot Display</label>
+        <select id="showSlotCounter">
+          <option value="0">Show total only</option>
+          <option value="1">Show registered counter</option>
+        </select>
+      </div>
 
       <div class="form-group">
         <label>Visible</label>
@@ -288,6 +361,32 @@
         <label>Short Description</label>
         <textarea id="shortDescription" placeholder="Short event description"></textarea>
       </div>
+
+      <div class="form-group full">
+        <label>Event Image</label>
+
+        <div class="image-upload-box">
+          <input
+            type="file"
+            id="eventImageFile"
+            accept="image/jpeg,image/png,image/webp"
+          >
+
+          <div class="image-upload-actions">
+            <button type="button" id="uploadEventImageBtn">Upload Image</button>
+            <span class="muted">JPG, PNG, WEBP only. Max 2MB.</span>
+          </div>
+
+          <input type="hidden" id="eventImage">
+
+          <div id="eventImageStatus"></div>
+
+          <img
+            id="eventImagePreview"
+            alt="Event image preview"
+          >
+        </div>
+      </div>
     </div>
 
     <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
@@ -299,8 +398,8 @@
     <button class="secondary" type="button" onclick="addCategoryRow()">+ Add Category</button>
 
     <div class="button-row">
-      <button onclick="saveEvent()">Save Event</button>
-      <button class="secondary" onclick="resetForm()">Clear Form</button>
+      <button type="button" onclick="saveEvent()">Save Event</button>
+      <button class="secondary" type="button" onclick="resetForm()">Clear Form</button>
     </div>
   </section>
 

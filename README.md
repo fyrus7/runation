@@ -1,2 +1,2 @@
 # runation
-runation setup web
+runation setup
