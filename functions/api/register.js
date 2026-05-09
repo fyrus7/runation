@@ -143,8 +143,11 @@ export async function onRequestPost(context) {
     const phone = cleanText(body.phone);
     const gender = cleanText(body.gender);
     const address = cleanText(body.address);
-
-    const eventTeeSize = cleanText(body.tee_size || body.event_tee_size);
+	const deliveryMethod = cleanText(body.delivery_method).toLowerCase() === "postage"
+	  ? "postage"
+	  : "pickup";
+	  
+	const eventTeeSize = cleanText(body.tee_size || body.event_tee_size);
     const emergencyName = cleanText(body.emergency_name);
     const emergencyPhone = cleanText(body.emergency_phone);
 
@@ -157,12 +160,12 @@ export async function onRequestPost(context) {
       }, 400);
     }
 
-    if (!name || !ic || !email || !phone || !gender || !address || !eventTeeSize || !emergencyName || !emergencyPhone) {
-      return json({
-        success: false,
-        error: "Please complete all required fields."
-      }, 400);
-    }
+    if (!name || !ic || !email || !phone || !gender || !eventTeeSize || !emergencyName || !emergencyPhone) {
+	  return json({
+		success: false,
+		error: "Please complete all required fields."
+	  }, 400);
+	}
 	
 	if (!isValidEmail(email)) {
 	  return json({
@@ -187,6 +190,25 @@ export async function onRequestPost(context) {
         error: "Event not found."
       }, 404);
     }
+	
+	const postageEnabled = Number(event.postage_enabled || 0) === 1;
+	const postageFeeRm = postageEnabled && deliveryMethod === "postage"
+      ? Number(event.postage_fee || 0)
+	  : 0;
+	  
+	if (deliveryMethod === "postage" && !postageEnabled) {
+	  return json({
+		success: false,
+		error: "Postage is not available for this event."
+	  }, 400);
+	}
+	
+	if (deliveryMethod === "postage" && !address) {
+	  return json({
+		success: false,
+		error: "Address is required for postage."
+	  }, 400);
+	}
 
     const eventStatus = calculateEventStatus(event);
 
@@ -238,14 +260,16 @@ export async function onRequestPost(context) {
       ToyyibPay perlukan amount dalam sen.
     */
     const priceRm = Number(categoryRow.price || 0);
-    const amount = Math.round(priceRm * 100);
-
-    if (!amount || amount <= 0) {
-      return json({
-        success: false,
-        error: "Invalid category amount."
-      }, 400);
-    }
+	const categoryAmount = Math.round(priceRm * 100);
+	const postageAmount = Math.round(postageFeeRm * 100);
+	const amount = categoryAmount + postageAmount;
+	
+	if (!categoryAmount || categoryAmount <= 0) {
+	  return json({
+		success: false,
+		error: "Invalid category amount."
+	  }, 400);
+	}
 
     const existing = await context.env.DB
       .prepare(`
@@ -258,9 +282,12 @@ export async function onRequestPost(context) {
           ic,
           category,
           amount,
+		  delivery_method,
+		  postage_fee,
           payment_status,
-          payment_url,
-          payment_ref
+		  payment_gateway,
+          payment_ref,
+		  payment_url,
         FROM registrations
         WHERE event_slug = ?
           AND ic = ?
@@ -409,7 +436,7 @@ export async function onRequestPost(context) {
           paid_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP)
       `)
       .bind(
         regNo,
@@ -430,6 +457,8 @@ export async function onRequestPost(context) {
         event.title,
 
         amount,
+		deliveryMethod,
+		postageFeeRm,
         "PENDING_PAYMENT",
         "TOYYIBPAY",
         "",
@@ -458,7 +487,10 @@ export async function onRequestPost(context) {
         : "https://toyyibpay.com";
 
     const billName = limitText(event.title || "Runation", 30);
-    const billDescription = limitText(`${event.title} ${category} Registration`, 100);
+    const billDescription = limitText(
+	  `${event.title} ${category} Registration${postageAmount > 0 ? " + Postage" : ""}`,
+	  100
+	);
 
     const billData = new URLSearchParams();
     billData.append("userSecretKey", secretKey);
@@ -545,6 +577,8 @@ export async function onRequestPost(context) {
         phone,
         gender,
         address,
+		delivery_method: deliveryMethod,
+		postage_fee: postageFeeRm,
         category,
         event_tee_size: eventTeeSize,
         finisher_tee_size: finisherTeeSize,
