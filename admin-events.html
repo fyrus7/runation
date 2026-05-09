@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runation Create</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #0f172a;
+    }
+
+    .admin-header {
+      background: #0f172a;
+      color: #fff;
+      padding: 16px;
+    }
+
+    .admin-header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .admin-header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .admin-nav {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .admin-nav a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .admin-wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .admin-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      border: 1px solid #e6edf6;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+    }
+
+    .admin-card h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    .admin-card h3 {
+      margin: 0 0 12px;
+      font-size: 17px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid #dbe3ea;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #fff;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    input[type="file"] {
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    button {
+      border: none;
+	  border-radius: 999px;
+	  padding: 8px 12px;
+	  min-height: 34px;
+	  font-size: 12px;
+	  font-weight: 900;
+	  cursor: pointer;
+	  background: #0f172a;
+	  color: #fff;
+	}
+	
+    .button-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    button.secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    button.danger {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .image-upload-box {
+      border: 1px solid #e6edf6;
+      background: #f8fafc;
+      border-radius: 16px;
+      padding: 14px;
+      margin-top: 4px;
+    }
+
+    .image-upload-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    #eventImageStatus {
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    #eventImagePreview {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      object-fit: cover;
+      aspect-ratio: 16 / 9;
+      background: #e2e8f0;
+    }
+
+    .event-row {
+      border: 1px solid #e6edf6;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .event-row-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .event-row h3 {
+      margin: 0 0 4px;
+      font-size: 17px;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 900;
+      background: #e2e8f0;
+    }
+
+    .cat-row {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr 0.8fr 0.7fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    #adminMessage {
+      margin-top: 12px;
+      font-weight: 800;
+      color: #2563eb;
+    }
+	
+	.admin-toast {
+  position: fixed;
+  left: 50%;
+  top: 20px;
+  transform: translateX(-50%) translateY(-20px);
+  width: calc(100% - 32px);
+  max-width: 460px;
+  z-index: 9999;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: 0.2s ease;
+}
+
+.admin-toast.show {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.admin-toast-content {
+  background: #0f172a;
+  color: #fff;
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 18px 40px rgba(15,23,42,0.28);
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-toast.success .admin-toast-content {
+  background: #16a34a;
+}
+
+.admin-toast.error .admin-toast-content {
+  background: #dc2626;
+}
+
+#adminToastText {
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.admin-toast-close {
+  background: rgba(255,255,255,0.18);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+    @media (max-width: 700px) {
+      .admin-header-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .form-grid,
+      .cat-row {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group.full {
+        grid-column: auto;
+      }
+
+      .event-row-top {
+        flex-direction: column;
+      }
+
+      .image-upload-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .image-upload-actions button {
+        width: 100%;
+      }
+    }
+	
+	.admin-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15,23,42,0.55);
+  z-index: 9998;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.admin-modal.show {
+  display: flex;
+}
+
+.admin-modal-box {
+  width: 100%;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 0 24px 60px rgba(15,23,42,0.32);
+}
+
+.admin-modal-box h2 {
+  margin: 0 0 10px;
+  font-size: 22px;
+}
+
+.modal-warning {
+  color: #dc2626;
+  font-weight: 900;
+}
+
+.delete-id-box {
+  background: #f1f5f9;
+  border: 1px solid #dbe3ea;
+  border-radius: 14px;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 18px;
+}
+
+#deleteEventError {
+  margin-top: 8px;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 900;
+}
+.field-hint {
+  display: block;
+  margin-top: 5px;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.35;
+}
+  </style>
+</head>
+
+<body>
+<div id="adminToast" class="admin-toast" role="status" aria-live="polite">
+  <div class="admin-toast-content">
+    <span id="adminToastText"></span>
+    <button type="button" class="admin-toast-close" onclick="closeAdminToast()">Dismiss</button>
+  </div>
+</div>
+
+<header class="admin-header">
+  <div class="admin-header-inner">
+    <h1>RUNATION Admin</h1>
+
+    <div class="admin-nav">
+      <a href="admin.html">Dashboard</a>
+      <a href="index.html">View Site</a>
+    </div>
+  </div>
+</header>
+
+<div id="deleteEventModal" class="admin-modal">
+  <div class="admin-modal-box">
+    <h2>Delete Event</h2>
+
+    <p class="modal-warning">
+      This action cannot be undone.
+    </p>
+
+    <p>
+      To confirm delete, type this Event ID:
+    </p>
+
+    <div class="delete-id-box">
+      ID: <strong id="deleteEventIdText">-</strong>
+    </div>
+
+    <input
+      id="deleteEventConfirmInput"
+      type="text"
+      placeholder="Type Event ID here"
+      autocomplete="off"
+    >
+
+    <div id="deleteEventError"></div>
+
+    <div class="button-row">
+      <button type="button" class="danger" onclick="confirmDeleteEvent()">
+        Delete Event
+      </button>
+
+      <button type="button" class="secondary" onclick="closeDeleteEventModal()">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<main class="admin-wrap">
+
+  <section class="admin-card">
+    <h2>Admin Session</h2>
+
+    <div class="button-row">
+      <button class="secondary" type="button" onclick="loadEvents()">Refresh Events</button>
+      <button class="danger" type="button" onclick="logoutAdmin()">Logout</button>
+    </div>
+
+    <div id="adminMessage"></div>
+  </section>
+
+  <section class="admin-card">
+    <h2 id="formTitle">Create Event</h2>
+
+    <input id="editingId" type="hidden">
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Event URL</label>
+        <input id="slug" placeholder="example: running">
+		<small class="field-hint">
+		  This will become: ?event=running
+		  </small>
+      </div>
+
+      <div class="form-group">
+        <label>Title</label>
+        <input id="title" placeholder="Event title">
+      </div>
+
+      <div class="form-group">
+        <label>Event Type</label>
+        <input id="eventType" placeholder="Half Marathon / Fun Run">
+      </div>
+
+      <div class="form-group">
+        <label>Venue</label>
+        <input id="venue" placeholder="Venue">
+      </div>
+
+      <div class="form-group">
+        <label>Event Date</label>
+        <input id="eventDate" type="date">
+      </div>
+
+      <div class="form-group">
+        <label>Status Mode</label>
+        <select id="statusMode">
+          <option value="force_closed">Force Closed</option>
+          <option value="force_open">Force Open</option>
+          <option value="auto">Auto Schedule</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Open At</label>
+        <input id="openAt" type="datetime-local">
+      </div>
+
+      <div class="form-group">
+        <label>Close At</label>
+        <input id="closeAt" type="datetime-local">
+      </div>
+
+      <div class="form-group">
+        <label>Total Limit</label>
+        <input id="totalLimit" type="number" placeholder="0 = unlimited">
+      </div>
+
+      <div class="form-group">
+        <label>Slot Display</label>
+        <select id="showSlotCounter">
+          <option value="0">Show total only</option>
+          <option value="1">Show registered counter</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Visible</label>
+        <select id="isVisible">
+          <option value="1">Visible</option>
+          <option value="0">Hidden</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Sort Order</label>
+        <input id="sortOrder" type="number" value="0">
+      </div>
+
+      <div class="form-group full">
+        <label>Short Description</label>
+        <textarea id="shortDescription" placeholder="Short event description"></textarea>
+      </div>
+
+      <div class="form-group full">
+        <label>Event Image</label>
+
+        <div class="image-upload-box">
+          <input
+            type="file"
+            id="eventImageFile"
+            accept="image/jpeg,image/png,image/webp"
+          >
+
+          <div class="image-upload-actions">
+  <button type="button" id="uploadEventImageBtn">Upload Image</button>
+  <button type="button" id="removeEventImageBtn" class="secondary">Remove Image</button>
+  <span class="muted">JPG, PNG, WEBP only. Max 2MB.</span>
+</div>
+
+          <input type="hidden" id="eventImage">
+
+          <div id="eventImageStatus"></div>
+
+          <img
+            id="eventImagePreview"
+            alt="Event image preview"
+          >
+        </div>
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
+
+    <h3>Categories</h3>
+
+    <div id="categoryEditor"></div>
+
+    <button class="secondary" type="button" onclick="addCategoryRow()">+ Add Category</button>
+
+    <div class="button-row">
+      <button type="button" onclick="saveEvent()">Save Event</button>
+      <button class="secondary" type="button" onclick="resetForm()">Clear Form</button>
+    </div>
+  </section>
+
+  <section class="admin-card">
+    <h2>Events</h2>
+    <div id="eventList">Loading...</div>
+  </section>
+
+</main>
+
+<script src="js/admin-events.js"></script>
+
+</body>
+</html>
