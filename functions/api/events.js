@@ -49,8 +49,9 @@ export async function onRequestGet(context) {
         e.close_at,
         e.total_limit,
         e.used_slots,
-		e.show_slot_counter,
+        e.show_slot_counter,
         e.sort_order,
+        e.event_image,
 
         COALESCE(GROUP_CONCAT(c.name, ' / '), '-') AS categories_text,
         MIN(CASE WHEN c.is_active = 1 THEN c.price END) AS fee_from
@@ -68,6 +69,7 @@ export async function onRequestGet(context) {
 
     const events = (rows.results || []).map(event => ({
       ...event,
+      event_image: event.event_image || "",
       status: calculateEventStatus(event)
     }));
 
