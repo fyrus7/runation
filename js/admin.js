@@ -1,332 +1,253 @@
-const adminToken = localStorage.getItem("adminToken");
-
-if (!adminToken) {
-  window.location.href = "login.html";
-}
-const eventTabs = document.querySelectorAll(".event-tab");
-let activeEventSlug = "";
-
-const participantsBody = document.getElementById("participantsBody");
-const searchInput = document.getElementById("searchInput");
-const statusFilter = document.getElementById("statusFilter");
-const searchBtn = document.getElementById("searchBtn");
-const clearBtn = document.getElementById("clearBtn");
-const refreshBtn = document.getElementById("refreshBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-const exportBtn = document.getElementById("exportBtn");
-const message = document.getElementById("message");
-
-const totalCount = document.getElementById("totalCount");
-const showingCount = document.getElementById("showingCount");
-const paidCount = document.getElementById("paidCount");
-const pendingCount = document.getElementById("pendingCount");
-
-const prevBtn = document.getElementById("prevBtn");
-const nextBtn = document.getElementById("nextBtn");
-const pageInfo = document.getElementById("pageInfo");
-
-let limit = 50;
-let offset = 0;
-let total = 0;
-let currentParticipants = [];
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function setMessage(message) {
+  const el = document.getElementById("adminMessage");
+  if (el) el.textContent = message || "";
 }
 
-function formatAmount(amount) {
-  const sen = Number(amount) || 0;
-  return "RM " + (sen / 100).toFixed(2);
+function getToken() {
+  return localStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
 }
 
-function formatDate(value) {
-  if (!value) return "-";
+function saveToken() {
+  const token = document.getElementById("adminToken").value.trim();
+  localStorage.setItem("RUNATION_ADMIN_TOKEN", token);
+  setMessage("Token saved.");
+  loadEvents();
+}
 
-  const d = new Date(value);
+function adminHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${getToken()}`
+  };
+}
 
-  if (isNaN(d.getTime())) return value;
+function getValue(id) {
+  const el = document.getElementById(id);
+  return el ? String(el.value || "").trim() : "";
+}
 
-  return d.toLocaleString("en-MY", {
-    timeZone: "Asia/Kuala_Lumpur",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit"
+function toIsoMalaysia(datetimeLocalValue) {
+  if (!datetimeLocalValue) return "";
+  return `${datetimeLocalValue}:00+08:00`;
+}
+
+function fromIsoToDatetimeLocal(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const pad = n => String(n).padStart(2, "0");
+
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate())
+  ].join("-") + "T" + [
+    pad(date.getHours()),
+    pad(date.getMinutes())
+  ].join(":");
+}
+
+function addCategoryRow(cat = {}) {
+  const box = document.getElementById("categoryEditor");
+
+  const row = document.createElement("div");
+  row.className = "cat-row";
+  row.innerHTML = `
+    <input class="cat-id" type="hidden" value="${cat.id || ""}">
+    <input class="cat-name" placeholder="Category e.g. 21KM" value="${cat.name || ""}">
+    <input class="cat-price" type="number" step="0.01" placeholder="Price RM" value="${cat.price || ""}">
+    <input class="cat-limit" type="number" placeholder="Limit" value="${cat.slot_limit || 0}">
+    <select class="cat-active">
+      <option value="1" ${Number(cat.is_active ?? 1) === 1 ? "selected" : ""}>Active</option>
+      <option value="0" ${Number(cat.is_active ?? 1) === 0 ? "selected" : ""}>Inactive</option>
+    </select>
+  `;
+
+  box.appendChild(row);
+}
+
+function getCategoriesFromForm() {
+  return Array.from(document.querySelectorAll(".cat-row")).map(row => ({
+    id: row.querySelector(".cat-id").value || "",
+    name: row.querySelector(".cat-name").value.trim(),
+    price: Number(row.querySelector(".cat-price").value || 0),
+    slot_limit: Number(row.querySelector(".cat-limit").value || 0),
+    is_active: Number(row.querySelector(".cat-active").value || 1)
+  })).filter(cat => cat.name);
+}
+
+function resetForm() {
+  document.getElementById("formTitle").textContent = "Create Event";
+  document.getElementById("editingId").value = "";
+
+  [
+    "slug",
+    "title",
+    "eventType",
+    "venue",
+    "eventDate",
+    "openAt",
+    "closeAt",
+    "totalLimit",
+    "sortOrder",
+    "shortDescription"
+  ].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
   });
+
+  document.getElementById("statusMode").value = "force_closed";
+  document.getElementById("isVisible").value = "1";
+  document.getElementById("categoryEditor").innerHTML = "";
+
+  addCategoryRow();
 }
 
-function statusBadge(status) {
-  const s = String(status || "").toUpperCase();
-
-  let className = "badge";
-
-  if (s === "PAID") className += " badge-paid";
-  else if (s === "PENDING_PAYMENT") className += " badge-pending";
-  else if (s === "FAILED") className += " badge-failed";
-  else className += " badge-default";
-
-  return `<span class="${className}">${escapeHtml(s)}</span>`;
+function buildEventPayload() {
+  return {
+    slug: getValue("slug"),
+    title: getValue("title"),
+    event_type: getValue("eventType"),
+    short_description: getValue("shortDescription"),
+    venue: getValue("venue"),
+    event_date: getValue("eventDate"),
+    status_mode: getValue("statusMode"),
+    open_at: toIsoMalaysia(getValue("openAt")),
+    close_at: toIsoMalaysia(getValue("closeAt")),
+    total_limit: Number(getValue("totalLimit") || 0),
+    is_visible: Number(getValue("isVisible") || 1),
+    sort_order: Number(getValue("sortOrder") || 0),
+    categories: getCategoriesFromForm()
+  };
 }
 
-function setLoading() {
-  participantsBody.innerHTML = `
-    <tr>
-      <td colspan="10" class="empty-cell">Loading registrations...</td>
-    </tr>
-  `;
-}
+async function saveEvent() {
+  const id = getValue("editingId");
+  const payload = buildEventPayload();
 
-function showError(text) {
-  message.innerHTML = `
-    <div class="error-box">
-      ${escapeHtml(text)}
-    </div>
-  `;
-}
-
-function clearMessage() {
-  message.innerHTML = "";
-}
-
-function getCurrentParams() {
-  const q = searchInput.value.trim();
-  const status = statusFilter.value;
-
-  const params = new URLSearchParams();
-  params.set("limit", limit);
-  params.set("offset", offset);
-
-  if (q) params.set("q", q);
-  if (status) params.set("status", status);
-  if (activeEventSlug) params.set("event_slug", activeEventSlug);
-
-  return params;
-}
-
-function getExportParams() {
-  const q = searchInput.value.trim();
-  const status = statusFilter.value;
-
-  const params = new URLSearchParams();
-
-  if (q) params.set("q", q);
-  if (status) params.set("status", status);
-  if (activeEventSlug) params.set("event_slug", activeEventSlug);
-  if (activeEventSlug) params.set("event_slug", activeEventSlug);
-
-  return params;
-}
-
-function renderRows(participants) {
-  currentParticipants = participants;
-
-  if (!participants.length) {
-    participantsBody.innerHTML = `
-      <tr>
-        <td colspan="10" class="empty-cell">No registration found</td>
-      </tr>
-    `;
-    updateVisibleStats();
+  if (!payload.slug || !payload.title) {
+    setMessage("Slug and title are required.");
     return;
   }
 
-  participantsBody.innerHTML = participants.map(p => {
-    return `
-      <tr>
-        <td><strong>${escapeHtml(p.reg_no)}</strong></td>
-        <td class="name-cell">${escapeHtml(p.name)}</td>
-        <td>${escapeHtml(p.ic)}</td>
-        <td>${escapeHtml(p.phone)}</td>
-        <td>${escapeHtml(p.email || "-")}</td>
-        <td>${escapeHtml(p.category)}</td>
-        <td>${escapeHtml(p.tshirt_size || "-")}</td>
-        <td>${formatAmount(p.amount)}</td>
-        <td>${statusBadge(p.payment_status)}</td>
-        <td>${formatDate(p.paid_at)}</td>
-      </tr>
-    `;
-  }).join("");
+  const url = id ? `/api/admin/events/${id}` : "/api/admin/events";
+  const method = id ? "PATCH" : "POST";
 
-  updateVisibleStats();
-}
-
-function updateVisibleStats() {
-  const paid = currentParticipants.filter(p => p.payment_status === "PAID").length;
-  const pending = currentParticipants.filter(p => p.payment_status === "PENDING_PAYMENT").length;
-
-  showingCount.textContent = currentParticipants.length;
-  paidCount.textContent = paid;
-  pendingCount.textContent = pending;
-}
-
-function updatePagination() {
-  const page = Math.floor(offset / limit) + 1;
-  const totalPages = Math.max(Math.ceil(total / limit), 1);
-
-  pageInfo.textContent = `Page ${page} of ${totalPages}`;
-
-  prevBtn.disabled = offset <= 0;
-  nextBtn.disabled = offset + limit >= total;
-}
-
-async function loadParticipants() {
-  clearMessage();
-  setLoading();
-
-  const params = getCurrentParams();
-
-  try {
-    const res = await fetch(`/api/participants?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${adminToken}`
-      }
-    });
-
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      throw new Error(data.error || "Failed to load participants");
-    }
-
-    total = Number(data.total) || 0;
-
-    totalCount.textContent = total;
-
-    renderRows(data.participants || []);
-    updatePagination();
-
-  } catch (err) {
-    participantsBody.innerHTML = `
-      <tr>
-        <td colspan="10" class="empty-cell">Failed to load data</td>
-      </tr>
-    `;
-
-    if (err.message === "Unauthorized") {
-      localStorage.removeItem("adminToken");
-      window.location.href = "login.html";
-    } else {
-      showError(err.message);
-    }
-  }
-}
-
-async function exportCsv() {
-  clearMessage();
-
-  exportBtn.disabled = true;
-  exportBtn.textContent = "Exporting...";
-
-  const params = getExportParams();
-
-  try {
-    const res = await fetch(`/api/export?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${adminToken}`
-      }
-    });
-
-    if (!res.ok) {
-      let errText = await res.text();
-
-      try {
-        const parsed = JSON.parse(errText);
-        errText = parsed.error || errText;
-      } catch (e) {}
-
-      throw new Error(errText || "Export failed");
-    }
-
-    const blob = await res.blob();
-    const url = window.URL.createObjectURL(blob);
-
-    const date = new Date().toISOString().slice(0, 10);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `runation-registrations-${date}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
-    window.URL.revokeObjectURL(url);
-
-  } catch (err) {
-    if (err.message === "Unauthorized") {
-      localStorage.removeItem("adminToken");
-      window.location.href = "login.html";
-    } else {
-      showError(err.message);
-    }
-  } finally {
-    exportBtn.disabled = false;
-    exportBtn.textContent = "Export CSV";
-  }
-}
-
-searchBtn.addEventListener("click", () => {
-  offset = 0;
-  loadParticipants();
-});
-
-clearBtn.addEventListener("click", () => {
-  searchInput.value = "";
-  statusFilter.value = "";
-  offset = 0;
-  loadParticipants();
-});
-
-refreshBtn.addEventListener("click", () => {
-  loadParticipants();
-});
-
-exportBtn.addEventListener("click", () => {
-  exportCsv();
-});
-
-logoutBtn.addEventListener("click", () => {
-  localStorage.removeItem("adminToken");
-  window.location.href = "login.html";
-});
-
-searchInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") {
-    offset = 0;
-    loadParticipants();
-  }
-});
-
-statusFilter.addEventListener("change", () => {
-  offset = 0;
-  loadParticipants();
-});
-
-prevBtn.addEventListener("click", () => {
-  if (offset <= 0) return;
-  offset -= limit;
-  loadParticipants();
-});
-
-nextBtn.addEventListener("click", () => {
-  if (offset + limit >= total) return;
-  offset += limit;
-  loadParticipants();
-});
-
-eventTabs.forEach(btn => {
-  btn.addEventListener("click", () => {
-    eventTabs.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-
-    activeEventSlug = btn.dataset.event || "";
-    offset = 0;
-    loadParticipants();
+  const res = await fetch(url, {
+    method,
+    headers: adminHeaders(),
+    body: JSON.stringify(payload)
   });
-});
 
-loadParticipants();
+  const data = await res.json();
+
+  if (!res.ok || !data.success) {
+    setMessage(data.error || "Save failed.");
+    return;
+  }
+
+  setMessage(id ? "Event updated." : "Event created.");
+  resetForm();
+  loadEvents();
+}
+
+async function editEvent(id) {
+  const res = await fetch(`/api/admin/events/${id}`, {
+    headers: adminHeaders()
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data.success) {
+    setMessage(data.error || "Failed to load event.");
+    return;
+  }
+
+  const event = data.event;
+  const categories = data.categories || [];
+
+  document.getElementById("formTitle").textContent = "Edit Event";
+  document.getElementById("editingId").value = event.id;
+
+  document.getElementById("slug").value = event.slug || "";
+  document.getElementById("title").value = event.title || "";
+  document.getElementById("eventType").value = event.event_type || "";
+  document.getElementById("venue").value = event.venue || "";
+  document.getElementById("eventDate").value = event.event_date || "";
+  document.getElementById("statusMode").value = event.status_mode || "force_closed";
+  document.getElementById("openAt").value = fromIsoToDatetimeLocal(event.open_at);
+  document.getElementById("closeAt").value = fromIsoToDatetimeLocal(event.close_at);
+  document.getElementById("totalLimit").value = event.total_limit || 0;
+  document.getElementById("isVisible").value = String(event.is_visible ?? 1);
+  document.getElementById("sortOrder").value = event.sort_order || 0;
+  document.getElementById("shortDescription").value = event.short_description || "";
+
+  const box = document.getElementById("categoryEditor");
+  box.innerHTML = "";
+
+  if (categories.length) {
+    categories.forEach(cat => addCategoryRow(cat));
+  } else {
+    addCategoryRow();
+  }
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+async function loadEvents() {
+  const box = document.getElementById("eventList");
+
+  const res = await fetch("/api/admin/events", {
+    headers: adminHeaders()
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data.success) {
+    box.innerHTML = `<div class="muted">${data.error || "Unable to load events."}</div>`;
+    return;
+  }
+
+  const events = data.events || [];
+
+  if (!events.length) {
+    box.innerHTML = `<div class="muted">No events yet.</div>`;
+    return;
+  }
+
+  box.innerHTML = events.map(event => `
+    <div class="event-row">
+      <div class="event-row-top">
+        <div>
+          <h3>${event.title}</h3>
+          <div class="muted">Slug: ${event.slug}</div>
+          <div class="muted">Date: ${event.event_date || "-"}</div>
+          <div class="muted">Registered: ${event.used_slots || 0} / ${event.total_limit || "Unlimited"}</div>
+          <div class="muted">Visible: ${Number(event.is_visible) === 1 ? "Yes" : "No"}</div>
+        </div>
+
+        <div>
+          <span class="status-pill">${event.status}</span>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button type="button" onclick="editEvent(${event.id})">Edit</button>
+        <a href="event.html?event=${encodeURIComponent(event.slug)}" target="_blank">
+          <button class="secondary" type="button">Open Page</button>
+        </a>
+      </div>
+    </div>
+  `).join("");
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  document.getElementById("adminToken").value = getToken();
+
+  resetForm();
+
+  if (getToken()) {
+    loadEvents();
+  }
+});

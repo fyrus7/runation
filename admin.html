@@ -3,146 +3,311 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RUNATION Admin Dashboard</title>
-  <link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/admin.css">
+  <title>Runation Admin</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      color: #0f172a;
+    }
+
+    .admin-header {
+      background: #0f172a;
+      color: #fff;
+      padding: 16px;
+    }
+
+    .admin-header-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .admin-header h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .admin-wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 18px;
+    }
+
+    .admin-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      border: 1px solid #e6edf6;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.08);
+    }
+
+    .admin-card h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color: #334155;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid #dbe3ea;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 16px;
+      font-weight: 900;
+      cursor: pointer;
+      background: #0f172a;
+      color: #fff;
+    }
+
+    button.secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    button.danger {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .event-row {
+      border: 1px solid #e6edf6;
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .event-row-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .event-row h3 {
+      margin: 0 0 4px;
+      font-size: 17px;
+    }
+
+    .muted {
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 900;
+      background: #e2e8f0;
+    }
+
+    .cat-row {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr 0.8fr 0.7fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    #adminMessage {
+      margin-top: 12px;
+      font-weight: 800;
+      color: #2563eb;
+    }
+
+    @media (max-width: 700px) {
+      .form-grid,
+      .cat-row {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group.full {
+        grid-column: auto;
+      }
+
+      .event-row-top {
+        flex-direction: column;
+      }
+    }
+  </style>
 </head>
-<body class="admin-page">
 
-<div class="admin-shell">
-  <aside class="admin-sidebar">
-    <div class="admin-logo">
-      <div class="logo-mark">R</div>
-      <div>
-        <strong>RUNATION</strong>
-        <span>Race Admin</span>
+<body>
+
+<header class="admin-header">
+  <div class="admin-header-inner">
+    <h1>RUNATION Admin</h1>
+    <a href="index.html" style="color:#fff;text-decoration:none;font-weight:900;">View Site</a>
+  </div>
+</header>
+
+<main class="admin-wrap">
+
+  <section class="admin-card">
+    <h2>Admin Login</h2>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Admin Token</label>
+        <input id="adminToken" type="password" placeholder="Enter admin token">
       </div>
     </div>
 
-    <div class="side-menu">
-      <div class="side-item active">Registrations</div>
-      <div class="side-item muted">Payments</div>
-      <div class="side-item muted">Reports</div>
+    <div class="button-row">
+      <button onclick="saveToken()">Save Token</button>
+      <button class="secondary" onclick="loadEvents()">Refresh Events</button>
     </div>
 
-    <div class="side-footer">
-      <span>Admin Panel</span>
-      <strong>2026</strong>
-    </div>
-  </aside>
+    <div id="adminMessage"></div>
+  </section>
 
-  <main class="admin-main">
-    <div class="admin-topbar">
-      <div>
-        <p class="admin-kicker">EVENT REGISTRATION</p>
-        <h1>Registration Dashboard</h1>
-        <p class="admin-subtitle">Monitor participants, payment status, and export registration data.</p>
+  <section class="admin-card">
+    <h2 id="formTitle">Create Event</h2>
+
+    <input id="editingId" type="hidden">
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Slug</label>
+        <input id="slug" placeholder="example: lsptk">
       </div>
 
-      <div class="admin-actions">
-        <button id="refreshBtn" class="ghost-btn">Refresh</button>
-        <button id="exportBtn" class="primary-btn">Export CSV</button>
-        <button id="logoutBtn" class="danger-outline-btn">Logout</button>
-      </div>
-    </div>
-
-    <div class="admin-stat-grid">
-      <div class="admin-stat-card">
-        <span>Filtered Total</span>
-        <strong id="totalCount">0</strong>
-        <small>Total records matching current filter</small>
+      <div class="form-group">
+        <label>Title</label>
+        <input id="title" placeholder="Event title">
       </div>
 
-      <div class="admin-stat-card">
-        <span>Current Page</span>
-        <strong id="showingCount">0</strong>
-        <small>Records displayed right now</small>
+      <div class="form-group">
+        <label>Event Type</label>
+        <input id="eventType" placeholder="Half Marathon / Fun Run">
       </div>
 
-      <div class="admin-stat-card paid-card">
-        <span>Paid On Page</span>
-        <strong id="paidCount">0</strong>
-        <small>Confirmed paid records shown</small>
+      <div class="form-group">
+        <label>Venue</label>
+        <input id="venue" placeholder="Venue">
       </div>
 
-      <div class="admin-stat-card pending-card">
-        <span>Pending On Page</span>
-        <strong id="pendingCount">0</strong>
-        <small>Unpaid records shown</small>
-      </div>
-    </div>
-
-<div class="event-tabs">
-  <button class="event-tab active" data-event="">All Events</button>
-  <button class="event-tab" data-event="tanjong-karang-half-marathon-2026">
-    TKHM 2026
-  </button>
-  <button class="event-tab" data-event="lsptk">
-    LSPTK
-  </button>
-</div>
-
-    <div class="admin-panel">
-      <div class="panel-head">
-        <div>
-          <h2>Participants</h2>
-          <p>Search by registration number, name, IC, email, or phone.</p>
-        </div>
+      <div class="form-group">
+        <label>Event Date</label>
+        <input id="eventDate" type="date">
       </div>
 
-      <div class="admin-controls premium-controls">
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Search name, IC, phone, email, reg no..."
-        >
-
-        <select id="statusFilter">
-          <option value="">All Status</option>
-          <option value="PAID">PAID</option>
-          <option value="PENDING_PAYMENT">PENDING PAYMENT</option>
-          <option value="FAILED">FAILED</option>
+      <div class="form-group">
+        <label>Status Mode</label>
+        <select id="statusMode">
+          <option value="force_closed">Force Closed</option>
+          <option value="force_open">Force Open</option>
+          <option value="auto">Auto Schedule</option>
         </select>
-
-        <button id="searchBtn" class="primary-btn">Search</button>
-        <button id="clearBtn" class="ghost-btn">Clear</button>
       </div>
 
-      <div id="message"></div>
-
-      <div class="table-wrap premium-table-wrap">
-        <table class="admin-table premium-table">
-          <thead>
-            <tr>
-              <th>Reg No</th>
-              <th>Name</th>
-              <th>IC</th>
-              <th>Phone</th>
-              <th>Email</th>
-              <th>Category</th>
-              <th>Size</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Paid At</th>
-            </tr>
-          </thead>
-          <tbody id="participantsBody">
-            <tr>
-              <td colspan="10" class="empty-cell">Loading...</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="form-group">
+        <label>Open At</label>
+        <input id="openAt" type="datetime-local">
       </div>
 
-      <div class="pagination premium-pagination">
-        <button id="prevBtn" class="ghost-btn">Previous</button>
-        <span id="pageInfo">Page 1</span>
-        <button id="nextBtn" class="ghost-btn">Next</button>
+      <div class="form-group">
+        <label>Close At</label>
+        <input id="closeAt" type="datetime-local">
+      </div>
+
+      <div class="form-group">
+        <label>Total Limit</label>
+        <input id="totalLimit" type="number" placeholder="0 = unlimited">
+      </div>
+
+      <div class="form-group">
+        <label>Visible</label>
+        <select id="isVisible">
+          <option value="1">Visible</option>
+          <option value="0">Hidden</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Sort Order</label>
+        <input id="sortOrder" type="number" value="0">
+      </div>
+
+      <div class="form-group full">
+        <label>Short Description</label>
+        <textarea id="shortDescription" placeholder="Short event description"></textarea>
       </div>
     </div>
-  </main>
-</div>
+
+    <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
+
+    <h3>Categories</h3>
+
+    <div id="categoryEditor"></div>
+
+    <button class="secondary" type="button" onclick="addCategoryRow()">+ Add Category</button>
+
+    <div class="button-row">
+      <button onclick="saveEvent()">Save Event</button>
+      <button class="secondary" onclick="resetForm()">Clear Form</button>
+    </div>
+  </section>
+
+  <section class="admin-card">
+    <h2>Events</h2>
+    <div id="eventList">Loading...</div>
+  </section>
+
+</main>
 
 <script src="js/admin.js"></script>
+
 </body>
 </html>
