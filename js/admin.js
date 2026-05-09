@@ -325,7 +325,7 @@ async function saveEvent() {
   const payload = buildEventPayload();
 
   if (!payload.slug || !payload.title) {
-    setMessage("Slug and title are required.");
+    setMessage("Event URL and title are required.");
     return;
   }
 
@@ -530,7 +530,7 @@ async function loadEvents() {
           <div class="event-row-top">
             <div>
               <h3>${title}</h3>
-              <div class="muted">Slug: ${slug}</div>
+              <div class="muted">Event URL: /event/${slug}</div>
               <div class="muted">Date: ${date}</div>
               <div class="muted">Registered: ${usedSlots} / ${totalLimit}</div>
               <div class="muted">Visible: ${visible}</div>
