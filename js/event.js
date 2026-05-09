@@ -1,3 +1,5 @@
+let additionalParticipantCount = 0;
+
 function getSlug() {
   const params = new URLSearchParams(location.search);
   return params.get("event") || "";
@@ -247,6 +249,244 @@ function updateIdInputMode() {
 }
 
 
+function sanitizeDigitsElement(el, maxLength) {
+  if (!el) return;
+
+  el.value = String(el.value || "")
+    .replace(/\D/g, "")
+    .slice(0, maxLength || 99);
+}
+
+function cleanPassportElement(el) {
+  if (!el) return;
+
+  el.value = String(el.value || "")
+    .toUpperCase()
+    .replace(/\s/g, "")
+    .slice(0, 9);
+}
+
+function getAdditionalCategoryOptionsHtml() {
+  const mainSelect = document.getElementById("categorySelect");
+
+  if (!mainSelect || !mainSelect.innerHTML.trim()) {
+    return `<option value="">Select category</option>`;
+  }
+
+  return mainSelect.innerHTML;
+}
+
+function getAdditionalIdType(card) {
+  return card.querySelector(".additional-id-type")?.value || "ic";
+}
+
+function updateAdditionalIdInputMode(card) {
+  const type = getAdditionalIdType(card);
+  const input = card.querySelector(".additional-ic");
+  const label = card.querySelector(".additional-ic-label");
+
+  if (!input) return;
+
+  input.classList.remove("input-error");
+
+  if (type === "ic") {
+    input.placeholder = "12 digit IC number";
+    input.maxLength = 12;
+    input.inputMode = "numeric";
+
+    if (label) label.textContent = "IC Number";
+
+    sanitizeDigitsElement(input, 12);
+    autoSetAdditionalGenderFromIc(card);
+    return;
+  }
+
+  input.placeholder = "Passport number";
+  input.maxLength = 9;
+  input.inputMode = "text";
+
+  if (label) label.textContent = "Passport Number";
+
+  cleanPassportElement(input);
+}
+
+function autoSetAdditionalGenderFromIc(card) {
+  if (getAdditionalIdType(card) !== "ic") return;
+
+  const input = card.querySelector(".additional-ic");
+  const gender = card.querySelector(".additional-gender");
+
+  if (!input || !gender) return;
+
+  const ic = String(input.value || "").trim();
+
+  if (!/^\d{12}$/.test(ic)) return;
+
+  const lastDigit = Number(ic.slice(-1));
+  gender.value = lastDigit % 2 === 1 ? "MEN" : "WOMEN";
+  gender.classList.remove("input-error");
+}
+
+function toggleAdditionalFinisherTee(card) {
+  const select = card.querySelector(".additional-category");
+  const box = card.querySelector(".additional-finisher-box");
+  const finisherSelect = card.querySelector(".additional-finisher-size");
+
+  if (!select || !box) return;
+
+  const selectedOption = select.options[select.selectedIndex];
+  const categoryName = String(selectedOption?.dataset?.name || "").toUpperCase();
+
+  const needFinisherTee = categoryName.includes("21KM");
+
+  box.style.display = needFinisherTee ? "block" : "none";
+
+  if (!needFinisherTee && finisherSelect) {
+    finisherSelect.value = "";
+    finisherSelect.classList.remove("input-error");
+  }
+}
+
+function renumberAdditionalParticipants() {
+  const cards = document.querySelectorAll(".additional-participant-card");
+
+  cards.forEach((card, index) => {
+    const title = card.querySelector(".additional-participant-title");
+    if (title) title.textContent = `Participant ${index + 2}`;
+  });
+}
+
+function addAdditionalParticipant() {
+  additionalParticipantCount += 1;
+
+  const container = document.getElementById("additionalParticipants");
+  if (!container) return;
+
+  const card = document.createElement("div");
+  card.className = "additional-participant-card";
+  card.dataset.participantIndex = String(additionalParticipantCount);
+
+  card.innerHTML = `
+    <div class="additional-participant-head">
+      <h3 class="additional-participant-title">Participant</h3>
+      <button type="button" class="remove-participant-btn">Remove</button>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Category</label>
+        <select class="additional-category">
+          ${getAdditionalCategoryOptionsHtml()}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Full Name</label>
+        <input class="additional-name" type="text" placeholder="Enter full name">
+      </div>
+
+      <div class="form-group">
+        <label>ID Type</label>
+        <select class="additional-id-type">
+          <option value="ic">IC</option>
+          <option value="passport">Passport</option>
+        </select>
+
+        <label class="field-sub-label additional-ic-label">IC Number</label>
+        <input
+          class="additional-ic"
+          type="text"
+          placeholder="12 digit IC number"
+          inputmode="numeric"
+          maxlength="12"
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input
+          class="additional-phone"
+          type="tel"
+          placeholder="Enter phone number"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+      </div>
+
+      <div class="form-group">
+        <label>Gender</label>
+        <select class="additional-gender">
+          <option value="">Select gender</option>
+          <option value="MEN">Men</option>
+          <option value="WOMEN">Women</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input class="additional-email" type="email" placeholder="Enter email">
+      </div>
+
+      <div class="form-group">
+        <label>T-Shirt Size</label>
+        <select class="additional-tee-size">
+          <option value="">Select size</option>
+          <option value="XS">XS</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="2XL">2XL</option>
+          <option value="3XL">3XL</option>
+          <option value="4XL">4XL</option>
+          <option value="5XL">5XL</option>
+        </select>
+      </div>
+
+      <div class="form-group additional-finisher-box" style="display:none;">
+        <label>Finisher Tee Size</label>
+        <select class="additional-finisher-size">
+          <option value="">Select finisher tee size</option>
+          <option value="XS">XS</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="2XL">2XL</option>
+          <option value="3XL">3XL</option>
+          <option value="4XL">4XL</option>
+          <option value="5XL">5XL</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Emergency Contact Name</label>
+        <input class="additional-emergency-name" type="text" placeholder="Emergency contact name">
+      </div>
+
+      <div class="form-group">
+        <label>Emergency Contact Number</label>
+        <input
+          class="additional-emergency-phone"
+          type="tel"
+          placeholder="Emergency contact number"
+          inputmode="numeric"
+          autocomplete="off"
+        >
+      </div>
+    </div>
+  `;
+
+  container.appendChild(card);
+
+  updateAdditionalIdInputMode(card);
+  toggleAdditionalFinisherTee(card);
+  renumberAdditionalParticipants();
+}
+
+
+
 function getSelectedCategoryName() {
   const select = document.getElementById("categorySelect");
   if (!select) return "";
@@ -275,6 +515,10 @@ function clearInvalidFields() {
     const el = document.getElementById(id);
     if (el) el.classList.remove("input-error");
   });
+  
+  document
+  .querySelectorAll("#additionalParticipants .input-error")
+  .forEach(el => el.classList.remove("input-error"));
 }
 
 function markInvalidField(id) {
@@ -284,6 +528,101 @@ function markInvalidField(id) {
   const el = document.getElementById(id);
   if (el) el.classList.add("input-error");
 }
+
+function markInvalidElement(el) {
+  if (el) el.classList.add("input-error");
+}
+
+function getAdditionalField(card, selector) {
+  return card.querySelector(selector);
+}
+
+function getAdditionalValue(card, selector) {
+  const el = getAdditionalField(card, selector);
+  return el ? String(el.value || "").trim() : "";
+}
+
+function validateAdditionalParticipants() {
+  const cards = Array.from(document.querySelectorAll(".additional-participant-card"));
+  let isValid = true;
+
+  cards.forEach(card => {
+    const required = [
+      [".additional-category", "Category"],
+      [".additional-name", "Full name"],
+      [".additional-phone", "Phone number"],
+      [".additional-gender", "Gender"],
+      [".additional-email", "Email"],
+      [".additional-tee-size", "T-shirt size"],
+      [".additional-emergency-name", "Emergency contact name"],
+      [".additional-emergency-phone", "Emergency contact number"]
+    ];
+
+    required.forEach(([selector]) => {
+      const el = getAdditionalField(card, selector);
+
+      if (!String(el?.value || "").trim()) {
+        markInvalidElement(el);
+        isValid = false;
+      }
+    });
+
+    const idType = getAdditionalValue(card, ".additional-id-type") || "ic";
+    const idValue = getAdditionalValue(card, ".additional-ic");
+    const icInput = getAdditionalField(card, ".additional-ic");
+
+    if (!idValue) {
+      markInvalidElement(icInput);
+      isValid = false;
+    } else if (idType === "ic" && !/^\d{12}$/.test(idValue)) {
+      markInvalidElement(icInput);
+      isValid = false;
+    } else if (idType === "passport" && !/^[A-Z0-9]{1,9}$/i.test(idValue)) {
+      markInvalidElement(icInput);
+      isValid = false;
+    }
+
+    const phone = getAdditionalValue(card, ".additional-phone");
+    const phoneInput = getAdditionalField(card, ".additional-phone");
+
+    if (phone && !/^\d+$/.test(phone)) {
+      markInvalidElement(phoneInput);
+      isValid = false;
+    }
+
+    const emergencyPhone = getAdditionalValue(card, ".additional-emergency-phone");
+    const emergencyPhoneInput = getAdditionalField(card, ".additional-emergency-phone");
+
+    if (emergencyPhone && !/^\d+$/.test(emergencyPhone)) {
+      markInvalidElement(emergencyPhoneInput);
+      isValid = false;
+    }
+
+    const email = getAdditionalValue(card, ".additional-email");
+    const emailInput = getAdditionalField(card, ".additional-email");
+
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      markInvalidElement(emailInput);
+      isValid = false;
+    }
+
+    const categorySelect = getAdditionalField(card, ".additional-category");
+    const selectedOption = categorySelect?.options?.[categorySelect.selectedIndex];
+    const categoryName = String(selectedOption?.dataset?.name || "").toUpperCase();
+
+    if (categoryName.includes("21KM")) {
+      const finisher = getAdditionalField(card, ".additional-finisher-size");
+
+      if (!String(finisher?.value || "").trim()) {
+        markInvalidElement(finisher);
+        isValid = false;
+      }
+    }
+  });
+
+  return isValid;
+}
+
 
 function validateRegistrationForm() {
   clearInvalidFields();
@@ -355,6 +694,10 @@ function validateRegistrationForm() {
     missing.push("Finisher tee size");
     markInvalidField("finisherTeeSize");
   }
+  
+  if (!validateAdditionalParticipants()) {
+   missing.push("Additional participant details");
+  }
 
   if (missing.length) {
     setEventMessage("Please complete all required fields correctly.");
@@ -364,6 +707,42 @@ function validateRegistrationForm() {
   setEventMessage("");
   return true;
 }
+
+
+function buildPrimaryParticipantPayload() {
+  return {
+    category_id: Number(getValue("categorySelect")),
+    full_name: getValue("participantName"),
+    id_type: getIdType(),
+    ic_passport: getValue("participantIc"),
+    email: getValue("participantEmail"),
+    phone: getValue("participantPhone"),
+    gender: getValue("participantGender"),
+    address: getValue("participantAddress"),
+    tee_size: getValue("teeSize"),
+    finisher_tee_size: getValue("finisherTeeSize"),
+    emergency_name: getValue("emergencyName"),
+    emergency_phone: getValue("emergencyPhone")
+  };
+}
+
+function buildAdditionalParticipantsPayload() {
+  return Array.from(document.querySelectorAll(".additional-participant-card"))
+    .map(card => ({
+      category_id: Number(getAdditionalValue(card, ".additional-category")),
+      full_name: getAdditionalValue(card, ".additional-name"),
+      id_type: getAdditionalValue(card, ".additional-id-type") || "ic",
+      ic_passport: getAdditionalValue(card, ".additional-ic"),
+      email: getAdditionalValue(card, ".additional-email"),
+      phone: getAdditionalValue(card, ".additional-phone"),
+      gender: getAdditionalValue(card, ".additional-gender"),
+      tee_size: getAdditionalValue(card, ".additional-tee-size"),
+      finisher_tee_size: getAdditionalValue(card, ".additional-finisher-size"),
+      emergency_name: getAdditionalValue(card, ".additional-emergency-name"),
+      emergency_phone: getAdditionalValue(card, ".additional-emergency-phone")
+    }));
+}
+
 
 async function submitRegistration() {
   const btn = document.getElementById("registerBtn");
@@ -376,10 +755,15 @@ async function submitRegistration() {
   if (!validateRegistrationForm()) {
     return;
   }
+  
+  const primaryParticipant = buildPrimaryParticipantPayload();
+  const additionalParticipants = buildAdditionalParticipantsPayload();
+  const allParticipants = [primaryParticipant, ...additionalParticipants];
 
   const payload = {
     event_id: window.RUNATION_EVENT.id,
     category_id: Number(getValue("categorySelect")),
+	participants: allParticipants,
 
     full_name: getValue("participantName"),
     ic_passport: getValue("participantIc"),
@@ -462,6 +846,27 @@ document.addEventListener("input", function (e) {
   if (e.target.id === "emergencyPhone") {
     onlyDigits("emergencyPhone", 15);
   }
+  
+  const card = e.target.closest(".additional-participant-card");
+
+if (card) {
+  if (e.target.classList.contains("additional-ic")) {
+    if (getAdditionalIdType(card) === "ic") {
+      sanitizeDigitsElement(e.target, 12);
+      autoSetAdditionalGenderFromIc(card);
+    } else {
+      cleanPassportElement(e.target);
+    }
+  }
+
+  if (e.target.classList.contains("additional-phone")) {
+    sanitizeDigitsElement(e.target, 15);
+  }
+
+  if (e.target.classList.contains("additional-emergency-phone")) {
+    sanitizeDigitsElement(e.target, 15);
+  }
+}
 
   if (e.target.classList.contains("input-error")) {
     if (String(e.target.value || "").trim()) {
@@ -480,6 +885,18 @@ document.addEventListener("change", function (e) {
   if (e.target.id === "categorySelect") {
     toggleFinisherTee();
   }
+  
+  const card = e.target.closest(".additional-participant-card");
+
+if (card) {
+  if (e.target.classList.contains("additional-id-type")) {
+    updateAdditionalIdInputMode(card);
+  }
+
+  if (e.target.classList.contains("additional-category")) {
+    toggleAdditionalFinisherTee(card);
+  }
+}
 
   if (e.target.classList.contains("input-error")) {
     if (String(e.target.value || "").trim()) {
@@ -489,7 +906,21 @@ document.addEventListener("change", function (e) {
 });
 
 document.addEventListener("click", function (e) {
-  if (e.target && e.target.id === "registerBtn") {
+  if (!e.target) return;
+
+  if (e.target.id === "addParticipantBtn") {
+    addAdditionalParticipant();
+    return;
+  }
+
+  if (e.target.classList.contains("remove-participant-btn")) {
+    const card = e.target.closest(".additional-participant-card");
+    if (card) card.remove();
+    renumberAdditionalParticipants();
+    return;
+  }
+
+  if (e.target.id === "registerBtn") {
     submitRegistration();
   }
 });

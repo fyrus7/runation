@@ -406,3 +406,52 @@ body.event-page * {
   line-height: 1.35;
   font-weight: 700;
 }
+
+.add-participant-btn {
+  width: 100%;
+  margin-top: 14px;
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px dashed #2563eb;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.add-participant-btn:active {
+  transform: scale(0.99);
+}
+
+.additional-participant-card {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.additional-participant-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.additional-participant-head h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #0f172a;
+}
+
+.remove-participant-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #fee2e2;
+  color: #dc2626;
+  font-weight: 900;
+  cursor: pointer;
+}

@@ -246,22 +246,26 @@ export async function onRequestPost(context) {
     }
 
     const updateResult = await context.env.DB.prepare(`
-      UPDATE registrations
-      SET
-        payment_status = ?,
-        paid_at = COALESCE(?, paid_at),
-        updated_at = ?
-      WHERE reg_no = ?
-        AND payment_ref = ?
-    `)
-    .bind(
-      paymentStatus,
-      paidAt,
-      now,
-      order_id,
-      billcode
-    )
-    .run();
+	 UPDATE registrations
+     SET
+      payment_status = ?,
+      paid_at = COALESCE(?, paid_at),
+      updated_at = ?
+     WHERE payment_ref = ?
+       AND (
+        reg_no = ?
+        OR group_id = ?
+       )
+     `)
+      .bind(
+        paymentStatus,
+		paidAt,
+		now,
+		billcode,
+		order_id,
+		order_id
+	  )
+	  .run();
 
     return Response.json({
       success: true,
