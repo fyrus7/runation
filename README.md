@@ -1,2 +1,2 @@
 # runation
-runation setup
+runation setup update
