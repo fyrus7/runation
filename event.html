@@ -1,34 +1,125 @@
-<body>
-  <main class="event-page">
-    <section class="event-hero">
-      <div class="event-badge">RUNATION EVENT</div>
-      <h1 id="eventTitle">Loading event...</h1>
-      <p id="eventDescription"></p>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Runation Event</title>
 
-      <div class="event-info-row">
-        <span id="eventVenue">-</span>
-        <span id="eventDate">-</span>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/event.css">
+</head>
+
+<body class="event-page">
+
+<header class="event-header">
+  <div class="event-header-inner">
+    <a href="index.html" class="event-brand">
+      <span class="event-logo">R</span>
+      <div>
+        <strong>RUNATION</strong>
+        <small>Running Event Platform</small>
+      </div>
+    </a>
+  </div>
+</header>
+
+<main>
+  <section class="event-hero">
+    <div class="event-hero-inner">
+      <div class="event-copy">
+        <p class="event-kicker">RUNATION EVENT</p>
+
+        <h1 id="eventTitle">Loading event...</h1>
+
+        <p id="eventDescription"></p>
+
+        <div class="event-meta-row">
+          <div>
+            <small>Date</small>
+            <strong id="eventDate">-</strong>
+          </div>
+
+          <div>
+            <small>Venue</small>
+            <strong id="eventVenue">-</strong>
+          </div>
+
+          <div>
+            <small>Status</small>
+            <strong id="eventStatus">Loading</strong>
+          </div>
+        </div>
       </div>
 
-      <div id="eventStatus" class="event-status-pill">Loading</div>
-    </section>
+      <div class="event-visual">
+        <div class="event-route-card">
+          <span class="route-dot start"></span>
+          <div class="route-line"></div>
+          <span class="route-dot finish"></span>
 
-    <section class="registration-card">
-      <h2>Registration</h2>
-
-      <div id="categoryBox">
-        <label for="categorySelect">Category</label>
-        <select id="categorySelect">
-          <option>Loading...</option>
-        </select>
+          <div class="route-info">
+            <small>REGISTRATION</small>
+            <strong id="eventVisualTitle">RUNATION EVENT</strong>
+            <p id="eventVisualStatus">Loading...</p>
+          </div>
+        </div>
       </div>
+    </div>
+  </section>
 
-      <!-- form kau letak bawah ni nanti -->
-      <button id="registerBtn" type="button">Register Now</button>
+  <section class="registration-section">
+    <div class="registration-wrap">
+      <div class="registration-card">
+        <div class="registration-head">
+          <p>REGISTER NOW</p>
+          <h2>Participant Registration</h2>
+        </div>
 
-      <div id="eventMessage"></div>
-    </section>
-  </main>
+        <div class="form-group">
+          <label for="categorySelect">Category</label>
+          <select id="categorySelect">
+            <option>Loading...</option>
+          </select>
+        </div>
 
-  <script src="js/event.js"></script>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="participantName">Full Name</label>
+            <input id="participantName" type="text" placeholder="Enter full name">
+          </div>
+
+          <div class="form-group">
+            <label for="participantPhone">Phone Number</label>
+            <input id="participantPhone" type="tel" placeholder="Enter phone number">
+          </div>
+
+          <div class="form-group">
+            <label for="participantEmail">Email</label>
+            <input id="participantEmail" type="email" placeholder="Enter email">
+          </div>
+
+          <div class="form-group">
+            <label for="participantIc">IC / Passport</label>
+            <input id="participantIc" type="text" placeholder="Enter IC or passport">
+          </div>
+        </div>
+
+        <button id="registerBtn" type="button" class="register-btn">
+          Register Now
+        </button>
+
+        <div id="eventMessage" class="event-message"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="event-footer">
+  <span>RUNATION</span>
+  <p>Official event registration platform.</p>
+</footer>
+
+<script src="js/event.js"></script>
+
 </body>
+</html>
