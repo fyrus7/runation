@@ -195,6 +195,35 @@
       background: #e2e8f0;
 	  color: #475569;
 	}
+	
+	.status-cancelled {
+	  background: #f1f5f9;
+	  color: #475569;
+	}
+	
+	.action-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.action-buttons button {
+  padding: 7px 10px;
+  font-size: 11px;
+}
+
+.action-buttons .paid-btn {
+  background: #16a34a;
+}
+
+.action-buttons .expire-btn {
+  background: #f59e0b;
+  color: #111827;
+}
+
+.action-buttons .cancel-btn {
+  background: #ef4444;
+}
 
     .muted {
       color: #64748b;
@@ -268,6 +297,7 @@
           <option value="PENDING_PAYMENT">PENDING_PAYMENT</option>
           <option value="FAILED">FAILED</option>
 		  <option value="EXPIRED">EXPIRED</option>
+		  <option value="CANCELLED">CANCELLED</option>
         </select>
       </div>
     </div>
@@ -330,12 +360,13 @@
             <th>Amount</th>
             <th>Created</th>
             <th>Paid</th>
+			<th>Action</th>
           </tr>
         </thead>
 
         <tbody id="registrationRows">
           <tr>
-            <td colspan="15">Loading...</td>
+            <td colspan="16">Loading...</td>
           </tr>
         </tbody>
       </table>

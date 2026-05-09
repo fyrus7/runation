@@ -162,6 +162,22 @@ function renderRows(rows) {
       <td>${formatMoneySen(row.amount)}</td>
       <td>${formatDate(row.created_at)}</td>
       <td>${formatDate(row.paid_at)}</td>
+
+<td>
+  <div class="action-buttons">
+    <button class="paid-btn" type="button" onclick="registrationAction('${row.reg_no}', 'mark_paid')">
+      Paid
+    </button>
+
+    <button class="expire-btn" type="button" onclick="registrationAction('${row.reg_no}', 'expire')">
+      Expire
+    </button>
+
+    <button class="cancel-btn" type="button" onclick="registrationAction('${row.reg_no}', 'cancel')">
+      Cancel
+    </button>
+  </div>
+</td>
     </tr>
   `).join("");
 }
@@ -197,6 +213,41 @@ async function loadRegistrations() {
   renderRows(CURRENT_ROWS);
 
   setMessage(`${CURRENT_ROWS.length} registrations loaded.`);
+}
+
+async function registrationAction(regNo, action) {
+  const labels = {
+    mark_paid: "mark this registration as PAID",
+    expire: "expire this registration",
+    cancel: "cancel this registration"
+  };
+
+  const confirmText = `Are you sure you want to ${labels[action] || action}?\n\nRegistration No: ${regNo}`;
+
+  if (!confirm(confirmText)) {
+    return;
+  }
+
+  setMessage("Processing action...");
+
+  const res = await fetch("/api/admin/registration-action", {
+    method: "POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({
+      reg_no: regNo,
+      action
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok || !data.success) {
+    setMessage(data.error || "Action failed.");
+    return;
+  }
+
+  setMessage(data.message || "Action completed.");
+  loadRegistrations();
 }
 
 async function expirePending() {
