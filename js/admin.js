@@ -12,9 +12,62 @@ const ALLOWED_EVENT_IMAGE_TYPES = [
   "image/webp"
 ];
 
-function setMessage(message) {
-  const el = document.getElementById("adminMessage");
-  if (el) el.textContent = message || "";
+let adminToastTimer = null;
+
+function closeAdminToast() {
+  const toast = document.getElementById("adminToast");
+  if (!toast) return;
+
+  toast.classList.remove("show");
+
+  if (adminToastTimer) {
+    clearTimeout(adminToastTimer);
+    adminToastTimer = null;
+  }
+}
+
+function getToastType(message) {
+  const text = String(message || "").toLowerCase();
+
+  if (
+    text.includes("failed") ||
+    text.includes("error") ||
+    text.includes("unable") ||
+    text.includes("required") ||
+    text.includes("unauthorized") ||
+    text.includes("not found") ||
+    text.includes("cannot")
+  ) {
+    return "error";
+  }
+
+  return "success";
+}
+
+function setMessage(message, type) {
+  const text = message || "";
+
+  const oldMessage = document.getElementById("adminMessage");
+  if (oldMessage) oldMessage.textContent = "";
+
+  const toast = document.getElementById("adminToast");
+  const toastText = document.getElementById("adminToastText");
+
+  if (!toast || !toastText) return;
+
+  toastText.textContent = text;
+
+  toast.classList.remove("success", "error");
+  toast.classList.add(type || getToastType(text));
+  toast.classList.add("show");
+
+  if (adminToastTimer) {
+    clearTimeout(adminToastTimer);
+  }
+
+  adminToastTimer = setTimeout(() => {
+    closeAdminToast();
+  }, 6000);
 }
 
 function setImageStatus(message, isError = false) {
@@ -110,6 +163,16 @@ function clearEventImageInput() {
   setValue("eventImage", "");
   updateEventImagePreview("");
   setImageStatus("");
+}
+
+function removeEventImage() {
+  const fileInput = document.getElementById("eventImageFile");
+
+  if (fileInput) fileInput.value = "";
+
+  setValue("eventImage", "");
+  updateEventImagePreview("");
+  setImageStatus("Image removed. Click Save Event to apply.");
 }
 
 function addCategoryRow(cat = {}) {
@@ -346,6 +409,39 @@ async function editEvent(id) {
   }
 }
 
+
+async function deleteEvent(id) {
+  const ok = confirm("Delete this event? This cannot be undone.");
+
+  if (!ok) return;
+
+  try {
+    const res = await fetch(`/api/admin/events/${id}`, {
+      method: "DELETE",
+      headers: adminHeaders()
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || !data.success) {
+      setMessage(data?.error || "Delete failed.");
+      return;
+    }
+
+    const editingId = getValue("editingId");
+
+    if (String(editingId) === String(id)) {
+      resetForm();
+    }
+
+    setMessage("Event deleted.");
+    loadEvents();
+  } catch (err) {
+    setMessage(err.message || "Delete failed.");
+  }
+}
+
+
 async function loadEvents() {
   const box = document.getElementById("eventList");
   if (!box) return;
@@ -397,11 +493,16 @@ async function loadEvents() {
           </div>
 
           <div class="button-row">
-            <button type="button" onclick="editEvent(${Number(event.id)})">Edit</button>
-            <a href="event.html?event=${encodeURIComponent(event.slug)}" target="_blank">
-              <button class="secondary" type="button">Open Page</button>
-            </a>
-          </div>
+    	    <button type="button" onclick="editEvent(${Number(event.id)})">Edit</button>
+
+			<a href="event.html?event=${encodeURIComponent(event.slug)}" target="_blank">
+			  <button class="secondary" type="button">Open Page</button>
+			</a>
+			
+			<button class="danger" type="button" onclick="deleteEvent(${Number(event.id)})">
+			 Delete
+			</button>
+		  </div>
         </div>
       `;
     }).join("");
@@ -416,6 +517,11 @@ document.addEventListener("DOMContentLoaded", function () {
   const uploadBtn = document.getElementById("uploadEventImageBtn");
   if (uploadBtn) {
     uploadBtn.addEventListener("click", uploadEventImage);
+  }
+  
+  const removeImageBtn = document.getElementById("removeEventImageBtn");
+  if (removeImageBtn) {
+    removeImageBtn.addEventListener("click", removeEventImage);
   }
 
   const imageInput = document.getElementById("eventImageFile");
