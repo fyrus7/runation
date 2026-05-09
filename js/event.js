@@ -111,9 +111,134 @@ function toggleFinisherTee() {
   }
 }
 
+function getValue(id) {
+  const el = document.getElementById(id);
+  return el ? String(el.value || "").trim() : "";
+}
+
+function getSelectedCategoryName() {
+  const select = document.getElementById("categorySelect");
+  if (!select) return "";
+
+  const option = select.options[select.selectedIndex];
+  return String(option?.dataset?.name || option?.textContent || "").trim();
+}
+
+function validateRegistrationForm() {
+  const required = [
+    ["participantName", "Full name is required."],
+    ["participantIc", "IC / Passport is required."],
+    ["participantPhone", "Phone number is required."],
+    ["participantGender", "Gender is required."],
+    ["categorySelect", "Category is required."],
+    ["participantAddress", "Address is required."],
+    ["teeSize", "T-shirt size is required."],
+    ["emergencyName", "Emergency contact name is required."],
+    ["emergencyPhone", "Emergency contact number is required."]
+  ];
+
+  for (const [id, message] of required) {
+    if (!getValue(id)) {
+      setEventMessage(message);
+      return false;
+    }
+  }
+
+  const categoryName = getSelectedCategoryName().toUpperCase();
+
+  if (categoryName.includes("21KM") && !getValue("finisherTeeSize")) {
+    setEventMessage("Finisher tee size is required for 21KM.");
+    return false;
+  }
+
+  return true;
+}
+
+async function submitRegistration() {
+  const btn = document.getElementById("registerBtn");
+
+  if (!window.RUNATION_EVENT) {
+    setEventMessage("Event is not ready yet.");
+    return;
+  }
+
+  if (!validateRegistrationForm()) {
+    return;
+  }
+
+  const payload = {
+    event_id: window.RUNATION_EVENT.id,
+    category_id: Number(getValue("categorySelect")),
+
+    full_name: getValue("participantName"),
+    ic_passport: getValue("participantIc"),
+    email: getValue("participantEmail"),
+    phone: getValue("participantPhone"),
+    gender: getValue("participantGender"),
+    address: getValue("participantAddress"),
+
+    tee_size: getValue("teeSize"),
+    finisher_tee_size: getValue("finisherTeeSize"),
+
+    emergency_name: getValue("emergencyName"),
+    emergency_phone: getValue("emergencyPhone")
+  };
+
+  try {
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Submitting...";
+    }
+
+    setEventMessage("");
+
+    const res = await fetch("/api/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "REGISTRATION_FAILED");
+    }
+
+    if (data.payment_url) {
+      window.location.href = data.payment_url;
+	  return;
+	}
+	
+	setEventMessage(`Registration saved. Registration No: ${data.reg_no || data.registration_no}`);
+	
+	if (btn) {
+	  btn.disabled = true;
+	  btn.textContent = "Registration Saved";
+	}
+
+  } catch (err) {
+    console.error(err);
+
+    setEventMessage(err.message || "Registration failed.");
+
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Register Now";
+    }
+  }
+}
+
 document.addEventListener("change", function (e) {
   if (e.target && e.target.id === "categorySelect") {
     toggleFinisherTee();
+  }
+});
+
+document.addEventListener("click", function (e) {
+  if (e.target && e.target.id === "registerBtn") {
+    submitRegistration();
   }
 });
 

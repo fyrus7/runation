@@ -199,11 +199,9 @@ export async function onRequestPost(context) {
     }
 
     /*
-      event_categories.price = RM.
-      Contoh:
-      65.00 → RM65.00
-      75.00 → RM75.00
-      ToyyibPay perlukan amount dalam sen.
+      event_categories.price sekarang kita anggap dalam RM.
+      Contoh: 65.00, 75.00, 88.00.
+      ToyyibPay billAmount perlu dalam sen.
     */
     const priceRm = Number(categoryRow.price || 0);
     const amount = Math.round(priceRm * 100);
@@ -343,7 +341,7 @@ export async function onRequestPost(context) {
 
     reservedCategoryId = categoryRow.id;
 
-    const prefix = event.slug || "RUN";
+    const prefix = event.bill_name_prefix || event.slug || "RUN";
     const regNo = makeRegNo(prefix);
     insertedRegNo = regNo;
 
@@ -420,7 +418,7 @@ export async function onRequestPost(context) {
 
     const siteUrl = context.env.SITE_URL || new URL(context.request.url).origin;
 
-    const billName = limitText(event.title || "Runation", 30);
+    const billName = limitText(event.bill_name_prefix || event.title || "Runation", 30);
     const billDescription = limitText(`${event.title} ${category} Registration`, 100);
 
     const billData = new URLSearchParams();
