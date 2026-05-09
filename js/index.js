@@ -104,7 +104,14 @@ async function loadEvents() {
 
               <div>
                 <small>Slots</small>
-                <strong>${Number(event.used_slots || 0)} / ${event.total_limit || "Unlimited"}</strong>
+				<strong>${slotText}</strong>
+                const totalLimit = Number(event.total_limit || 0);
+				const usedSlots = Number(event.used_slots || 0);
+				const showCounter = Number(event.show_slot_counter || 0) === 1;
+				
+				const slotText = totalLimit > 0
+				  ? (showCounter ? `${usedSlots} / ${totalLimit}` : `${totalLimit} slots`)
+				  : "Unlimited";
               </div>
             </div>
 

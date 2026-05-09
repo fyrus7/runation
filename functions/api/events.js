@@ -49,6 +49,7 @@ export async function onRequestGet(context) {
         e.close_at,
         e.total_limit,
         e.used_slots,
+		e.show_slot_counter,
         e.sort_order,
 
         COALESCE(GROUP_CONCAT(c.name, ' / '), '-') AS categories_text,

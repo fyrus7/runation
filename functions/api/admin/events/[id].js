@@ -112,6 +112,7 @@ export async function onRequestPatch(context) {
       open_at = ?,
       close_at = ?,
       total_limit = ?,
+	  show_slot_counter = ?,
       is_visible = ?,
       sort_order = ?,
       updated_at = CURRENT_TIMESTAMP
@@ -127,6 +128,7 @@ export async function onRequestPatch(context) {
     cleanText(body.open_at),
     cleanText(body.close_at),
     Number(body.total_limit || 0),
+	Number(body.show_slot_counter || 0),
     Number(body.is_visible ?? 1),
     Number(body.sort_order || 0),
     id

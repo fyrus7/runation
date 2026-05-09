@@ -104,6 +104,7 @@ function resetForm() {
 
   document.getElementById("statusMode").value = "force_closed";
   document.getElementById("isVisible").value = "1";
+  document.getElementById("showSlotCounter").value = "0";
   document.getElementById("categoryEditor").innerHTML = "";
 
   addCategoryRow();
@@ -121,6 +122,7 @@ function buildEventPayload() {
     open_at: toIsoMalaysia(getValue("openAt")),
     close_at: toIsoMalaysia(getValue("closeAt")),
     total_limit: Number(getValue("totalLimit") || 0),
+	show_slot_counter: Number(getValue("showSlotCounter") || 0),
     is_visible: Number(getValue("isVisible") || 1),
     sort_order: Number(getValue("sortOrder") || 0),
     categories: getCategoriesFromForm()
@@ -184,6 +186,7 @@ async function editEvent(id) {
   document.getElementById("openAt").value = fromIsoToDatetimeLocal(event.open_at);
   document.getElementById("closeAt").value = fromIsoToDatetimeLocal(event.close_at);
   document.getElementById("totalLimit").value = event.total_limit || 0;
+  document.getElementById("showSlotCounter").value = String(event.show_slot_counter ?? 0);
   document.getElementById("isVisible").value = String(event.is_visible ?? 1);
   document.getElementById("sortOrder").value = event.sort_order || 0;
   document.getElementById("shortDescription").value = event.short_description || "";

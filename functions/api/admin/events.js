@@ -112,12 +112,13 @@ export async function onRequestPost(context) {
       close_at,
       total_limit,
       used_slots,
+	  show_slot_counter,
       is_visible,
       sort_order,
       created_at,
       updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
   `).bind(
     slug,
     title,
@@ -129,6 +130,7 @@ export async function onRequestPost(context) {
     cleanText(body.open_at),
     cleanText(body.close_at),
     Number(body.total_limit || 0),
+	Number(body.show_slot_counter || 0),
     Number(body.is_visible ?? 1),
     Number(body.sort_order || 0)
   ).run();
