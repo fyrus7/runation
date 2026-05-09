@@ -40,10 +40,15 @@ export async function onRequestPost(context) {
     form.append("billCode", billcode);
     form.append("billpaymentStatus", "1");
 
-    const toyRes = await fetch("https://toyyibpay.com/index.php/api/getBillTransactions", {
-      method: "POST",
-      body: form
-    });
+    const toyyibpayBase =
+	  context.env.TOYYIBPAY_MODE === "sandbox"
+    	? "https://dev.toyyibpay.com"
+		: "https://toyyibpay.com";
+		
+	const toyRes = await fetch(`${toyyibpayBase}/index.php/api/getBillTransactions`, {
+	  method: "POST",
+	  body: form
+	});
 
     const raw = await toyRes.text();
 

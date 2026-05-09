@@ -451,6 +451,11 @@ export async function onRequestPost(context) {
     }
 
     const siteUrl = context.env.SITE_URL || new URL(context.request.url).origin;
+	
+	const toyyibpayBase =
+      context.env.TOYYIBPAY_MODE === "sandbox"
+        ? "https://dev.toyyibpay.com"
+        : "https://toyyibpay.com";
 
     const billName = limitText(event.title || "Runation", 30);
     const billDescription = limitText(`${event.title} ${category} Registration`, 100);
@@ -474,7 +479,7 @@ export async function onRequestPost(context) {
     billData.append("billPaymentChannel", "0");
 	billData.append("billExpiryDate", getToyyibPayExpiryDateAfterOneHour());
 
-    const toyRes = await fetch("https://dev.toyyibpay.com/index.php/api/createBill", {
+    const toyRes = await fetch(`${toyyibpayBase}/index.php/api/createBill`, {
       method: "POST",
       body: billData
     });
@@ -508,7 +513,7 @@ export async function onRequestPost(context) {
       }, 502);
     }
 
-    const paymentUrl = `https://dev.toyyibpay.com/${billCode}`;
+    const paymentUrl = `${toyyibpayBase}/${billCode}`;
 
     await context.env.DB
       .prepare(`
