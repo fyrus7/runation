@@ -17,11 +17,18 @@ export async function onRequestPost(context) {
 
     const existing = await context.env.DB
       .prepare(`
-        SELECT id, reg_no, payment_ref, payment_status, amount
-        FROM registrations
-        WHERE reg_no = ?
-          AND payment_ref = ?
-        LIMIT 1
+        SELECT
+		  id,
+		  reg_no,
+		  payment_ref,
+		  payment_status,
+		  amount,
+		  event_slug,
+		  event_name
+		FROM registrations
+		WHERE reg_no = ?
+    	  AND payment_ref = ?
+		LIMIT 1
       `)
       .bind(reg_no, billcode)
       .first();
@@ -103,21 +110,26 @@ export async function onRequestPost(context) {
         .run();
 
       return Response.json({
-        success: true,
-        paid: true,
-        payment_status: "PAID",
-        transaction_id: tx.billpaymentInvoiceNo || "",
-        payment_date: tx.billPaymentDate || "",
-        registration_no: reg_no
-      });
+	    success: true,
+		paid: true,
+		payment_status: "PAID",
+		transaction_id: tx.billpaymentInvoiceNo || "",
+		payment_date: tx.billPaymentDate || "",
+		registration_no: reg_no,
+		event_slug: existing.event_slug,
+		event_name: existing.event_name
+	  });
     }
 
     return Response.json({
-      success: true,
-      paid: false,
-      payment_status: existing.payment_status,
-      billpaymentStatus: billStatus
-    });
+	  success: true,
+	  paid: false,
+	  payment_status: existing.payment_status,
+	  billpaymentStatus: billStatus,
+	  registration_no: reg_no,
+	  event_slug: existing.event_slug,
+	  event_name: existing.event_name
+	});
 
   } catch (err) {
     return Response.json(

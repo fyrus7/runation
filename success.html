@@ -6,6 +6,24 @@
   <title>Payment Status</title>
   <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/login.css">
+
+<style>
+  .success-ok-btn {
+    display: inline-flex;
+    width: 100%;
+    max-width: 260px;
+    height: 48px;
+    margin-top: 18px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #2563eb, #0f172a);
+    color: #fff;
+    text-decoration: none;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+  }
+</style>
+
 </head>
 <body>
 
@@ -26,6 +44,18 @@
   const billcode = params.get("billcode") || "";
 
   const box = document.getElementById("statusBox");
+
+  function okButton(eventSlug) {
+    const href = eventSlug
+      ? `event.html?event=${encodeURIComponent(eventSlug)}`
+      : "index.html";
+
+    return `
+      <a class="success-ok-btn" href="${href}">
+        OK
+      </a>
+    `;
+  }
 
   async function verifyPayment() {
     try {
@@ -50,6 +80,8 @@
         throw new Error(result.error || "Payment verification failed.");
       }
 
+      const eventSlug = result.event_slug || "";
+
       if (result.paid) {
         box.innerHTML = `
           <div class="success-box">
@@ -58,6 +90,7 @@
             <p><b>Transaction ID:</b> ${result.transaction_id || transactionId || "-"}</p>
             <p><b>Bill Code:</b> ${billcode}</p>
             <p>Your registration has been confirmed.</p>
+            ${okButton(eventSlug)}
           </div>
         `;
       } else if (statusId === "1" && msg.toLowerCase() === "ok") {
@@ -67,6 +100,7 @@
             <p><b>Registration No:</b> ${ref}</p>
             <p><b>Bill Code:</b> ${billcode}</p>
             <p>Payment was returned as successful, but verification is still pending.</p>
+            ${okButton(eventSlug)}
           </div>
         `;
       } else {
@@ -75,6 +109,7 @@
             <h1>Payment Pending / Failed</h1>
             <p><b>Registration No:</b> ${ref || "-"}</p>
             <p>Please contact the organizer if payment was deducted.</p>
+            ${okButton(eventSlug)}
           </div>
         `;
       }
@@ -86,6 +121,7 @@
           <p>${err.message}</p>
           <p><b>Registration No:</b> ${ref || "-"}</p>
           <p><b>Bill Code:</b> ${billcode || "-"}</p>
+          ${okButton("")}
         </div>
       `;
     }
