@@ -136,6 +136,84 @@ function getValue(id) {
   return el ? String(el.value || "").trim() : "";
 }
 
+function setValue(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.value = value ?? "";
+}
+
+function getIdType() {
+  return getValue("participantIdType") || "ic";
+}
+
+function onlyDigits(id, maxLength) {
+  const el = document.getElementById(id);
+  if (!el) return;
+
+  el.value = String(el.value || "")
+    .replace(/\D/g, "")
+    .slice(0, maxLength || 99);
+}
+
+function cleanPassportInput() {
+  const el = document.getElementById("participantIc");
+  if (!el) return;
+
+  el.value = String(el.value || "")
+    .toUpperCase()
+    .replace(/\s/g, "")
+    .slice(0, 9);
+}
+
+function autoSetGenderFromIc() {
+  if (getIdType() !== "ic") return;
+
+  const ic = getValue("participantIc");
+
+  if (!/^\d{12}$/.test(ic)) return;
+
+  const lastDigit = Number(ic.slice(-1));
+
+  if (lastDigit % 2 === 1) {
+    setValue("participantGender", "MEN");
+  } else {
+    setValue("participantGender", "WOMEN");
+  }
+
+  const gender = document.getElementById("participantGender");
+  if (gender) gender.classList.remove("input-error");
+}
+
+function updateIdInputMode() {
+  const type = getIdType();
+  const input = document.getElementById("participantIc");
+  const label = document.getElementById("participantIcLabel");
+
+  if (!input) return;
+
+  input.classList.remove("input-error");
+
+  if (type === "ic") {
+    input.placeholder = "12 digit IC number";
+    input.maxLength = 12;
+    input.inputMode = "numeric";
+
+    if (label) label.textContent = "IC Number";
+
+    onlyDigits("participantIc", 12);
+    autoSetGenderFromIc();
+    return;
+  }
+
+  input.placeholder = "Passport number";
+  input.maxLength = 9;
+  input.inputMode = "text";
+
+  if (label) label.textContent = "Passport Number";
+
+  cleanPassportInput();
+}
+
+
 function getSelectedCategoryName() {
   const select = document.getElementById("categorySelect");
   if (!select) return "";
@@ -148,6 +226,7 @@ function getSelectedCategoryName() {
 function clearInvalidFields() {
   [
     "participantName",
+    "participantIdType",
     "participantIc",
     "participantPhone",
     "participantGender",
@@ -177,7 +256,6 @@ function validateRegistrationForm() {
 
   const required = [
     ["participantName", "Full name"],
-    ["participantIc", "IC / Passport"],
     ["participantPhone", "Phone number"],
     ["participantGender", "Gender"],
     ["participantEmail", "Email"],
@@ -197,6 +275,33 @@ function validateRegistrationForm() {
     }
   }
 
+  const idType = getIdType();
+  const idValue = getValue("participantIc");
+
+  if (!idValue) {
+    missing.push(idType === "ic" ? "IC number" : "Passport number");
+    markInvalidField("participantIc");
+  } else if (idType === "ic" && !/^\d{12}$/.test(idValue)) {
+    missing.push("IC must be 12 digits");
+    markInvalidField("participantIc");
+  } else if (idType === "passport" && !/^[A-Z0-9]{1,9}$/i.test(idValue)) {
+    missing.push("Passport must be maximum 9 characters");
+    markInvalidField("participantIc");
+  }
+
+  const phone = getValue("participantPhone");
+  const emergencyPhone = getValue("emergencyPhone");
+
+  if (phone && !/^\d+$/.test(phone)) {
+    missing.push("Phone number must contain numbers only");
+    markInvalidField("participantPhone");
+  }
+
+  if (emergencyPhone && !/^\d+$/.test(emergencyPhone)) {
+    missing.push("Emergency contact number must contain numbers only");
+    markInvalidField("emergencyPhone");
+  }
+
   const email = getValue("participantEmail");
 
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -212,7 +317,7 @@ function validateRegistrationForm() {
   }
 
   if (missing.length) {
-    setEventMessage("Please complete all required fields.");
+    setEventMessage("Please complete all required fields correctly.");
     return false;
   }
 
@@ -296,9 +401,49 @@ async function submitRegistration() {
   }
 }
 
+
+document.addEventListener("input", function (e) {
+  if (!e.target) return;
+
+  if (e.target.id === "participantIc") {
+    if (getIdType() === "ic") {
+      onlyDigits("participantIc", 12);
+      autoSetGenderFromIc();
+    } else {
+      cleanPassportInput();
+    }
+  }
+
+  if (e.target.id === "participantPhone") {
+    onlyDigits("participantPhone", 15);
+  }
+
+  if (e.target.id === "emergencyPhone") {
+    onlyDigits("emergencyPhone", 15);
+  }
+
+  if (e.target.classList.contains("input-error")) {
+    if (String(e.target.value || "").trim()) {
+      e.target.classList.remove("input-error");
+    }
+  }
+});
+
 document.addEventListener("change", function (e) {
-  if (e.target && e.target.id === "categorySelect") {
+  if (!e.target) return;
+
+  if (e.target.id === "participantIdType") {
+    updateIdInputMode();
+  }
+
+  if (e.target.id === "categorySelect") {
     toggleFinisherTee();
+  }
+
+  if (e.target.classList.contains("input-error")) {
+    if (String(e.target.value || "").trim()) {
+      e.target.classList.remove("input-error");
+    }
   }
 });
 
@@ -308,21 +453,7 @@ document.addEventListener("click", function (e) {
   }
 });
 
-document.addEventListener("input", function (e) {
-  if (e.target && e.target.classList.contains("input-error")) {
-    if (String(e.target.value || "").trim()) {
-      e.target.classList.remove("input-error");
-    }
-  }
-});
 
-document.addEventListener("change", function (e) {
-  if (e.target && e.target.classList.contains("input-error")) {
-    if (String(e.target.value || "").trim()) {
-      e.target.classList.remove("input-error");
-    }
-  }
-});
 
 async function loadEvent() {
   const slug = getSlug();
@@ -367,4 +498,5 @@ async function loadEvent() {
   }
 }
 
+updateIdInputMode();
 loadEvent();

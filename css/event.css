@@ -393,3 +393,7 @@ body.event-page * {
   color: #dc2626;
   font-weight: 800;
 }
+
+.field-sub-label {
+  margin-top: 10px;
+}
