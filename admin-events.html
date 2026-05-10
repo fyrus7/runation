@@ -214,11 +214,18 @@
     }
 
     .cat-row {
-      display: grid;
-      grid-template-columns: 1.4fr 0.8fr 0.8fr 0.7fr;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr 0.8fr 0.7fr auto;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.cat-remove-btn {
+  min-height: 42px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
 
     #adminMessage {
       margin-top: 12px;
@@ -469,6 +476,16 @@
         <label>Venue</label>
         <input id="venue" placeholder="Venue">
       </div>
+	  
+	  <div class="form-group">
+  <label>Organizer Name</label>
+  <input id="organizerName" placeholder="Organizer name">
+</div>
+
+<div class="form-group">
+  <label>Organizer Website</label>
+  <input id="organizerUrl" type="url" placeholder="https://example.com">
+</div>
 
       <div class="form-group">
         <label>Event Date</label>
@@ -532,6 +549,20 @@
 	    <label>Postage Fee</label>
 		<input id="postageFee" type="number" step="0.01" placeholder="Example: 10.00">
 	  </div>
+	  
+	  <div class="form-group full">
+	      <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
+		  
+		  <h3>Categories</h3>
+		  
+		  <div id="categoryEditor"></div>
+		  
+		  <button class="secondary" type="button" onclick="addCategoryRow()">
+		  + Add Category
+		  </button>
+		  </div>
+		  <br>
+
 
       <div class="form-group full">
         <label>Short Description</label>
@@ -542,11 +573,25 @@
         <label>Event Image</label>
 
         <div class="image-upload-box">
-          <input
-            type="file"
-            id="eventImageFile"
-            accept="image/jpeg,image/png,image/webp"
-          >
+         <label>Banner Image URL</label>
+<input
+  id="eventImage"
+  type="url"
+  placeholder="Paste image URL or upload image below"
+>
+
+<small class="field-hint">
+  You can paste an image URL directly, or upload JPG/PNG/WEBP below.
+</small>
+
+<br>
+
+<label>Upload Image</label>
+<input
+  type="file"
+  id="eventImageFile"
+  accept="image/jpeg,image/png,image/webp"
+>
 
           <div class="image-upload-actions">
   <button type="button" id="uploadEventImageBtn">Upload Image</button>
@@ -554,7 +599,6 @@
   <span class="muted">JPG, PNG, WEBP only. Max 2MB.</span>
 </div>
 
-          <input type="hidden" id="eventImage">
 
           <div id="eventImageStatus"></div>
 
@@ -566,13 +610,6 @@
       </div>
     </div>
 
-    <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
-
-    <h3>Categories</h3>
-
-    <div id="categoryEditor"></div>
-
-    <button class="secondary" type="button" onclick="addCategoryRow()">+ Add Category</button>
 
     <div class="button-row">
       <button type="button" onclick="saveEvent()">Save Event</button>

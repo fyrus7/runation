@@ -99,6 +99,9 @@ export async function onRequestPost(context) {
     }, 400);
   }
 
+const organizerName = cleanText(body.organizer_name);
+const organizerUrl = cleanText(body.organizer_url);
+
 const result = await context.env.DB.prepare(`
   INSERT INTO events (
     slug,
@@ -106,6 +109,8 @@ const result = await context.env.DB.prepare(`
     event_type,
     short_description,
     venue,
+    organizer_name,
+    organizer_url,
     event_date,
     status_mode,
     open_at,
@@ -121,13 +126,15 @@ const result = await context.env.DB.prepare(`
     created_at,
     updated_at
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 `).bind(
   slug,
   title,
   cleanText(body.event_type),
   cleanText(body.short_description),
   cleanText(body.venue),
+  organizerName,
+  organizerUrl,
   cleanText(body.event_date),
   cleanText(body.status_mode || "force_closed"),
   cleanText(body.open_at),

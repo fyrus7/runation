@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Runation Event</title>
+  <title>RunationX Event</title>
 
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/event.css">
@@ -16,7 +16,7 @@
     <a href="index.html" class="event-brand">
       <span class="event-logo">R</span>
       <div>
-        <strong>RUNATION</strong>
+        <strong>RUNATIONX</strong>
         <small>Running Event Platform</small>
       </div>
     </a>
@@ -27,27 +27,13 @@
   <section class="event-hero">
     <div class="event-hero-inner">
       <div class="event-copy">
-        <p class="event-kicker">RUNATION EVENT</p>
+      <!--  <p class="event-kicker">RUNATIONX EVENT</p> -->
 
         <h1 id="eventTitle">Loading event...</h1>
 
-        <p id="eventDescription"></p>
-
-        <div class="event-meta-row">
-          <div>
-            <small>Date</small>
-            <strong id="eventDate">-</strong>
-          </div>
-
-          <div>
-            <small>Venue</small>
-            <strong id="eventVenue">-</strong>
-          </div>
-
-          <div>
-            <small>Status</small>
-            <strong id="eventStatus">Loading</strong>
-          </div>
+        <div class="hero-status-pill">
+          <small>Status</small>
+          <strong id="eventStatus">Loading</strong>
         </div>
       </div>
 
@@ -58,21 +44,76 @@
           <span class="route-dot finish"></span>
 
           <div class="route-info">
-    		<small>EVENT STATUS</small>
-			<strong id="eventVisualTitle"></strong>
-			<p id="eventVisualStatus"></p>
-		  </div>
+            <small>EVENT STATUS</small>
+            <strong id="eventVisualTitle"></strong>
+            <p id="eventVisualStatus"></p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="registration-section">
+  <section class="event-info-section">
+    <div class="event-info-wrap">
+      <div id="eventFormBanner" class="event-form-banner" hidden></div>
+	  
+	  <p id="eventDescription" class="event-description-text"></p>
+
+      <div class="event-info-card">
+        <div class="event-info-head">
+          <p>EVENT DETAILS</p>
+          <h2>Race Information</h2>
+        </div>
+
+        <div class="event-detail-grid">
+          <div class="event-detail-item">
+            <small>Date</small>
+            <strong id="eventDate">-</strong>
+          </div>
+
+          <div class="event-detail-item">
+            <small>Venue</small>
+            <strong id="eventVenue">-</strong>
+          </div>
+
+          <div class="event-detail-item">
+            <small>Categories</small>
+            <strong id="eventCategories">-</strong>
+          </div>
+
+          <div class="event-detail-item">
+            <small>Slots</small>
+            <strong id="eventSlots">-</strong>
+          </div>
+		  
+<div class="event-detail-item">
+  <small>Organizer</small>
+  <strong id="eventOrganizer">-</strong>
+
+  <a
+    id="eventOrganizerWebsite"
+    class="event-detail-link organizer-link"
+    href="#"
+    target="_blank"
+    rel="noopener"
+  >
+    -
+  </a>
+</div>
+        </div>
+
+        <button id="openRegistrationBtn" type="button" class="open-registration-btn">
+          Register Now
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section id="registrationSection" class="registration-section" hidden>
     <div class="registration-wrap">
       <div class="registration-card">
         <div class="registration-head">
-		<div id="eventFormBanner" class="event-form-banner" hidden></div>
-          <p>REGISTER NOW</p>
+          <p>REGISTRATION FORM</p>
           <h2>Participant Registration</h2>
         </div>
 
@@ -83,127 +124,133 @@
           </select>
         </div>
 
-<div class="form-grid">
-  <div class="form-group">
-    <label for="participantName">Full Name</label>
-    <input id="participantName" type="text" placeholder="Enter full name">
-  </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="participantName">Full Name</label>
+            <input id="participantName" type="text" placeholder="Enter full name">
+          </div>
 
-<div class="form-group">
-  <label for="participantIdType">ID Type</label>
-  <select id="participantIdType">
-    <option value="ic">IC</option>
-    <option value="passport">Passport</option>
-  </select>
+          <div class="form-group">
+            <label for="participantIdType">ID Type</label>
+            <select id="participantIdType">
+              <option value="ic">IC</option>
+              <option value="passport">Passport</option>
+            </select>
 
-  <label for="participantIc" id="participantIcLabel" class="field-sub-label">IC Number</label>
-  <input
-    id="participantIc"
-    type="text"
-    placeholder="12 digit IC number"
-    inputmode="numeric"
-    maxlength="12"
-    autocomplete="off"
-  >
-</div>
+            <label for="participantIc" id="participantIcLabel" class="field-sub-label">IC Number</label>
+            <input
+              id="participantIc"
+              type="text"
+              placeholder="12 digit IC number"
+              inputmode="numeric"
+              maxlength="12"
+              autocomplete="off"
+            >
+          </div>
 
-  <div class="form-group">
-    <label for="participantPhone">Phone Number</label>
-    <input
-       id="participantPhone"
-       type="tel"
-	   placeholder="Enter phone number"
-	   inputmode="numeric"
-	   autocomplete="off"
-	 >
-  </div>
+          <div class="form-group">
+            <label for="participantPhone">Phone Number</label>
+            <input
+              id="participantPhone"
+              type="tel"
+              placeholder="Enter phone number"
+              inputmode="numeric"
+              autocomplete="off"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="participantGender">Gender</label>
+            <select id="participantGender">
+              <option value="">Select gender</option>
+              <option value="MEN">Men</option>
+              <option value="WOMEN">Women</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="participantEmail">Email</label>
+            <input id="participantEmail" type="email" placeholder="Enter email">
+          </div>
+
+          <div class="form-group form-group-full" id="postageOptionBox" style="display:none;">
+            <label for="deliveryMethod">Postage</label>
+            <select id="deliveryMethod">
+              <option value="pickup">No, self collect</option>
+              <option value="postage">Yes, postage</option>
+            </select>
+            <small id="postageFeeText" class="field-hint"></small>
+          </div>
+
+          <div class="form-group form-group-full" id="addressBox">
+            <label for="participantAddress">Address</label>
+            <textarea id="participantAddress" placeholder="Required only if postage selected"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="teeSize">T-Shirt Size</label>
+            <select id="teeSize">
+              <option value="">Select size</option>
+              <option value="XS">XS</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="2XL">2XL</option>
+              <option value="3XL">3XL</option>
+              <option value="4XL">4XL</option>
+              <option value="5XL">5XL</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="finisherTeeBox" style="display:none;">
+            <label for="finisherTeeSize">Finisher Tee Size</label>
+            <select id="finisherTeeSize">
+              <option value="">Select finisher tee size</option>
+              <option value="XS">XS</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="2XL">2XL</option>
+              <option value="3XL">3XL</option>
+              <option value="4XL">4XL</option>
+              <option value="5XL">5XL</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="emergencyName">Emergency Contact Name</label>
+            <input id="emergencyName" type="text" placeholder="Emergency contact name">
+          </div>
+
+          <div class="form-group">
+            <label for="emergencyPhone">Emergency Contact Number</label>
+            <input
+              id="emergencyPhone"
+              type="tel"
+              placeholder="Emergency contact number"
+              inputmode="numeric"
+              autocomplete="off"
+            >
+          </div>
+        </div>
+
+        <div id="additionalParticipants"></div>
+
+        <button id="addParticipantBtn" type="button" class="add-participant-btn">
+          + Add More Participant
+        </button>
+
+        <div class="registration-actions">
+  <button id="registerBtn" type="button" class="register-btn">
+    Proceed to Payment
+  </button>
   
-  <div class="form-group">
-  <label for="participantGender">Gender</label>
-  <select id="participantGender">
-    <option value="">Select gender</option>
-    <option value="MEN">Men</option>
-    <option value="WOMEN">Women</option>
-  </select>
+    <button id="cancelRegistrationBtn" type="button" class="cancel-registration-btn">
+    Cancel
+  </button>
 </div>
-
-  <div class="form-group">
-    <label for="participantEmail">Email</label>
-    <input id="participantEmail" type="email" placeholder="Enter email">
-  </div>
-
-<div class="form-group form-group-full" id="postageOptionBox" style="display:none;">
-  <label for="deliveryMethod">Postage</label>
-  <select id="deliveryMethod">
-    <option value="pickup">No, self collect</option>
-    <option value="postage">Yes, postage</option>
-  </select>
-  <small id="postageFeeText" class="field-hint"></small>
-</div>
-
-<div class="form-group form-group-full" id="addressBox">
-  <label for="participantAddress">Address</label>
-  <textarea id="participantAddress" placeholder="Required only if postage selected"></textarea>
-</div>
-
-  <div class="form-group">
-    <label for="teeSize">T-Shirt Size</label>
-    <select id="teeSize">
-      <option value="">Select size</option>
-      <option value="XS">XS</option>
-      <option value="S">S</option>
-      <option value="M">M</option>
-      <option value="L">L</option>
-      <option value="XL">XL</option>
-      <option value="2XL">2XL</option>
-      <option value="3XL">3XL</option>
-      <option value="4XL">4XL</option>
-      <option value="5XL">5XL</option>
-    </select>
-  </div>
-
-  <div class="form-group" id="finisherTeeBox" style="display:none;">
-    <label for="finisherTeeSize">Finisher Tee Size</label>
-    <select id="finisherTeeSize">
-      <option value="">Select finisher tee size</option>
-      <option value="XS">XS</option>
-      <option value="S">S</option>
-      <option value="M">M</option>
-      <option value="L">L</option>
-      <option value="XL">XL</option>
-      <option value="2XL">2XL</option>
-      <option value="3XL">3XL</option>
-      <option value="4XL">4XL</option>
-      <option value="5XL">5XL</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label for="emergencyName">Emergency Contact Name</label>
-    <input id="emergencyName" type="text" placeholder="Emergency contact name">
-  </div>
-
-  <div class="form-group">
-    <label for="emergencyPhone">Emergency Contact Number</label>
-    <input
-       id="emergencyPhone"
-	   type="tel"
-	   placeholder="Emergency contact number"
-	   inputmode="numeric"
-	   autocomplete="off"
-	>
-  </div>
-</div>
-
-<div id="additionalParticipants"></div>
-
-<button id="addParticipantBtn" type="button" class="add-participant-btn">
-  + Add More Participant
-</button>
-
-<button id="registerBtn" type="button" class="register-btn">
-  Register Now
-</button>
 
         <div id="eventMessage" class="event-message"></div>
       </div>
@@ -212,7 +259,7 @@
 </main>
 
 <footer class="event-footer">
-  <span>RUNATION</span>
+  <span>RUNATIONX</span>
   <p>Official event registration platform.</p>
 </footer>
 

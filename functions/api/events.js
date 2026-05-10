@@ -33,9 +33,18 @@ function calculateEventStatus(event) {
 
 export async function onRequestGet(context) {
   try {
-    const { env } = context;
+    const env = context.env || {};
+    const DB = env.DB;
 
-    const rows = await env.DB.prepare(`
+    if (!DB) {
+      return json({
+        success: false,
+        error: "DB binding missing inside /api/events",
+        envKeys: Object.keys(env)
+      }, 500);
+    }
+
+    const rows = await DB.prepare(`
       SELECT
         e.id,
         e.slug,
@@ -81,7 +90,8 @@ export async function onRequestGet(context) {
   } catch (err) {
     return json({
       success: false,
-      error: err.message
+      error: err.message || String(err),
+      stack: err.stack || ""
     }, 500);
   }
 }

@@ -82,35 +82,128 @@ function setEventMessage(message) {
 }
 
 function applyEventStatus(event) {
-  const btn = document.getElementById("registerBtn");
+  const formBtn = document.getElementById("registerBtn");
+  const openBtn = document.getElementById("openRegistrationBtn");
   const statusBox = document.getElementById("eventStatus");
 
+  const status = String(event.status || "").toUpperCase();
+
   if (statusBox) {
-    statusBox.textContent = event.status || "-";
-    statusBox.className = `event-status-pill status-${String(event.status || "").toLowerCase()}`;
+    statusBox.textContent = status || "-";
+    statusBox.className = `event-status-pill status-${status.toLowerCase()}`;
   }
 
-  if (!btn) return;
+  const isOpen = status === "OPEN";
 
-  if (event.status === "OPEN") {
-    btn.disabled = false;
-    btn.textContent = "Register Now";
+  if (openBtn) {
+    openBtn.disabled = !isOpen;
+
+    if (status === "OPEN") {
+      openBtn.textContent = "Register Now";
+    } else if (status === "UPCOMING") {
+      openBtn.textContent = "Registration Not Open Yet";
+    } else if (status === "FULL") {
+      openBtn.textContent = "Event Full";
+    } else {
+      openBtn.textContent = "Registration Closed";
+    }
+  }
+
+  if (!formBtn) return;
+
+  formBtn.disabled = !isOpen;
+
+  if (status === "OPEN") {
+    formBtn.textContent = "Proceed to Payment";
     setEventMessage("");
+  } else if (status === "UPCOMING") {
+    formBtn.textContent = "Registration Not Open Yet";
+    setEventMessage("Registration is not open yet.");
+  } else if (status === "FULL") {
+    formBtn.textContent = "Event Full";
+    setEventMessage("This event is already full.");
+  } else {
+    formBtn.textContent = "Registration Closed";
+    setEventMessage("Registration for this event is closed.");
+  }
+}
+
+function getActiveCategories(categories) {
+  return (categories || []).filter(cat => Number(cat.is_active) === 1);
+}
+
+function renderEventDetails(event, categories) {
+  const activeCategories = getActiveCategories(categories);
+
+  const categoryText = activeCategories.length
+    ? activeCategories.map(cat => cat.name).join(", ")
+    : "-";
+
+  setText("eventCategories", categoryText);
+
+  const showSlotCounter = Number(event.show_slot_counter || 0) === 1;
+
+  if (!showSlotCounter) {
+    setText("eventSlots", "Available");
     return;
   }
 
-  btn.disabled = true;
+  let totalLimit = Number(event.total_limit || 0);
+  let usedSlots = Number(event.used_slots || 0);
 
-  if (event.status === "UPCOMING") {
-    btn.textContent = "Registration Not Open Yet";
-    setEventMessage("Registration is not open yet.");
-  } else if (event.status === "FULL") {
-    btn.textContent = "Event Full";
-    setEventMessage("This event is already full.");
-  } else {
-    btn.textContent = "Registration Closed";
-    setEventMessage("Registration for this event is closed.");
+  if (!totalLimit && activeCategories.length) {
+    totalLimit = activeCategories.reduce((sum, cat) => {
+      return sum + Number(cat.slot_limit || 0);
+    }, 0);
   }
+
+  if (!usedSlots && activeCategories.length) {
+    usedSlots = activeCategories.reduce((sum, cat) => {
+      return sum + Number(cat.used_slots || 0);
+    }, 0);
+  }
+
+  if (!totalLimit) {
+    setText("eventSlots", "Available");
+    return;
+  }
+
+  const balance = Math.max(totalLimit - usedSlots, 0);
+
+  setText("eventSlots", `${balance} / ${totalLimit} slots left`);
+}
+
+function normalizeWebsiteUrl(url) {
+  const value = String(url || "").trim();
+
+  if (!value) return "";
+
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+
+  return `https://${value}`;
+}
+
+function renderOrganizerDetails(event) {
+  setText("eventOrganizer", event.organizer_name || "-");
+
+  const link = document.getElementById("eventOrganizerWebsite");
+  if (!link) return;
+
+  const rawUrl = String(event.organizer_url || "").trim();
+  const finalUrl = normalizeWebsiteUrl(rawUrl);
+
+  if (!rawUrl) {
+    link.textContent = "-";
+    link.href = "#";
+    link.classList.add("is-empty");
+    return;
+  }
+
+  link.textContent = rawUrl.replace(/^https?:\/\//i, "").replace(/\/$/, "");
+  link.href = finalUrl;
+  link.classList.remove("is-empty");
 }
 
 function renderCategories(categories) {
@@ -907,6 +1000,27 @@ if (card) {
 
 document.addEventListener("click", function (e) {
   if (!e.target) return;
+  
+    if (e.target.id === "cancelRegistrationBtn") {
+    const section = document.getElementById("registrationSection");
+    const openBtn = document.getElementById("openRegistrationBtn");
+
+    if (section) section.hidden = true;
+    if (openBtn) openBtn.hidden = false;
+
+    setEventMessage("");
+
+    if (openBtn) {
+      setTimeout(() => {
+        openBtn.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      }, 50);
+    }
+
+    return;
+  }
 
   if (e.target.id === "addParticipantBtn") {
     addAdditionalParticipant();
@@ -957,7 +1071,9 @@ async function loadEvent() {
     setText("eventDescription", event.short_description);
     setText("eventVenue", event.venue || "-");
     setText("eventDate", formatDate(event.event_date));
-
+	
+	renderEventDetails(event, categories);
+	renderOrganizerDetails(event);
     renderCategories(categories);
     applyEventStatus(event);
 
@@ -969,6 +1085,32 @@ async function loadEvent() {
     setText("eventTitle", "Unable to load event");
     setEventMessage("Please try again later.");
   }
+}
+
+const openRegistrationBtn = document.getElementById("openRegistrationBtn");
+const registrationSection = document.getElementById("registrationSection");
+
+if (openRegistrationBtn && registrationSection) {
+  openRegistrationBtn.disabled = true;
+  openRegistrationBtn.textContent = "Loading...";
+
+  openRegistrationBtn.addEventListener("click", () => {
+    const status = String(window.RUNATION_EVENT?.status || "").toUpperCase();
+
+    if (status !== "OPEN") {
+      return;
+    }
+
+    registrationSection.hidden = false;
+    openRegistrationBtn.hidden = true;
+
+    setTimeout(() => {
+      registrationSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }, 50);
+  });
 }
 
 updateIdInputMode();

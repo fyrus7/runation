@@ -198,6 +198,7 @@ function addCategoryRow(cat = {}) {
       <option value="1" ${active === 1 ? "selected" : ""}>Active</option>
       <option value="0" ${active === 0 ? "selected" : ""}>Inactive</option>
     </select>
+    <button type="button" class="danger cat-remove-btn">Remove</button>
   `;
 
   box.appendChild(row);
@@ -226,6 +227,8 @@ function resetForm() {
     "title",
     "eventType",
     "venue",
+	"organizerName",
+	"organizerUrl",
     "eventDate",
     "openAt",
     "closeAt",
@@ -255,6 +258,8 @@ function buildEventPayload() {
     event_type: getValue("eventType"),
     short_description: getValue("shortDescription"),
     venue: getValue("venue"),
+	organizer_name: getValue("organizerName"),
+	organizer_url: getValue("organizerUrl"),
     event_date: getValue("eventDate"),
     status_mode: getValue("statusMode"),
     open_at: toIsoMalaysia(getValue("openAt")),
@@ -382,7 +387,9 @@ async function editEvent(id) {
     setValue("title", event.title || "");
     setValue("eventType", event.event_type || "");
     setValue("venue", event.venue || "");
-    setValue("eventDate", event.event_date || "");
+	setValue("organizerName", event.organizer_name || "");
+	setValue("organizerUrl", event.organizer_url || "");
+	setValue("eventDate", event.event_date || "");
     setValue("statusMode", event.status_mode || "force_closed");
     setValue("openAt", fromIsoToDatetimeLocal(event.open_at));
     setValue("closeAt", fromIsoToDatetimeLocal(event.close_at));
@@ -571,6 +578,29 @@ async function loadEvents() {
   }
 }
 
+
+document.addEventListener("click", function (e) {
+  if (!e.target) return;
+
+  if (e.target.classList.contains("cat-remove-btn")) {
+    const row = e.target.closest(".cat-row");
+    const rows = document.querySelectorAll(".cat-row");
+
+    if (!row) return;
+
+    if (rows.length <= 1) {
+      row.querySelector(".cat-id").value = "";
+      row.querySelector(".cat-name").value = "";
+      row.querySelector(".cat-price").value = "";
+      row.querySelector(".cat-limit").value = "0";
+      row.querySelector(".cat-active").value = "1";
+      return;
+    }
+
+    row.remove();
+  }
+});
+
 document.addEventListener("DOMContentLoaded", function () {
   resetForm();
 
@@ -607,6 +637,21 @@ document.addEventListener("DOMContentLoaded", function () {
       setImageStatus("Image ready to upload.");
     });
   }
+  
+  const eventImageInput = document.getElementById("eventImage");
+if (eventImageInput) {
+  eventImageInput.addEventListener("input", function () {
+    const url = getValue("eventImage");
+
+    updateEventImagePreview(url);
+
+    if (url) {
+      setImageStatus("Image URL ready. Click Save Event to apply.");
+    } else {
+      setImageStatus("");
+    }
+  });
+}
 
   if (getToken()) {
     loadEvents();

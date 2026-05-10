@@ -20,8 +20,8 @@ function getStatusText(status) {
 }
 
 function getButtonText(status) {
-  if (status === "OPEN") return "View Event & Register";
-  return "View Event";
+  if (status === "OPEN") return "Event Info";
+  return "Event Info";
 }
 
 function money(value) {
@@ -120,7 +120,7 @@ async function loadEvents() {
             <strong>${slotText}</strong>
           </div>
         </div>
-
+<!--
         <p class="event-desc">
           ${event.short_description || ""}
         </p>
@@ -129,7 +129,7 @@ async function loadEvents() {
           <span>Fee From</span>
           <strong>${feeFrom}</strong>
         </div>
-
+-->
         <a href="event.html?event=${encodeURIComponent(event.slug)}" class="event-btn">
           ${getButtonText(status)}
         </a>

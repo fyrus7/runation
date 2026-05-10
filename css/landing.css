@@ -15,8 +15,8 @@
 
 /* Header */
 .hub-header {
-  position: sticky;
-  top: 0;
+ /* position: sticky;
+  top: 0; */
   z-index: 50;
   background: rgba(7, 13, 25, 0.94);
   backdrop-filter: blur(12px);
@@ -168,7 +168,7 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.72));
+  /*background: linear-gradient(180deg, rgba(15,23,42,0.08), rgba(15,23,42,0.72));*/
 }
 
 .event-image {

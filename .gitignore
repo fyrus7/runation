@@ -4,3 +4,7 @@
 !.dev.vars.example
 .env*
 !.env.example
+.dev.vars.dev.vars 
+.local-d1/ 
+runation-backup.sql 
+dev.bat 

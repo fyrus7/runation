@@ -34,7 +34,14 @@ function calculateEventStatus(event) {
 export async function onRequestGet(context) {
   try {
     const { env, params } = context;
-    const slug = params.slug;
+    const slug = String(params.slug || "").trim();
+
+    if (!slug) {
+      return json({
+        success: false,
+        error: "MISSING_EVENT_SLUG"
+      }, 400);
+    }
 
     const event = await env.DB.prepare(`
       SELECT *
@@ -64,15 +71,20 @@ export async function onRequestGet(context) {
     `).bind(event.id).all();
 
     return json({
-	  success: true,
-	  event: {
-		...event,
-		postage_enabled: Number(event.postage_enabled || 0),
-		postage_fee: Number(event.postage_fee || 0),
-		status: calculateEventStatus(event)
-	  },
-	  categories: categories.results || []
-	});
+      success: true,
+      event: {
+        ...event,
+        postage_enabled: Number(event.postage_enabled || 0),
+        postage_fee: Number(event.postage_fee || 0),
+        show_slot_counter: Number(event.show_slot_counter || 0),
+        total_limit: Number(event.total_limit || 0),
+        used_slots: Number(event.used_slots || 0),
+        organizer_name: event.organizer_name || "",
+        organizer_url: event.organizer_url || "",
+        status: calculateEventStatus(event)
+      },
+      categories: categories.results || []
+    });
 
   } catch (err) {
     return json({
