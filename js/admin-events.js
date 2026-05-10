@@ -1,8 +1,4 @@
-const ADMIN_TOKEN_NOW = sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
-
-if (!ADMIN_TOKEN_NOW) {
-  location.replace(`login.html?next=${encodeURIComponent("admin-events.html")}`);
-}
+requireAdminLogin("admin-events.html");
 
 const MAX_EVENT_IMAGE_SIZE = 2 * 1024 * 1024;
 
@@ -79,25 +75,16 @@ function setImageStatus(message, isError = false) {
   el.style.color = isError ? "#dc2626" : "#16a34a";
 }
 
-function getToken() {
-  return sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
-}
-
-function logoutAdmin() {
-  sessionStorage.removeItem("RUNATION_ADMIN_TOKEN");
-  location.href = "login.html";
-}
-
 function adminHeaders() {
   return {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${getToken()}`
+    "Authorization": `Bearer ${getAdminToken()}`
   };
 }
 
 function adminAuthHeaders() {
   return {
-    "Authorization": `Bearer ${getToken()}`
+    "Authorization": `Bearer ${getAdminToken()}`
   };
 }
 
@@ -934,7 +921,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  if (getToken()) {
+  if (getAdminToken()) {
     loadEvents();
   }
 });

@@ -25,3 +25,24 @@ function formatDateTime(value) {
     minute: "2-digit"
   });
 }
+
+// admin.js & admin-events.js
+function getAdminToken() {
+  return sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
+}
+
+function requireAdminLogin(nextPage) {
+  const token = getAdminToken();
+
+  if (!token) {
+    location.replace(`login.html?next=${encodeURIComponent(nextPage)}`);
+    return false;
+  }
+
+  return true;
+}
+
+function logoutAdmin() {
+  sessionStorage.removeItem("RUNATION_ADMIN_TOKEN");
+  location.href = "login.html";
+}

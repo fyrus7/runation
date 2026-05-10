@@ -1,8 +1,4 @@
-const ADMIN_TOKEN_NOW = sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
-
-if (!ADMIN_TOKEN_NOW) {
-  location.replace(`login.html?next=${encodeURIComponent("admin.html")}`);
-}
+requireAdminLogin("admin.html");
 
 let CURRENT_ROWS = [];
 
@@ -11,19 +7,11 @@ function setMessage(message) {
   if (el) el.textContent = message || "";
 }
 
-function getToken() {
-  return sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
-}
-
-function logoutAdmin() {
-  sessionStorage.removeItem("RUNATION_ADMIN_TOKEN");
-  location.href = "login.html";
-}
 
 function adminHeaders() {
   return {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${getToken()}`
+    "Authorization": `Bearer ${getAdminToken()}`
   };
 }
 
@@ -333,7 +321,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  if (getToken()) {
+  if (getAdminToken()) {
     loadEventsForFilter();
     expirePending();
   }
