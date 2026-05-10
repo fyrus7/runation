@@ -1,9 +1,5 @@
 import { json } from "../../../server/lib/response.js";
-
-function isAdmin(context) {
-  const auth = context.request.headers.get("Authorization") || "";
-  return auth === `Bearer ${context.env.ADMIN_TOKEN}`;
-}
+import { isAdmin } from "../../../server/lib/auth.js";
 
 export async function onRequestPost(context) {
   if (!isAdmin(context)) {
