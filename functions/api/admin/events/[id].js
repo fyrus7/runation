@@ -118,6 +118,8 @@ await context.env.DB.prepare(`
     is_visible = ?,
     sort_order = ?,
     event_image = ?,
+    registration_mode = ?,
+    external_registration_url = ?,
     postage_enabled = ?,
     postage_fee = ?,
     updated_at = CURRENT_TIMESTAMP
@@ -139,6 +141,8 @@ await context.env.DB.prepare(`
   Number(body.is_visible ?? 1),
   Number(body.sort_order || 0),
   cleanText(body.event_image),
+  cleanText(body.registration_mode || "internal"),
+  cleanText(body.external_registration_url),
   Number(body.postage_enabled || 0),
   Number(body.postage_fee || 0),
   id

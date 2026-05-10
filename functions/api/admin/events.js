@@ -99,54 +99,61 @@ export async function onRequestPost(context) {
     }, 400);
   }
 
-const organizerName = cleanText(body.organizer_name);
-const organizerUrl = cleanText(body.organizer_url);
+  const registrationMode = cleanText(body.registration_mode || "internal");
+  const externalRegistrationUrl = cleanText(body.external_registration_url);
 
-const result = await context.env.DB.prepare(`
-  INSERT INTO events (
+  const organizerName = cleanText(body.organizer_name);
+  const organizerUrl = cleanText(body.organizer_url);
+
+  const result = await context.env.DB.prepare(`
+    INSERT INTO events (
+      slug,
+      title,
+      event_type,
+      short_description,
+      venue,
+      organizer_name,
+      organizer_url,
+      event_date,
+      status_mode,
+      open_at,
+      close_at,
+      total_limit,
+      used_slots,
+      show_slot_counter,
+      is_visible,
+      sort_order,
+      event_image,
+      registration_mode,
+      external_registration_url,
+      postage_enabled,
+      postage_fee,
+      created_at,
+      updated_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  `).bind(
     slug,
     title,
-    event_type,
-    short_description,
-    venue,
-    organizer_name,
-    organizer_url,
-    event_date,
-    status_mode,
-    open_at,
-    close_at,
-    total_limit,
-    used_slots,
-    show_slot_counter,
-    is_visible,
-    sort_order,
-    event_image,
-    postage_enabled,
-    postage_fee,
-    created_at,
-    updated_at
-  )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-`).bind(
-  slug,
-  title,
-  cleanText(body.event_type),
-  cleanText(body.short_description),
-  cleanText(body.venue),
-  organizerName,
-  organizerUrl,
-  cleanText(body.event_date),
-  cleanText(body.status_mode || "force_closed"),
-  cleanText(body.open_at),
-  cleanText(body.close_at),
-  Number(body.total_limit || 0),
-  Number(body.show_slot_counter || 0),
-  Number(body.is_visible ?? 1),
-  Number(body.sort_order || 0),
-  cleanText(body.event_image),
-  Number(body.postage_enabled || 0),
-  Number(body.postage_fee || 0)
-).run();
+    cleanText(body.event_type),
+    cleanText(body.short_description),
+    cleanText(body.venue),
+    organizerName,
+    organizerUrl,
+    cleanText(body.event_date),
+    cleanText(body.status_mode || "force_closed"),
+    cleanText(body.open_at),
+    cleanText(body.close_at),
+    Number(body.total_limit || 0),
+    Number(body.show_slot_counter || 0),
+    Number(body.is_visible ?? 1),
+    Number(body.sort_order || 0),
+    cleanText(body.event_image),
+    registrationMode,
+    externalRegistrationUrl,
+    Number(body.postage_enabled || 0),
+    Number(body.postage_fee || 0)
+  ).run();
 
   const eventId = result.meta.last_row_id;
 

@@ -1074,8 +1074,28 @@ async function loadEvent() {
 	
 	renderEventDetails(event, categories);
 	renderOrganizerDetails(event);
-    renderCategories(categories);
-    applyEventStatus(event);
+	renderCategories(categories);
+	applyEventStatus(event);
+	
+	const registrationMode = String(event.registration_mode || "internal").toLowerCase();
+	
+	if (registrationMode === "external") {
+		const externalUrl = normalizeWebsiteUrl(event.external_registration_url || "");
+		
+	if (registrationSection) registrationSection.hidden = true;
+	
+	if (openRegistrationBtn) {
+		openRegistrationBtn.hidden = false;
+		
+		if (externalUrl) {
+			openRegistrationBtn.disabled = String(event.status || "").toUpperCase() !== "OPEN";
+			openRegistrationBtn.textContent = "Register Now";
+		} else {
+			openRegistrationBtn.disabled = true;
+			openRegistrationBtn.textContent = "Registration URL Missing";
+		}
+	  }
+    }
 
     window.RUNATION_EVENT = event;
     window.RUNATION_CATEGORIES = categories;
@@ -1095,9 +1115,23 @@ if (openRegistrationBtn && registrationSection) {
   openRegistrationBtn.textContent = "Loading...";
 
   openRegistrationBtn.addEventListener("click", () => {
-    const status = String(window.RUNATION_EVENT?.status || "").toUpperCase();
+    const event = window.RUNATION_EVENT;
+    const status = String(event?.status || "").toUpperCase();
 
     if (status !== "OPEN") {
+      return;
+    }
+
+    const mode = String(event?.registration_mode || "internal").toLowerCase();
+    const externalUrl = normalizeWebsiteUrl(event?.external_registration_url || "");
+
+    if (mode === "external") {
+      if (!externalUrl) {
+        setEventMessage("Registration URL is not available.");
+        return;
+      }
+
+      window.location.href = externalUrl;
       return;
     }
 

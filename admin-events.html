@@ -375,6 +375,10 @@
   font-size: 11px;
   line-height: 1.35;
 }
+
+[hidden] {
+  display: none !important;
+}
   </style>
 </head>
 
@@ -447,9 +451,23 @@
 
     <div id="adminMessage"></div>
   </section>
-
+  
   <section class="admin-card">
-    <h2 id="formTitle">Create Event</h2>
+  <h2>Event Setup</h2>
+
+  <div class="button-row">
+    <button type="button" onclick="showFullEventForm()">
+      Create Event
+    </button>
+
+    <button type="button" class="secondary" onclick="showExternalEventForm()">
+      Add External Event
+    </button>
+  </div>
+</section>
+
+  <section id="fullEventForm" class="admin-card" hidden>
+  <h2 id="formTitle">Create Event</h2>
 
     <input id="editingId" type="hidden">
 
@@ -616,6 +634,81 @@
       <button class="secondary" type="button" onclick="resetForm()">Clear Form</button>
     </div>
   </section>
+
+<section id="externalEventForm" class="admin-card" hidden>
+  <h2>Add External Event</h2>
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Event URL</label>
+      <input id="externalSlug" placeholder="example: external-run">
+      <small class="field-hint">
+        This will become: ?event=external-run
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label>External Registration URL</label>
+      <input id="externalRegistrationUrl" type="url" placeholder="https://external-site.com/register">
+      <small class="field-hint">
+        Register Now button will redirect to this URL.
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label>Title</label>
+      <input id="externalTitle" placeholder="Event title">
+    </div>
+
+    <div class="form-group">
+      <label>Venue</label>
+      <input id="externalVenue" placeholder="Venue">
+    </div>
+
+    <div class="form-group">
+      <label>Event Date</label>
+      <input id="externalEventDate" type="date">
+    </div>
+
+    <div class="form-group">
+      <label>Categories</label>
+      <input id="externalCategories" placeholder="Example: 21KM, 10KM, 5KM">
+    </div>
+	
+	<div class="form-group">
+  <label>Slots</label>
+  <input id="externalSlots" type="number" placeholder="Example: 5000">
+  <small class="field-hint">
+    Leave empty if not applicable.
+  </small>
+</div>
+
+<div class="form-group">
+  <label>Organizer Name</label>
+  <input id="externalOrganizerName" placeholder="Organizer name">
+</div>
+
+<div class="form-group">
+  <label>Organizer Website</label>
+  <input id="externalOrganizerUrl" type="url" placeholder="https://example.com">
+</div>
+
+    <div class="form-group full">
+      <label>Short Description</label>
+      <textarea id="externalShortDescription" placeholder="Short event description"></textarea>
+    </div>
+
+    <div class="form-group full">
+      <label>Banner Image URL</label>
+      <input id="externalEventImage" type="url" placeholder="https://example.com/banner.jpg">
+    </div>
+  </div>
+
+  <div class="button-row">
+    <button type="button" onclick="saveExternalEvent()">Save External Event</button>
+    <button type="button" class="secondary" onclick="resetExternalEventForm()">Clear Form</button>
+  </div>
+</section>
 
   <section class="admin-card">
     <h2>Events</h2>
