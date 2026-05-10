@@ -160,8 +160,8 @@ function renderRows(rows) {
       </td>
 
       <td>${formatMoneySen(row.amount)}</td>
-      <td>${formatDate(row.created_at)}</td>
-      <td>${formatDate(row.paid_at)}</td>
+      <td>${formatDateTime(row.created_at)}</td>
+      <td>${formatDateTime(row.paid_at)}</td>
 
 <td>
   <div class="action-buttons">

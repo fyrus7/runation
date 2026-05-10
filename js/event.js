@@ -1070,7 +1070,7 @@ async function loadEvent() {
 	setText("eventVisualStatus", event.status);
     setText("eventDescription", event.short_description);
     setText("eventVenue", event.venue || "-");
-    setText("eventDate", formatDate(event.event_date));
+    setText("eventDate", formatDateOnly(event.event_date));
 	
 	renderEventDetails(event, categories);
 	renderOrganizerDetails(event);

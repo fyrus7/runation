@@ -102,7 +102,7 @@ async function loadEvents() {
         <div class="event-info-grid">
           <div>
             <small>Date</small>
-            <strong>${formatDate(event.event_date)}</strong>
+            <strong>${formatDateOnly(event.event_date)}</strong>
           </div>
 
           <div>
