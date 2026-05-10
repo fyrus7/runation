@@ -8,3 +8,4 @@
 .local-d1/ 
 runation-backup.sql 
 dev.bat 
+wrangler.backup.jsonc 
