@@ -1,4 +1,5 @@
 import { json } from "../../../server/lib/response.js";
+import { isAdmin } from "../../../server/lib/auth.js";
 
 const MAX_SIZE = 2 * 1024 * 1024;
 
@@ -8,25 +9,6 @@ const ALLOWED_TYPES = {
   "image/webp": "webp"
 };
 
-
-function getBearerToken(request) {
-  const auth = request.headers.get("Authorization") || "";
-  return auth.replace(/^Bearer\s+/i, "").trim();
-}
-
-function isAuthorized(request, env) {
-  const token = getBearerToken(request);
-
-  if (!token) return false;
-
-  /*
-    IMPORTANT:
-    Ini assume admin token kau disimpan dalam env.ADMIN_TOKEN.
-    Kalau API admin existing kau guna env name lain,
-    tukar env.ADMIN_TOKEN kepada nama yang sama.
-  */
-  return token === env.ADMIN_TOKEN;
-}
 
 function safeSlug(value) {
   return String(value || "event")
@@ -41,7 +23,7 @@ export async function onRequestPost(context) {
   const { request, env } = context;
 
   try {
-    if (!isAuthorized(request, env)) {
+    if (!isAdmin(context)) {
       return json({
         success: false,
         error: "UNAUTHORIZED"
