@@ -1,6 +1,4 @@
-function json(data, status = 200) {
-  return Response.json(data, { status });
-}
+import { json } from "../../../server/lib/response.js";
 
 export async function onRequestPost(context) {
   try {
