@@ -1,3 +1,5 @@
+import { json } from "../../server/lib/response.js";
+
 function md5(input) {
   function cmn(q, a, b, x, s, t) {
     a = add32(add32(a, q), add32(x, t));
@@ -159,7 +161,7 @@ function md5(input) {
 }
 
 export async function onRequestGet() {
-  return Response.json({
+  return json({
     success: true,
     message: "payment-callback endpoint is alive. ToyyibPay must call this using POST."
   });
@@ -221,11 +223,11 @@ export async function onRequestPost(context) {
     .run();
 
     if (!status || !billcode || !order_id) {
-      return Response.json({
+      return json({
         success: false,
         error: "Missing important callback fields",
         received: data
-      }, { status: 400 });
+      }, 400);
     }
 
     // Untuk sementara debug:
@@ -267,7 +269,7 @@ export async function onRequestPost(context) {
 	  )
 	  .run();
 
-    return Response.json({
+    return json({
       success: true,
       message: "Callback received",
       payment_status: paymentStatus,
@@ -306,9 +308,9 @@ export async function onRequestPost(context) {
     )
     .run();
 
-    return Response.json({
+    return json({
       success: false,
       error: err.message
-    }, { status: 500 });
+    }, 500);
   }
 }
