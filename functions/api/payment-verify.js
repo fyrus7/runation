@@ -1,3 +1,5 @@
+import { json } from "../../server/lib/response.js";
+
 export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
@@ -6,7 +8,7 @@ export async function onRequestPost(context) {
     const billcode = String(body.billcode || body.billCode || body.BillCode || "").trim();
 
     if (!ref || !billcode) {
-      return Response.json(
+      return json(
         {
           success: false,
           error: "Missing payment reference or billcode"
@@ -39,7 +41,7 @@ export async function onRequestPost(context) {
       .first();
 
     if (!existing) {
-      return Response.json(
+      return json(
         {
           success: false,
           error: "Registration not found"
@@ -89,7 +91,7 @@ export async function onRequestPost(context) {
     const tx = Array.isArray(toyData) ? toyData[0] : null;
 
     if (!tx) {
-      return Response.json({
+      return json({
         success: true,
         paid: false,
         message: "No successful ToyyibPay transaction found",
@@ -108,7 +110,7 @@ export async function onRequestPost(context) {
     const externalRef = String(tx.billExternalReferenceNo || "");
 
     if (externalRef && externalRef !== ref) {
-      return Response.json(
+      return json(
         {
           success: false,
           error: "ToyyibPay reference does not match payment reference",
@@ -138,7 +140,7 @@ export async function onRequestPost(context) {
         .bind(now, now, billcode, ref, ref)
         .run();
 
-      return Response.json({
+      return json({
         success: true,
         paid: true,
         payment_status: "PAID",
@@ -153,7 +155,7 @@ export async function onRequestPost(context) {
       });
     }
 
-    return Response.json({
+    return json({
       success: true,
       paid: false,
       payment_status: existing.payment_status,
@@ -167,7 +169,7 @@ export async function onRequestPost(context) {
     });
 
   } catch (err) {
-    return Response.json(
+    return json(
       {
         success: false,
         error: err.message
