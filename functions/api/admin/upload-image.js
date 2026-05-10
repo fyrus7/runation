@@ -1,3 +1,5 @@
+import { json } from "../../../server/lib/response.js";
+
 const MAX_SIZE = 2 * 1024 * 1024;
 
 const ALLOWED_TYPES = {
@@ -6,14 +8,6 @@ const ALLOWED_TYPES = {
   "image/webp": "webp"
 };
 
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    }
-  });
-}
 
 function getBearerToken(request) {
   const auth = request.headers.get("Authorization") || "";
