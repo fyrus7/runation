@@ -1,11 +1,4 @@
-function json(data, status = 200) {
-  return new Response(JSON.stringify(data), {
-    status,
-    headers: {
-      "Content-Type": "application/json; charset=utf-8"
-    }
-  });
-}
+import { json } from "../../server/lib/response.js";
 
 function calculateEventStatus(event) {
   const now = new Date();
