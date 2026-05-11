@@ -321,8 +321,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  if (getAdminToken()) {
-    loadEventsForFilter();
+  if (getToken()) {
+  loadEventsForFilter();
+
+  const role = sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "master";
+
+  if (role === "master") {
     expirePending();
   }
+}
 });

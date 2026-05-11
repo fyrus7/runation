@@ -1,5 +1,14 @@
-import { json } from "../../../server/lib/response.js";
-import { isAdmin } from "../../../server/lib/auth.js";
+import {
+  json,
+  requireAdmin,
+  isMaster
+} from "./_auth.js";
+
+const auth = await requireAdmin(context);
+if (!auth.ok) return auth.response;
+
+const admin = auth.admin;
+
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -55,24 +64,31 @@ async function insertCategories(env, eventId, categories) {
 }
 
 export async function onRequestGet(context) {
-  if (!isAdmin(context)) {
-    return json({ success: false, error: "UNAUTHORIZED" }, 401);
+  const auth = await requireAdmin(context);
+  if (!auth.ok) return auth.response;
+
+  const admin = auth.admin;
+
+  let result;
+
+  if (isMaster(admin)) {
+    result = await context.env.DB.prepare(`
+      SELECT *
+      FROM events
+      ORDER BY sort_order ASC, id DESC
+    `).all();
+  } else {
+    result = await context.env.DB.prepare(`
+      SELECT *
+      FROM events
+      WHERE lower(slug) = ?
+      ORDER BY sort_order ASC, id DESC
+    `).bind(String(admin.event_slug || "").toLowerCase()).all();
   }
-
-  const rows = await context.env.DB.prepare(`
-    SELECT *
-    FROM events
-    ORDER BY sort_order ASC, id DESC
-  `).all();
-
-  const events = (rows.results || []).map(event => ({
-    ...event,
-    status: calculateEventStatus(event)
-  }));
 
   return json({
     success: true,
-    events
+    events: result.results || []
   });
 }
 
