@@ -1051,7 +1051,7 @@ async function loadEvent() {
   }
 
   try {
-    const res = await fetch(`/api/event/${encodeURIComponent(slug)}`);
+    const res = await fetch(`/api/event-detail?slug=${encodeURIComponent(slug)}`);
     const data = await res.json();
 
     if (!data.success) {

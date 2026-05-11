@@ -399,7 +399,7 @@ async function saveEvent() {
     return;
   }
 
-  const url = id ? `/api/admin/events/${id}` : "/api/admin/events";
+  const url = id ? `/api/admin/event?id=${encodeURIComponent(id)}` : "/api/admin/events";
   const method = id ? "PATCH" : "POST";
 
   try {
@@ -540,7 +540,7 @@ async function saveExternalEvent() {
       : []
   };
 
-  const url = id ? `/api/admin/events/${id}` : "/api/admin/events";
+  const url = id ? `/api/admin/event?id=${encodeURIComponent(id)}` : "/api/admin/events";
   const method = id ? "PATCH" : "POST";
 
   try {
@@ -572,7 +572,7 @@ async function saveExternalEvent() {
 
 async function editEvent(id) {
   try {
-    const res = await fetch(`/api/admin/events/${id}`, {
+    const res = await fetch(`/api/admin/event?id=${encodeURIComponent(id)}`, {
       headers: adminHeaders()
     });
 
@@ -703,7 +703,7 @@ async function confirmDeleteEvent() {
   }
 
   try {
-    const res = await fetch(`/api/admin/events/${id}`, {
+    const res = await fetch(`/api/admin/event?id=${encodeURIComponent(id)}`, {
       method: "DELETE",
       headers: adminHeaders()
     });

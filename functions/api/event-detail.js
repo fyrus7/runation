@@ -1,4 +1,4 @@
-import { json } from "../../../server/lib/response.js";
+import { json } from "../../server/lib/response.js";
 
 function calculateEventStatus(event) {
   const now = new Date();
@@ -26,8 +26,10 @@ function calculateEventStatus(event) {
 
 export async function onRequestGet(context) {
   try {
-    const { env, params } = context;
-    const slug = String(params.slug || "").trim();
+    const { env } = context;
+    const slug = String(
+      new URL(context.request.url).searchParams.get("slug") || ""
+    ).trim();
 
     if (!slug) {
       return json({

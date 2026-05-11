@@ -1,5 +1,5 @@
-import { json } from "../../../../server/lib/response.js";
-import { isAdmin } from "../../../../server/lib/auth.js";
+import { json } from "../../../server/lib/response.js";
+import { isAdmin } from "../../../server/lib/auth.js";
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -60,7 +60,7 @@ export async function onRequestGet(context) {
     return json({ success: false, error: "UNAUTHORIZED" }, 401);
   }
 
-  const id = Number(context.params.id || 0);
+  const id = Number(new URL(context.request.url).searchParams.get("id") || 0);
 
   const data = await getEventWithCategories(context.env, id);
 
@@ -79,7 +79,7 @@ export async function onRequestPatch(context) {
     return json({ success: false, error: "UNAUTHORIZED" }, 401);
   }
 
-  const id = Number(context.params.id || 0);
+  const id = Number(new URL(context.request.url).searchParams.get("id") || 0);
   const body = await context.request.json();
 
   const existing = await context.env.DB.prepare(`
@@ -201,7 +201,7 @@ export async function onRequestDelete(context) {
       return json({ success: false, error: "UNAUTHORIZED" }, 401);
     }
 
-    const id = Number(context.params.id || 0);
+    const id = Number(new URL(context.request.url).searchParams.get("id") || 0);
 
     if (!id) {
       return json({ success: false, error: "INVALID_EVENT_ID" }, 400);
