@@ -1,7 +1,6 @@
 import {
   json,
   requireAdmin,
-  requireMaster,
   isMaster
 } from "./_auth.js";
 
@@ -76,9 +75,13 @@ export async function onRequestGet(context) {
     result = await context.env.DB.prepare(`
       SELECT *
       FROM events
-      WHERE lower(slug) = ?
+      WHERE owner_admin_id = ?
+         OR lower(slug) = ?
       ORDER BY sort_order ASC, id DESC
-    `).bind(String(admin.event_slug || "").toLowerCase()).all();
+    `).bind(
+      admin.id,
+      String(admin.event_slug || "").toLowerCase()
+    ).all();
   }
 
   return json({
@@ -88,9 +91,10 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPost(context) {
-  const auth = await requireMaster(context);
+  const auth = await requireAdmin(context);
   if (!auth.ok) return auth.response;
 
+  const admin = auth.admin;
   const body = await context.request.json();
 
   const slug = cleanText(body.slug).toLowerCase();
@@ -103,39 +107,58 @@ export async function onRequestPost(context) {
     }, 400);
   }
 
-  const registrationMode = cleanText(body.registration_mode || "internal");
-  const externalRegistrationUrl = cleanText(body.external_registration_url);
+  const requestedRegistrationMode = cleanText(body.registration_mode || "internal").toLowerCase();
+
+if (!isMaster(admin) && requestedRegistrationMode === "external") {
+  return json({
+    success: false,
+    error: "Event admin cannot create external events."
+  }, 403);
+}
+
+const registrationMode = isMaster(admin)
+  ? requestedRegistrationMode
+  : "internal";
+
+const externalRegistrationUrl = isMaster(admin)
+  ? cleanText(body.external_registration_url)
+  : "";
+  
+  const ownerAdminId = isMaster(admin) ? null : admin.id;
+  const ownerUsername = isMaster(admin) ? "" : admin.username;
 
   const organizerName = cleanText(body.organizer_name);
   const organizerUrl = cleanText(body.organizer_url);
 
   const result = await context.env.DB.prepare(`
-    INSERT INTO events (
-      slug,
-      title,
-      event_type,
-      short_description,
-      venue,
-      organizer_name,
-      organizer_url,
-      event_date,
-      status_mode,
-      open_at,
-      close_at,
-      total_limit,
-      used_slots,
-      show_slot_counter,
-      is_visible,
-      sort_order,
-      event_image,
-      registration_mode,
-      external_registration_url,
-      postage_enabled,
-      postage_fee,
-      created_at,
-      updated_at
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+INSERT INTO events (
+  slug,
+  title,
+  event_type,
+  short_description,
+  venue,
+  organizer_name,
+  organizer_url,
+  event_date,
+  status_mode,
+  open_at,
+  close_at,
+  total_limit,
+  used_slots,
+  show_slot_counter,
+  is_visible,
+  sort_order,
+  event_image,
+  registration_mode,
+  external_registration_url,
+  postage_enabled,
+  postage_fee,
+  owner_admin_id,
+  owner_username,
+  created_at,
+  updated_at
+)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
   `).bind(
     slug,
     title,
@@ -156,7 +179,9 @@ export async function onRequestPost(context) {
     registrationMode,
     externalRegistrationUrl,
     Number(body.postage_enabled || 0),
-    Number(body.postage_fee || 0)
+	Number(body.postage_fee || 0),
+	ownerAdminId,
+	ownerUsername
   ).run();
 
   const eventId = result.meta.last_row_id;
