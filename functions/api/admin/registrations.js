@@ -1,4 +1,9 @@
-import { json } from "../../../server/lib/response.js";
+import {
+  json,
+  requireAdmin,
+  isMaster
+} from "./_auth.js";
+
 import { isAdmin } from "../../../server/lib/auth.js";
 
 function cleanText(value) {
@@ -6,26 +11,30 @@ function cleanText(value) {
 }
 
 export async function onRequestGet(context) {
-  if (!isAdmin(context)) {
-    return json({ success: false, error: "UNAUTHORIZED" }, 401);
-  }
+  const auth = await requireAdmin(context);
+  if (!auth.ok) return auth.response;
 
+  const admin = auth.admin;
   const url = new URL(context.request.url);
 
-  const eventSlug = cleanText(url.searchParams.get("event_slug"));
+  const requestedEventSlug = cleanText(url.searchParams.get("event_slug")).toLowerCase();
   const status = cleanText(url.searchParams.get("status"));
   const search = cleanText(url.searchParams.get("search"));
+
+  const eventSlug = isMaster(admin)
+    ? requestedEventSlug
+    : cleanText(admin.event_slug).toLowerCase();
 
   let where = [];
   let binds = [];
 
   if (eventSlug) {
-    where.push("event_slug = ?");
+    where.push("lower(event_slug) = ?");
     binds.push(eventSlug);
   }
 
   if (status) {
-    where.push("payment_status = ?");
+    where.push("upper(payment_status) = upper(?)");
     binds.push(status);
   }
 
