@@ -1,5 +1,9 @@
 requireAdminLogin("admin.html");
 
+if (String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase() === "external_only") {
+  window.location.href = "admin-events.html";
+}
+
 let CURRENT_ROWS = [];
 
 function setMessage(message) {
