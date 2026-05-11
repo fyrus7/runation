@@ -38,11 +38,11 @@ export async function onRequestGet(context) {
       }, 400);
     }
 
-    const event = await env.DB.prepare(`
+const event = await env.DB.prepare(`
   SELECT *
   FROM events
   WHERE slug = ?
-    AND COALESCE(approval_status, 'live') = 'live'
+    AND COALESCE(approval_status, 'live') IN ('live', 'sandbox')
   LIMIT 1
 `).bind(slug).first();
 
