@@ -105,11 +105,14 @@ function getApprovalStatus(event) {
 function renderApprovalText(event) {
   const approvalStatus = getApprovalStatus(event);
   const isVisible = Number(event.is_visible || 0) === 1;
+  const mode = String(event.registration_mode || "internal").toLowerCase();
+
+  const modeLabel = mode === "external" ? "External" : "Runation";
 
   if (approvalStatus === "sandbox") {
     return `
       <div class="muted">
-        Publish Status: <strong>Sandbox / Pending Approval</strong>
+        Publish Status: <strong>${modeLabel} / Sandbox / Pending Approval</strong>
       </div>
     `;
   }
@@ -117,7 +120,7 @@ function renderApprovalText(event) {
   if (approvalStatus === "live" && isVisible) {
     return `
       <div class="muted">
-        Publish Status: <strong>Live / Visible</strong>
+        Publish Status: <strong>${modeLabel} / Live / Visible</strong>
       </div>
     `;
   }
@@ -125,14 +128,14 @@ function renderApprovalText(event) {
   if (approvalStatus === "live" && !isVisible) {
     return `
       <div class="muted">
-        Publish Status: <strong>Live / Hidden</strong>
+        Publish Status: <strong>${modeLabel} / Live / Hidden</strong>
       </div>
     `;
   }
 
   return `
     <div class="muted">
-      Publish Status: <strong>${escapeHtml(approvalStatus || "-")}</strong>
+      Publish Status: <strong>${modeLabel} / ${escapeHtml(approvalStatus || "-")}</strong>
     </div>
   `;
 }
@@ -951,6 +954,23 @@ ${renderDeleteButton(event)}
   }
 }
 
+function lockExternalOnlyUi() {
+  if (!isExternalOnlyAdmin()) return;
+
+  document.querySelectorAll("button, a").forEach(el => {
+    const onclick = String(el.getAttribute("onclick") || "");
+    const text = String(el.textContent || "").toLowerCase();
+
+    if (
+      onclick.includes("showFullEventForm") ||
+      text === "create event" ||
+      text === "add event"
+    ) {
+      el.style.display = "none";
+    }
+  });
+}
+
 /* =========================
    GLOBAL EVENTS
 ========================= */
@@ -1006,6 +1026,7 @@ document.addEventListener("DOMContentLoaded", function () {
   
   if (isExternalOnlyAdmin()) {
 	  showExternalEventForm();
+	  lockExternalOnlyUi();
   }
 
   const uploadBtn = document.getElementById("uploadEventImageBtn");
