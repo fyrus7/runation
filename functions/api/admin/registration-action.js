@@ -1,5 +1,8 @@
-import { json } from "../../../server/lib/response.js";
-import { isAdmin } from "../../../server/lib/auth.js";
+import {
+  json,
+  requireAdmin,
+  canAccessEvent
+} from "./_auth.js";
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -42,9 +45,10 @@ async function releaseSlot(env, registration) {
 }
 
 export async function onRequestPost(context) {
-  if (!isAdmin(context)) {
-    return json({ success: false, error: "UNAUTHORIZED" }, 401);
-  }
+  const auth = await requireAdmin(context);
+  if (!auth.ok) return auth.response;
+
+  const admin = auth.admin;
 
   try {
     const body = await context.request.json();
@@ -86,6 +90,13 @@ export async function onRequestPost(context) {
         success: false,
         error: "Registration not found."
       }, 404);
+    }
+
+    if (!canAccessEvent(admin, registration.event_slug)) {
+      return json({
+        success: false,
+        error: "FORBIDDEN_EVENT"
+      }, 403);
     }
 
     const currentStatus = String(registration.payment_status || "").toUpperCase();
@@ -164,6 +175,11 @@ export async function onRequestPost(context) {
         message: "Registration expired."
       });
     }
+
+    return json({
+      success: false,
+      error: "Unhandled action."
+    }, 400);
 
   } catch (err) {
     return json({
