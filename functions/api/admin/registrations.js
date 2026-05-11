@@ -4,10 +4,12 @@ import {
   isMaster
 } from "./_auth.js";
 
-import { isAdmin } from "../../../server/lib/auth.js";
-
 function cleanText(value) {
   return String(value || "").trim();
+}
+
+function normalizeText(value) {
+  return cleanText(value).toLowerCase();
 }
 
 export async function onRequestGet(context) {
@@ -17,34 +19,56 @@ export async function onRequestGet(context) {
   const admin = auth.admin;
   const url = new URL(context.request.url);
 
-  const requestedEventSlug = cleanText(url.searchParams.get("event_slug")).toLowerCase();
+  const requestedEventSlug = normalizeText(url.searchParams.get("event_slug"));
   const status = cleanText(url.searchParams.get("status"));
   const search = cleanText(url.searchParams.get("search"));
 
-  const eventSlug = isMaster(admin)
-    ? requestedEventSlug
-    : cleanText(admin.event_slug).toLowerCase();
+  const where = [];
+  const binds = [];
 
-  let where = [];
-  let binds = [];
+  if (isMaster(admin)) {
+    if (requestedEventSlug) {
+      where.push("lower(r.event_slug) = ?");
+      binds.push(requestedEventSlug);
+    }
+  } else {
+    where.push(`
+      EXISTS (
+        SELECT 1
+        FROM events e
+        WHERE lower(e.slug) = lower(r.event_slug)
+          AND (
+            e.owner_admin_id = ?
+            OR lower(e.owner_username) = ?
+            OR lower(e.slug) = ?
+          )
+      )
+    `);
 
-  if (eventSlug) {
-    where.push("lower(event_slug) = ?");
-    binds.push(eventSlug);
+    binds.push(
+      Number(admin.id || 0),
+      normalizeText(admin.username),
+      normalizeText(admin.event_slug)
+    );
+
+    if (requestedEventSlug) {
+      where.push("lower(r.event_slug) = ?");
+      binds.push(requestedEventSlug);
+    }
   }
 
   if (status) {
-    where.push("upper(payment_status) = upper(?)");
+    where.push("upper(r.payment_status) = upper(?)");
     binds.push(status);
   }
 
   if (search) {
     where.push(`(
-      reg_no LIKE ?
-      OR name LIKE ?
-      OR ic LIKE ?
-      OR phone LIKE ?
-      OR email LIKE ?
+      r.reg_no LIKE ?
+      OR r.name LIKE ?
+      OR r.ic LIKE ?
+      OR r.phone LIKE ?
+      OR r.email LIKE ?
     )`);
 
     const like = `%${search}%`;
@@ -55,32 +79,32 @@ export async function onRequestGet(context) {
 
   const rows = await context.env.DB.prepare(`
     SELECT
-      id,
-      reg_no,
-      name,
-      ic,
-      email,
-      phone,
-      gender,
-      category,
-      address,
-      event_tee_size,
-      finisher_tee_size,
-      emergency_name,
-      emergency_phone,
-      event_slug,
-      event_name,
-      amount,
-      payment_status,
-      payment_gateway,
-      payment_ref,
-      payment_url,
-      created_at,
-      paid_at,
-      updated_at
-    FROM registrations
+      r.id,
+      r.reg_no,
+      r.name,
+      r.ic,
+      r.email,
+      r.phone,
+      r.gender,
+      r.category,
+      r.address,
+      r.event_tee_size,
+      r.finisher_tee_size,
+      r.emergency_name,
+      r.emergency_phone,
+      r.event_slug,
+      r.event_name,
+      r.amount,
+      r.payment_status,
+      r.payment_gateway,
+      r.payment_ref,
+      r.payment_url,
+      r.created_at,
+      r.paid_at,
+      r.updated_at
+    FROM registrations r
     ${whereSql}
-    ORDER BY id DESC
+    ORDER BY r.id DESC
     LIMIT 500
   `).bind(...binds).all();
 
