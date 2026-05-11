@@ -47,6 +47,7 @@ loginForm.addEventListener("submit", async function (e) {
     sessionStorage.setItem("RUNATION_ADMIN_TOKEN", data.token || "");
     sessionStorage.setItem("RUNATION_ADMIN_USERNAME", data.username || "");
     sessionStorage.setItem("RUNATION_ADMIN_ROLE", data.role || "master");
+	sessionStorage.setItem("RUNATION_ADMIN_ACCESS_MODE", data.access_mode || "own_event");
     sessionStorage.setItem("RUNATION_ADMIN_EVENT", data.event_slug || "");
 
     const next = new URLSearchParams(window.location.search).get("next");
