@@ -353,4 +353,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 }
+
+  const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
+  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
+  const isMaster = role === "master" || accessMode === "master";
+
+  document.querySelectorAll("[data-master-only]").forEach(el => {
+    el.style.display = isMaster ? "" : "none";
+  });
+  
 });
