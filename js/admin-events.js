@@ -893,14 +893,14 @@ async function loadEvents() {
             <button type="button" onclick="editEvent(${Number(event.id)})">Edit</button>
 
             <a href="event.html?event=${encodeURIComponent(event.slug)}" target="_blank">
-              <button class="secondary" type="button">Open Page</button>
-            </a>
+  <button class="secondary" type="button">Open Page</button>
+</a>
 
-            ${renderApprovalButton(event)}
+${renderApprovalButton(event)}
 
-            <button class="danger" type="button" onclick="deleteEvent(${Number(event.id)})">
-              Delete
-            </button>
+<button class="danger" type="button" onclick="deleteEvent(${Number(event.id)})">
+  Delete
+</button>
           </div>
         </div>
       `;
