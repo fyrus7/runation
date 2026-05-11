@@ -138,12 +138,15 @@ export async function onRequestPatch(context) {
 
   const requestedRegistrationMode = normalizeText(body.registration_mode || "internal");
 
-  if (!isMaster(admin) && requestedRegistrationMode === "external") {
-    return json({
-      success: false,
-      error: "Event admin cannot change event to external mode."
-    }, 403);
+const accessMode = String(admin.access_mode || "own_event").toLowerCase();
+
+if (!isMaster(admin)) {
+  if (accessMode === "external_only") {
+    registrationMode = "external";
+  } else {
+    registrationMode = "internal";
   }
+}
 
   const registrationMode = isMaster(admin)
     ? requestedRegistrationMode
