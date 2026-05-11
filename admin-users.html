@@ -4,249 +4,167 @@
   <meta charset="UTF-8">
   <title>Admin Users - Runation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/admin.css">
-
-  <style>
-    .users-page {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 22px;
-    }
-
-    .users-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .users-header h1 {
-      margin: 0;
-      font-size: 28px;
-      font-weight: 900;
-    }
-
-    .users-header p {
-      margin: 6px 0 0;
-      color: #64748b;
-      font-size: 14px;
-    }
-
-    .users-nav {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: flex-end;
-    }
-
-    .users-grid {
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 18px;
-      align-items: start;
-    }
-
-    .users-card {
-      background: #fff;
-      border: 1px solid rgba(15, 23, 42, 0.08);
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 14px 35px rgba(15, 23, 42, 0.06);
-    }
-
-    .users-card h2 {
-      margin: 0 0 14px;
-      font-size: 18px;
-      font-weight: 900;
-    }
-
-    .users-card label {
-      display: block;
-      margin-top: 12px;
-      margin-bottom: 6px;
-      font-size: 13px;
-      font-weight: 800;
-      color: #334155;
-    }
-
-    .users-card input,
-    .users-card select {
-      width: 100%;
-      box-sizing: border-box;
-      border: 1px solid #cbd5e1;
-      border-radius: 12px;
-      padding: 11px 12px;
-      font-size: 14px;
-      background: #fff;
-    }
-
-    .users-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .users-message {
-      margin-top: 12px;
-      color: #475569;
-      font-size: 13px;
-      min-height: 18px;
-    }
-
-    .users-table-wrap {
-      overflow-x: auto;
-    }
-
-    .users-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-
-    .users-table th,
-    .users-table td {
-      border-bottom: 1px solid #e2e8f0;
-      padding: 10px 8px;
-      text-align: left;
-      vertical-align: top;
-      white-space: nowrap;
-    }
-
-    .users-table th {
-      color: #64748b;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 12px;
-      font-weight: 800;
-      background: #e2e8f0;
-      color: #0f172a;
-    }
-
-    .pill.active {
-      background: #dcfce7;
-      color: #166534;
-    }
-
-    .pill.inactive {
-      background: #fee2e2;
-      color: #991b1b;
-    }
-
-    .muted-small {
-      color: #64748b;
-      font-size: 12px;
-    }
-
-    @media (max-width: 900px) {
-      .users-header {
-        flex-direction: column;
-      }
-
-      .users-nav {
-        justify-content: flex-start;
-      }
-
-      .users-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
 </head>
-<body>
-  <main class="users-page">
-    <header class="users-header">
-      <div>
-        <h1>Admin Users</h1>
-        <p>Create, update, and disable event admin accounts.</p>
+
+<body class="admin-page">
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="admin-logo">
+        <div class="logo-mark">R</div>
+        <div>
+          <strong>RUNATION</strong>
+          <span>Admin Console</span>
+        </div>
       </div>
 
-      <nav class="users-nav">
-        <a href="admin.html">
-          <button type="button" class="secondary">Dashboard</button>
-        </a>
-
-        <a href="admin-events.html">
-          <button type="button" class="secondary">Events</button>
-        </a>
-
-        <button type="button" class="danger" onclick="logoutAdmin()">Logout</button>
+      <nav class="side-menu">
+        <a class="side-item" href="admin.html">Dashboard</a>
+        <a class="side-item" href="admin-events.html">Events</a>
+        <a class="side-item active" href="admin-users.html">Add Users</a>
       </nav>
-    </header>
 
-    <section class="users-grid">
-      <div class="users-card">
-        <h2 id="userFormTitle">Create Admin User</h2>
+      <div class="side-footer">
+        <span>Signed in as</span>
+        <strong id="sidebarUsername">Master</strong>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div>
+          <p class="admin-kicker">MASTER ADMIN</p>
+          <h1>Admin Users</h1>
+          <p class="admin-subtitle">Create, edit, and disable event admin accounts.</p>
+        </div>
+
+        <div class="admin-actions">
+          <a href="admin.html">
+            <button type="button" class="ghost-btn">Dashboard</button>
+          </a>
+
+          <a href="admin-events.html">
+            <button type="button" class="ghost-btn">Events</button>
+          </a>
+
+          <button type="button" class="danger-outline-btn" onclick="logoutAdmin()">Logout</button>
+        </div>
+      </div>
+
+      <section class="admin-stat-grid">
+        <div class="admin-stat-card">
+          <span>Total Users</span>
+          <strong id="statTotalUsers">0</strong>
+          <small>All event admin accounts</small>
+        </div>
+
+        <div class="admin-stat-card paid-card">
+          <span>Active</span>
+          <strong id="statActiveUsers">0</strong>
+          <small>Can login</small>
+        </div>
+
+        <div class="admin-stat-card pending-card">
+          <span>External Only</span>
+          <strong id="statExternalUsers">0</strong>
+          <small>External event admins</small>
+        </div>
+
+        <div class="admin-stat-card">
+          <span>Own Event</span>
+          <strong id="statOwnEventUsers">0</strong>
+          <small>Internal event admins</small>
+        </div>
+      </section>
+
+      <section class="admin-panel" style="margin-bottom:20px;">
+        <div class="panel-head">
+          <div>
+            <h2 id="userFormTitle">Create Admin User</h2>
+            <p>Password is required for new users. Leave blank when editing to keep current password.</p>
+          </div>
+        </div>
 
         <input id="editingUserId" type="hidden">
 
-        <label>Username</label>
-        <input id="adminUsername" type="text" placeholder="example: externaltest">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Username</label>
+            <input id="adminUsername" type="text" placeholder="example: externaltest">
+          </div>
 
-        <label>Password</label>
-        <input id="adminPassword" type="password" placeholder="Required for new user, optional when editing">
+          <div class="form-group">
+            <label>Password</label>
+            <input id="adminPassword" type="password" placeholder="New password">
+          </div>
 
-        <label>Access Mode</label>
-        <select id="adminAccessMode">
-          <option value="own_event">Own Event / Internal</option>
-          <option value="external_only">External Only</option>
-        </select>
+          <div class="form-group">
+            <label>Access Mode</label>
+            <select id="adminAccessMode">
+              <option value="own_event">Own Event / Internal</option>
+              <option value="external_only">External Only</option>
+            </select>
+          </div>
 
-        <label>Assigned Event Slug</label>
-        <input id="adminEventSlug" type="text" placeholder="Optional for own_event, empty for external_only">
+          <div class="form-group">
+            <label>Status</label>
+            <select id="adminIsActive">
+              <option value="1">Active</option>
+              <option value="0">Inactive</option>
+            </select>
+          </div>
 
-        <label>Status</label>
-        <select id="adminIsActive">
-          <option value="1">Active</option>
-          <option value="0">Inactive</option>
-        </select>
+          <div class="form-group full">
+            <label>Assigned Event Slug</label>
+            <input id="adminEventSlug" type="text" placeholder="Optional for own_event. Leave empty for external_only.">
+            <small class="field-hint">Use this only when assigning an existing event to an own_event admin.</small>
+          </div>
+        </div>
 
-        <div class="users-actions">
+        <div class="button-row">
           <button type="button" onclick="saveAdminUser()">Save User</button>
           <button type="button" class="secondary" onclick="resetUserForm()">Clear</button>
         </div>
 
-        <div id="adminUsersMessage" class="users-message"></div>
-      </div>
+        <div id="adminUsersMessage" class="muted" style="margin-top:12px;"></div>
+      </section>
 
-      <div class="users-card">
-        <h2>Admin User List</h2>
+      <section class="admin-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Admin User List</h2>
+            <p>Master can edit users or disable their login access.</p>
+          </div>
 
-        <div class="users-table-wrap">
-          <table class="users-table">
+          <button type="button" class="ghost-btn" onclick="loadAdminUsers()">Refresh</button>
+        </div>
+
+        <div class="premium-table-wrap">
+          <table class="premium-table">
             <thead>
               <tr>
                 <th>User</th>
-                <th>Access</th>
+                <th>Access Mode</th>
                 <th>Event Slug</th>
-                <th>Events</th>
+                <th>Owned Events</th>
                 <th>Status</th>
+                <th>Updated</th>
                 <th>Action</th>
               </tr>
             </thead>
 
             <tbody id="adminUsersRows">
               <tr>
-                <td colspan="6">Loading...</td>
+                <td colspan="7" class="empty-cell">Loading...</td>
               </tr>
             </tbody>
           </table>
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 
-  <script src="js/auth.js"></script>
   <script src="js/admin-users.js"></script>
 </body>
 </html>

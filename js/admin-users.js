@@ -6,6 +6,22 @@ function getAdminToken() {
   return sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
 }
 
+function requireAdminLogin(currentPage) {
+  const token = getAdminToken();
+
+  if (!token) {
+    window.location.href = `login.html?next=${encodeURIComponent(currentPage || "admin.html")}`;
+    return;
+  }
+}
+
+function adminHeaders() {
+  return {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${getAdminToken()}`
+  };
+}
+
 function getValue(id) {
   const el = document.getElementById(id);
   return el ? String(el.value || "").trim() : "";
@@ -16,23 +32,13 @@ function setValue(id, value) {
   if (el) el.value = value ?? "";
 }
 
+function setText(id, value) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = value ?? "";
+}
+
 function setMessage(message) {
-  const el = document.getElementById("adminUsersMessage");
-  if (el) el.textContent = message || "";
-}
-
-function adminHeaders() {
-  return {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${getAdminToken()}`
-  };
-}
-
-function isMasterAdmin() {
-  const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
-  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
-
-  return role === "master" || accessMode === "master";
+  setText("adminUsersMessage", message || "");
 }
 
 function escapeHtml(value) {
@@ -42,6 +48,13 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+function isMasterAdmin() {
+  const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
+  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
+
+  return role === "master" || accessMode === "master";
 }
 
 function logoutAdmin() {
@@ -68,64 +81,88 @@ function resetUserForm() {
   setMessage("");
 }
 
+function updateStats() {
+  const total = ADMIN_USERS.length;
+  const active = ADMIN_USERS.filter(u => Number(u.is_active || 0) === 1).length;
+  const external = ADMIN_USERS.filter(u => String(u.access_mode || "") === "external_only").length;
+  const ownEvent = ADMIN_USERS.filter(u => String(u.access_mode || "") === "own_event").length;
+
+  setText("statTotalUsers", total);
+  setText("statActiveUsers", active);
+  setText("statExternalUsers", external);
+  setText("statOwnEventUsers", ownEvent);
+}
+
+function renderAccessBadge(accessMode) {
+  const label = accessMode === "external_only"
+    ? "External Only"
+    : "Own Event";
+
+  return `<span class="badge badge-default">${escapeHtml(label)}</span>`;
+}
+
+function renderStatusBadge(isActive) {
+  const active = Number(isActive || 0) === 1;
+
+  return active
+    ? `<span class="badge badge-paid">Active</span>`
+    : `<span class="badge badge-failed">Inactive</span>`;
+}
+
 function renderUsers() {
   const tbody = document.getElementById("adminUsersRows");
   if (!tbody) return;
 
+  updateStats();
+
   if (!ADMIN_USERS.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6">No admin users found.</td>
+        <td colspan="7" class="empty-cell">No admin users found.</td>
       </tr>
     `;
     return;
   }
 
-  tbody.innerHTML = ADMIN_USERS.map(user => {
-    const active = Number(user.is_active || 0) === 1;
-    const accessMode = String(user.access_mode || "own_event");
+  tbody.innerHTML = ADMIN_USERS.map(user => `
+    <tr>
+      <td>
+        <div class="name-cell">${escapeHtml(user.username)}</div>
+        <div class="muted">ID: ${Number(user.id)}</div>
+      </td>
 
-    return `
-      <tr>
-        <td>
-          <strong>${escapeHtml(user.username)}</strong>
-          <div class="muted-small">ID: ${Number(user.id)}</div>
-        </td>
+      <td>${renderAccessBadge(String(user.access_mode || "own_event"))}</td>
 
-        <td>
-          <span class="pill">${escapeHtml(accessMode)}</span>
-        </td>
+      <td>${escapeHtml(user.event_slug || "-")}</td>
 
-        <td>${escapeHtml(user.event_slug || "-")}</td>
+      <td>${Number(user.owned_event_count || 0)}</td>
 
-        <td>${Number(user.owned_event_count || 0)}</td>
+      <td>${renderStatusBadge(user.is_active)}</td>
 
-        <td>
-          <span class="pill ${active ? "active" : "inactive"}">
-            ${active ? "Active" : "Inactive"}
-          </span>
-        </td>
+      <td>${escapeHtml(user.updated_at || "-")}</td>
 
-        <td>
+      <td>
+        <div class="action-buttons">
           <button type="button" class="secondary" onclick="editAdminUser(${Number(user.id)})">
             Edit
           </button>
 
           <button type="button" class="danger" onclick="deleteAdminUser(${Number(user.id)})">
-            Delete
+            Disable
           </button>
-        </td>
-      </tr>
-    `;
-  }).join("");
+        </div>
+      </td>
+    </tr>
+  `).join("");
 }
 
 async function loadAdminUsers() {
   const tbody = document.getElementById("adminUsersRows");
+
   if (tbody) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="6">Loading...</td>
+        <td colspan="7" class="empty-cell">Loading...</td>
       </tr>
     `;
   }
@@ -141,7 +178,7 @@ async function loadAdminUsers() {
       if (tbody) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="6">${escapeHtml(data?.error || "Unable to load users.")}</td>
+            <td colspan="7" class="empty-cell">${escapeHtml(data?.error || "Unable to load users.")}</td>
           </tr>
         `;
       }
@@ -155,7 +192,7 @@ async function loadAdminUsers() {
     if (tbody) {
       tbody.innerHTML = `
         <tr>
-          <td colspan="6">${escapeHtml(err.message || "Unable to load users.")}</td>
+          <td colspan="7" class="empty-cell">${escapeHtml(err.message || "Unable to load users.")}</td>
         </tr>
       `;
     }
@@ -214,7 +251,7 @@ async function saveAdminUser() {
 
     setMessage(data.message || "Admin user saved.");
     resetUserForm();
-    loadAdminUsers();
+    await loadAdminUsers();
 
   } catch (err) {
     setMessage(err.message || "Save admin user failed.");
@@ -255,7 +292,7 @@ async function deleteAdminUser(id) {
     return;
   }
 
-  if (!confirm(`Delete / disable admin user "${user.username}"?`)) {
+  if (!confirm(`Disable admin user "${user.username}"?`)) {
     return;
   }
 
@@ -268,16 +305,16 @@ async function deleteAdminUser(id) {
     const data = await res.json().catch(() => null);
 
     if (!res.ok || !data || !data.success) {
-      setMessage(data?.error || "Delete admin user failed.");
+      setMessage(data?.error || "Disable admin user failed.");
       return;
     }
 
     setMessage(data.message || "Admin user disabled.");
     resetUserForm();
-    loadAdminUsers();
+    await loadAdminUsers();
 
   } catch (err) {
-    setMessage(err.message || "Delete admin user failed.");
+    setMessage(err.message || "Disable admin user failed.");
   }
 }
 
@@ -286,6 +323,11 @@ document.addEventListener("DOMContentLoaded", function () {
     window.location.href = "admin.html";
     return;
   }
+
+  setText(
+    "sidebarUsername",
+    sessionStorage.getItem("RUNATION_ADMIN_USERNAME") || "Master"
+  );
 
   loadAdminUsers();
 });
