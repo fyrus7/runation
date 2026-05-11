@@ -100,16 +100,37 @@ function getApprovalStatus(event) {
 
 function renderApprovalText(event) {
   const approvalStatus = getApprovalStatus(event);
+  const isVisible = Number(event.is_visible || 0) === 1;
 
   if (approvalStatus === "sandbox") {
-    return `<div class="muted">Approval: <strong>Sandbox / Pending Approval</strong></div>`;
+    return `
+      <div class="muted">
+        Publish Status: <strong>Sandbox / Pending Approval</strong>
+      </div>
+    `;
   }
 
-  if (approvalStatus === "live") {
-    return `<div class="muted">Approval: <strong>Live</strong></div>`;
+  if (approvalStatus === "live" && isVisible) {
+    return `
+      <div class="muted">
+        Publish Status: <strong>Live / Visible</strong>
+      </div>
+    `;
   }
 
-  return `<div class="muted">Approval: <strong>${escapeHtml(approvalStatus || "-")}</strong></div>`;
+  if (approvalStatus === "live" && !isVisible) {
+    return `
+      <div class="muted">
+        Publish Status: <strong>Live / Hidden</strong>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="muted">
+      Publish Status: <strong>${escapeHtml(approvalStatus || "-")}</strong>
+    </div>
+  `;
 }
 
 function renderApprovalButton(event) {
@@ -861,7 +882,6 @@ async function loadEvents() {
       const modeText = mode === "external" ? "External" : "Runation";
       const usedSlots = escapeHtml(event.used_slots || 0);
       const totalLimit = escapeHtml(event.total_limit || "Unlimited");
-      const visible = Number(event.is_visible) === 1 ? "Yes" : "No";
       const status = escapeHtml(event.status);
       const imageText = event.event_image ? "Yes" : "No";
 
@@ -878,7 +898,6 @@ async function loadEvents() {
               <div class="muted">Mode: ${modeText}</div>
               <div class="muted">Date: ${date}</div>
               <div class="muted">Registered: ${usedSlots} / ${totalLimit}</div>
-              <div class="muted">Visible: ${visible}</div>
               ${renderApprovalText(event)}
               <div class="muted">Image: ${imageText}</div>
               <div class="muted">Postage: ${postageText}</div>
