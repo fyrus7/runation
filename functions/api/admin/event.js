@@ -260,6 +260,12 @@ export async function onRequestDelete(context) {
     if (!auth.ok) return auth.response;
 
     const admin = auth.admin;
+	if (!isMaster(admin)) {
+  return json({
+    success: false,
+    error: "Master only. Event admins can hide events instead of deleting."
+  }, 403);
+}
     const id = Number(new URL(context.request.url).searchParams.get("id") || 0);
 
     if (!id) {
