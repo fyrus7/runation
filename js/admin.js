@@ -51,6 +51,10 @@ function statusClass(status) {
 
 async function loadEventsForFilter() {
   const select = document.getElementById("eventFilter");
+  if (!select) return;
+
+  const role = sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "master";
+  const assignedEvent = sessionStorage.getItem("RUNATION_ADMIN_EVENT") || "";
 
   const res = await fetch("/api/admin/events", {
     headers: adminHeaders()
@@ -64,7 +68,9 @@ async function loadEventsForFilter() {
 
   const current = select.value;
 
-  select.innerHTML = `<option value="">All Events</option>`;
+  select.innerHTML = role === "event_admin"
+    ? ""
+    : `<option value="">All Events</option>`;
 
   (data.events || []).forEach(event => {
     const opt = document.createElement("option");
@@ -73,7 +79,13 @@ async function loadEventsForFilter() {
     select.appendChild(opt);
   });
 
-  select.value = current;
+  if (role === "event_admin") {
+    select.value = assignedEvent;
+    select.disabled = true;
+  } else {
+    select.value = current;
+    select.disabled = false;
+  }
 }
 
 function buildQuery() {
