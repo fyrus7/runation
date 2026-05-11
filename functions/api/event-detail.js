@@ -39,11 +39,12 @@ export async function onRequestGet(context) {
     }
 
     const event = await env.DB.prepare(`
-      SELECT *
-      FROM events
-      WHERE slug = ?
-      LIMIT 1
-    `).bind(slug).first();
+  SELECT *
+  FROM events
+  WHERE slug = ?
+    AND COALESCE(approval_status, 'live') = 'live'
+  LIMIT 1
+`).bind(slug).first();
 
     if (!event) {
       return json({

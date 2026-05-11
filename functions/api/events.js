@@ -64,6 +64,7 @@ export async function onRequestGet(context) {
         AND c.is_active = 1
 
       WHERE e.is_visible = 1
+	    AND COALESCE(e.approval_status, 'live') = 'live'
 
       GROUP BY e.id
       ORDER BY e.sort_order ASC, e.id DESC
