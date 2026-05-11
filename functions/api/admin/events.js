@@ -107,25 +107,53 @@ export async function onRequestPost(context) {
     }, 400);
   }
 
-  const requestedRegistrationMode = cleanText(body.registration_mode || "internal").toLowerCase();
+const accessMode = cleanText(admin.access_mode || "own_event").toLowerCase();
+const requestedRegistrationMode = cleanText(body.registration_mode || "internal").toLowerCase();
 
-if (!isMaster(admin) && requestedRegistrationMode === "external") {
-  return json({
-    success: false,
-    error: "Event admin cannot create external events."
-  }, 403);
+let registrationMode = requestedRegistrationMode;
+let externalRegistrationUrl = cleanText(body.external_registration_url);
+
+if (!isMaster(admin)) {
+  if (accessMode === "own_event") {
+    if (requestedRegistrationMode === "external") {
+      return json({
+        success: false,
+        error: "This admin can only create own/internal events."
+      }, 403);
+    }
+
+    registrationMode = "internal";
+    externalRegistrationUrl = "";
+  }
+
+  else if (accessMode === "external_only") {
+    registrationMode = "external";
+
+    if (!externalRegistrationUrl) {
+      return json({
+        success: false,
+        error: "External registration URL is required."
+      }, 400);
+    }
+  }
+
+  else {
+    return json({
+      success: false,
+      error: "Invalid admin access mode."
+    }, 403);
+  }
 }
 
-const registrationMode = isMaster(admin)
-  ? requestedRegistrationMode
-  : "internal";
+const ownerAdminId = isMaster(admin) ? null : admin.id;
+const ownerUsername = isMaster(admin) ? "" : admin.username;
 
-const externalRegistrationUrl = isMaster(admin)
-  ? cleanText(body.external_registration_url)
-  : "";
-  
-  const ownerAdminId = isMaster(admin) ? null : admin.id;
-  const ownerUsername = isMaster(admin) ? "" : admin.username;
+const approvalStatus = isMaster(admin) ? "live" : "sandbox";
+const approvedBy = isMaster(admin) ? admin.id : null;
+const approvedAt = isMaster(admin) ? new Date().toISOString() : null;
+
+const createdByAdminId = isMaster(admin) ? null : admin.id;
+const createdByUsername = isMaster(admin) ? "master" : admin.username;
 
   const organizerName = cleanText(body.organizer_name);
   const organizerUrl = cleanText(body.organizer_url);
@@ -155,10 +183,15 @@ INSERT INTO events (
   postage_fee,
   owner_admin_id,
   owner_username,
+  approval_status,
+  approved_by,
+  approved_at,
+  created_by_admin_id,
+  created_by_username,
   created_at,
   updated_at
 )
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP
   `).bind(
     slug,
     title,
@@ -182,11 +215,43 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CUR
 	Number(body.postage_fee || 0),
 	ownerAdminId,
 	ownerUsername
+	approvalStatus,
+	approvedBy,
+	approvedAt,
+	createdByAdminId,
+	createdByUsername
   ).run();
 
   const eventId = result.meta.last_row_id;
 
+if (registrationMode === "internal") {
   await insertCategories(context.env, eventId, body.categories || []);
+}
+
+if (!isMaster(admin)) {
+  await context.env.DB.prepare(`
+    INSERT INTO master_notifications (
+      type,
+      title,
+      message,
+      related_event_id,
+      related_event_slug,
+      created_by_admin_id,
+      created_by_username,
+      is_read,
+      created_at
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, 0, CURRENT_TIMESTAMP)
+  `).bind(
+    "event_pending_approval",
+    "New event pending approval",
+    `${admin.username} created a new ${registrationMode} event: ${title}`,
+    eventId,
+    slug,
+    admin.id,
+    admin.username
+  ).run();
+}
 
   return json({
     success: true,
