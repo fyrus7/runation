@@ -18,6 +18,12 @@ export async function onRequestPost(context) {
     const role = cleanText(body.role || "event_admin").toLowerCase();
     const eventSlug = cleanText(body.event_slug).toLowerCase();
 
+    const requestedAccessMode = cleanText(body.access_mode || "own_event").toLowerCase();
+
+    const accessMode = role === "master"
+      ? "master"
+      : requestedAccessMode;
+
     if (!username || !password) {
       return json({
         success: false,
@@ -32,26 +38,39 @@ export async function onRequestPost(context) {
       }, 400);
     }
 
-    if (role === "event_admin" && !eventSlug) {
+    if (role === "event_admin" && !["own_event", "external_only"].includes(accessMode)) {
       return json({
         success: false,
-        error: "event_slug is required for event admin."
+        error: "Invalid access mode."
       }, 400);
     }
 
-    if (role === "event_admin") {
-      const event = await context.env.DB.prepare(`
-        SELECT id
+    let assignedEvent = null;
+
+    if (role === "event_admin" && eventSlug) {
+      assignedEvent = await context.env.DB.prepare(`
+        SELECT
+          id,
+          slug,
+          owner_admin_id,
+          owner_username
         FROM events
         WHERE lower(slug) = ?
         LIMIT 1
       `).bind(eventSlug).first();
 
-      if (!event) {
+      if (!assignedEvent) {
         return json({
           success: false,
           error: "Event not found."
         }, 404);
+      }
+
+      if (assignedEvent.owner_admin_id) {
+        return json({
+          success: false,
+          error: "This event already has an owner."
+        }, 409);
       }
     }
 
@@ -72,31 +91,56 @@ export async function onRequestPost(context) {
     const salt = createSalt();
     const hash = await hashPassword(password, salt);
 
-    await context.env.DB.prepare(`
+    const inserted = await context.env.DB.prepare(`
       INSERT INTO admin_users (
         username,
         password_salt,
         password_hash,
         role,
         event_slug,
+        access_mode,
         is_active,
         created_at,
         updated_at
       )
-      VALUES (?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      VALUES (?, ?, ?, ?, ?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `).bind(
       username,
       salt,
       hash,
       role,
-      role === "master" ? "" : eventSlug
+      role === "master" ? "" : eventSlug,
+      accessMode
     ).run();
+
+    const userId = inserted.meta.last_row_id;
+
+    if (role === "event_admin" && assignedEvent) {
+      await context.env.DB.prepare(`
+        UPDATE events
+        SET
+          owner_admin_id = ?,
+          owner_username = ?,
+          created_by_admin_id = COALESCE(created_by_admin_id, ?),
+          created_by_username = COALESCE(created_by_username, ?),
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).bind(
+        userId,
+        username,
+        userId,
+        username,
+        assignedEvent.id
+      ).run();
+    }
 
     return json({
       success: true,
       message: "Admin user created.",
+      id: userId,
       username,
       role,
+      access_mode: accessMode,
       event_slug: role === "master" ? "" : eventSlug
     });
 

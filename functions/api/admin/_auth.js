@@ -55,23 +55,25 @@ export async function getAdmin(context) {
   // Keep old master token working
   if (context.env.ADMIN_TOKEN && token === context.env.ADMIN_TOKEN) {
     return {
-      id: 0,
-      username: "master",
-      role: "master",
-      event_slug: "",
-      token
-    };
+  id: 0,
+  username: "master",
+  role: "master",
+  access_mode: "master",
+  event_slug: "",
+  token
+};
   }
 
   const row = await context.env.DB.prepare(`
     SELECT
       s.token,
-      s.expires_at,
-      u.id,
-      u.username,
-      u.role,
-      u.event_slug,
-      u.is_active
+	  s.expires_at,
+	  u.id,
+	  u.username,
+	  u.role,
+	  u.access_mode,
+	  u.event_slug,
+	  u.is_active
     FROM admin_sessions s
     JOIN admin_users u ON u.id = s.admin_user_id
     WHERE s.token = ?
@@ -86,6 +88,7 @@ export async function getAdmin(context) {
     id: row.id,
     username: row.username,
     role: row.role,
+	access_mode: row.access_mode || "own_event",
     event_slug: row.event_slug || "",
     token: row.token
   };

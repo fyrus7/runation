@@ -40,6 +40,7 @@ export async function onRequestPost(context) {
         token: adminToken,
         username: validUsername,
         role: "master",
+        access_mode: "master",
         event_slug: ""
       });
     }
@@ -55,6 +56,7 @@ export async function onRequestPost(context) {
         password_salt,
         password_hash,
         role,
+        access_mode,
         event_slug,
         is_active
       FROM admin_users
@@ -106,6 +108,7 @@ export async function onRequestPost(context) {
       token,
       username: user.username,
       role: user.role,
+      access_mode: user.access_mode || "own_event",
       event_slug: user.event_slug || ""
     });
 
