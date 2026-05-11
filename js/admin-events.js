@@ -82,6 +82,95 @@ function adminHeaders() {
   };
 }
 
+function getAdminAccessMode() {
+  return String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
+}
+
+function getAdminRole() {
+  return String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
+}
+
+function isMasterAdmin() {
+  return getAdminAccessMode() === "master" || getAdminRole() === "master";
+}
+
+function getApprovalStatus(event) {
+  return String(event.approval_status || "live").toLowerCase();
+}
+
+function renderApprovalText(event) {
+  const approvalStatus = getApprovalStatus(event);
+
+  if (approvalStatus === "sandbox") {
+    return `<div class="muted">Approval: <strong>Sandbox / Pending Approval</strong></div>`;
+  }
+
+  if (approvalStatus === "live") {
+    return `<div class="muted">Approval: <strong>Live</strong></div>`;
+  }
+
+  return `<div class="muted">Approval: <strong>${escapeHtml(approvalStatus || "-")}</strong></div>`;
+}
+
+function renderApprovalButton(event) {
+  if (!isMasterAdmin()) return "";
+
+  const approvalStatus = getApprovalStatus(event);
+  const id = Number(event.id);
+
+  if (approvalStatus === "sandbox") {
+    return `
+      <button class="secondary" type="button" onclick="eventApprovalAction(${id}, 'approve')">
+        Approve Live
+      </button>
+    `;
+  }
+
+  if (approvalStatus === "live") {
+    return `
+      <button class="secondary" type="button" onclick="eventApprovalAction(${id}, 'return_to_sandbox')">
+        Return Sandbox
+      </button>
+    `;
+  }
+
+  return "";
+}
+
+async function eventApprovalAction(eventId, action) {
+  const label = action === "approve"
+    ? "approve this event and make it live"
+    : "return this event to sandbox";
+
+  if (!confirm(`Are you sure you want to ${label}?\n\nEvent ID: ${eventId}`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/admin/event-approval", {
+      method: "POST",
+      headers: adminHeaders(),
+      body: JSON.stringify({
+        event_id: Number(eventId),
+        action
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || !data.success) {
+      setMessage(data?.error || "Approval update failed.");
+      return;
+    }
+
+    setMessage(data.message || "Approval updated.");
+    loadEvents();
+
+  } catch (err) {
+    setMessage(err.message || "Approval update failed.");
+  }
+}
+
 function adminAuthHeaders() {
   return {
     "Authorization": `Bearer ${getAdminToken()}`
@@ -790,6 +879,7 @@ async function loadEvents() {
               <div class="muted">Date: ${date}</div>
               <div class="muted">Registered: ${usedSlots} / ${totalLimit}</div>
               <div class="muted">Visible: ${visible}</div>
+              ${renderApprovalText(event)}
               <div class="muted">Image: ${imageText}</div>
               <div class="muted">Postage: ${postageText}</div>
             </div>
@@ -805,6 +895,8 @@ async function loadEvents() {
             <a href="event.html?event=${encodeURIComponent(event.slug)}" target="_blank">
               <button class="secondary" type="button">Open Page</button>
             </a>
+
+            ${renderApprovalButton(event)}
 
             <button class="danger" type="button" onclick="deleteEvent(${Number(event.id)})">
               Delete
