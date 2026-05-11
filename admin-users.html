@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Users - Runation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div class="admin-header">
+      <div>
+        <h1>Admin Users</h1>
+        <p>Create event admin accounts.</p>
+      </div>
+
+      <div class="button-row">
+        <a href="admin.html">
+          <button type="button" class="secondary">Dashboard</button>
+        </a>
+
+        <a href="admin-events.html">
+          <button type="button" class="secondary">Events</button>
+        </a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Create Admin User</h2>
+
+      <label>Username</label>
+      <input id="adminUsername" type="text" placeholder="example: tkhm2">
+
+      <label>Password</label>
+      <input id="adminPassword" type="password" placeholder="Password">
+
+      <label>Access Mode</label>
+      <select id="adminAccessMode">
+        <option value="own_event">Own Event / Internal</option>
+        <option value="external_only">External Only</option>
+      </select>
+
+      <label>Assigned Event Slug</label>
+      <input id="adminEventSlug" type="text" placeholder="Optional, e.g. tanjongkaranghm">
+
+      <p class="muted">
+        For external_only, event slug can be empty. For existing own_event admin, use event slug if assigning an existing event.
+      </p>
+
+      <div class="button-row">
+        <button type="button" onclick="createAdminUser()">Create Admin</button>
+      </div>
+
+      <div id="adminUsersMessage" class="muted"></div>
+    </div>
+  </div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/admin-users.js"></script>
+</body>
+</html>
