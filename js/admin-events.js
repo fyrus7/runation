@@ -94,6 +94,10 @@ function isMasterAdmin() {
   return getAdminAccessMode() === "master" || getAdminRole() === "master";
 }
 
+function isExternalOnlyAdmin() {
+  return getAdminAccessMode() === "external_only";
+}
+
 function getApprovalStatus(event) {
   return String(event.approval_status || "live").toLowerCase();
 }
@@ -242,6 +246,12 @@ function hideEventForms() {
 }
 
 function showFullEventForm() {
+  if (isExternalOnlyAdmin()) {
+    showExternalEventForm();
+    setMessage("External-only admin can create external events only.");
+    return;
+  }
+
   hideEventForms();
 
   const full = document.getElementById("fullEventForm");
@@ -982,6 +992,10 @@ document.addEventListener("DOMContentLoaded", function () {
   resetForm();
   resetExternalEventForm();
   hideEventForms();
+  
+  if (isExternalOnlyAdmin()) {
+	  showExternalEventForm();
+  }
 
   const uploadBtn = document.getElementById("uploadEventImageBtn");
   if (uploadBtn) {
