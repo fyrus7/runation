@@ -1,8 +1,15 @@
-import { json } from "../../../server/lib/response.js";
-import { isAdmin } from "../../../server/lib/auth.js";
+import {
+  json,
+  requireAdmin,
+  isMaster
+} from "./_auth.js";
 
 function cleanText(value) {
   return String(value || "").trim();
+}
+
+function normalizeText(value) {
+  return cleanText(value).toLowerCase();
 }
 
 function calculateEventStatus(event) {
@@ -27,6 +34,21 @@ function calculateEventStatus(event) {
   if (totalLimit > 0 && usedSlots >= totalLimit) return "FULL";
 
   return "OPEN";
+}
+
+function canManageEvent(admin, event) {
+  if (!admin || !event) return false;
+  if (isMaster(admin)) return true;
+
+  const adminId = Number(admin.id || 0);
+  const ownerAdminId = Number(event.owner_admin_id || 0);
+
+  if (adminId && ownerAdminId && adminId === ownerAdminId) {
+    return true;
+  }
+
+  // Fallback untuk event lama yang belum ada owner_admin_id
+  return normalizeText(event.slug) === normalizeText(admin.event_slug);
 }
 
 async function getEventWithCategories(env, id) {
@@ -56,16 +78,24 @@ async function getEventWithCategories(env, id) {
 }
 
 export async function onRequestGet(context) {
-  if (!isAdmin(context)) {
-    return json({ success: false, error: "UNAUTHORIZED" }, 401);
-  }
+  const auth = await requireAdmin(context);
+  if (!auth.ok) return auth.response;
 
+  const admin = auth.admin;
   const id = Number(new URL(context.request.url).searchParams.get("id") || 0);
+
+  if (!id) {
+    return json({ success: false, error: "INVALID_EVENT_ID" }, 400);
+  }
 
   const data = await getEventWithCategories(context.env, id);
 
   if (!data) {
     return json({ success: false, error: "EVENT_NOT_FOUND" }, 404);
+  }
+
+  if (!canManageEvent(admin, data.event)) {
+    return json({ success: false, error: "FORBIDDEN_EVENT" }, 403);
   }
 
   return json({
@@ -75,15 +105,24 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPatch(context) {
-  if (!isAdmin(context)) {
-    return json({ success: false, error: "UNAUTHORIZED" }, 401);
-  }
+  const auth = await requireAdmin(context);
+  if (!auth.ok) return auth.response;
 
+  const admin = auth.admin;
   const id = Number(new URL(context.request.url).searchParams.get("id") || 0);
   const body = await context.request.json();
 
+  if (!id) {
+    return json({ success: false, error: "INVALID_EVENT_ID" }, 400);
+  }
+
   const existing = await context.env.DB.prepare(`
-    SELECT id
+    SELECT
+      id,
+      slug,
+      owner_admin_id,
+      owner_username,
+      registration_mode
     FROM events
     WHERE id = ?
     LIMIT 1
@@ -93,54 +132,75 @@ export async function onRequestPatch(context) {
     return json({ success: false, error: "EVENT_NOT_FOUND" }, 404);
   }
 
-await context.env.DB.prepare(`
-  UPDATE events
-  SET
-    slug = ?,
-    title = ?,
-    event_type = ?,
-    short_description = ?,
-    venue = ?,
-    organizer_name = ?,
-    organizer_url = ?,
-    event_date = ?,
-    status_mode = ?,
-    open_at = ?,
-    close_at = ?,
-    total_limit = ?,
-    show_slot_counter = ?,
-    is_visible = ?,
-    sort_order = ?,
-    event_image = ?,
-    registration_mode = ?,
-    external_registration_url = ?,
-    postage_enabled = ?,
-    postage_fee = ?,
-    updated_at = CURRENT_TIMESTAMP
-  WHERE id = ?
-`).bind(
-  cleanText(body.slug).toLowerCase(),
-  cleanText(body.title),
-  cleanText(body.event_type),
-  cleanText(body.short_description),
-  cleanText(body.venue),
-  cleanText(body.organizer_name),
-  cleanText(body.organizer_url),
-  cleanText(body.event_date),
-  cleanText(body.status_mode || "force_closed"),
-  cleanText(body.open_at),
-  cleanText(body.close_at),
-  Number(body.total_limit || 0),
-  Number(body.show_slot_counter || 0),
-  Number(body.is_visible ?? 1),
-  Number(body.sort_order || 0),
-  cleanText(body.event_image),
-  cleanText(body.registration_mode || "internal"),
-  cleanText(body.external_registration_url),
-  Number(body.postage_enabled || 0),
-  Number(body.postage_fee || 0),
-  id
-).run();
+  if (!canManageEvent(admin, existing)) {
+    return json({ success: false, error: "FORBIDDEN_EVENT" }, 403);
+  }
+
+  const requestedRegistrationMode = normalizeText(body.registration_mode || "internal");
+
+  if (!isMaster(admin) && requestedRegistrationMode === "external") {
+    return json({
+      success: false,
+      error: "Event admin cannot change event to external mode."
+    }, 403);
+  }
+
+  const registrationMode = isMaster(admin)
+    ? requestedRegistrationMode
+    : "internal";
+
+  const externalRegistrationUrl = isMaster(admin)
+    ? cleanText(body.external_registration_url)
+    : "";
+
+  await context.env.DB.prepare(`
+    UPDATE events
+    SET
+      slug = ?,
+      title = ?,
+      event_type = ?,
+      short_description = ?,
+      venue = ?,
+      organizer_name = ?,
+      organizer_url = ?,
+      event_date = ?,
+      status_mode = ?,
+      open_at = ?,
+      close_at = ?,
+      total_limit = ?,
+      show_slot_counter = ?,
+      is_visible = ?,
+      sort_order = ?,
+      event_image = ?,
+      registration_mode = ?,
+      external_registration_url = ?,
+      postage_enabled = ?,
+      postage_fee = ?,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = ?
+  `).bind(
+    normalizeText(body.slug),
+    cleanText(body.title),
+    cleanText(body.event_type),
+    cleanText(body.short_description),
+    cleanText(body.venue),
+    cleanText(body.organizer_name),
+    cleanText(body.organizer_url),
+    cleanText(body.event_date),
+    cleanText(body.status_mode || "force_closed"),
+    cleanText(body.open_at),
+    cleanText(body.close_at),
+    Number(body.total_limit || 0),
+    Number(body.show_slot_counter || 0),
+    Number(body.is_visible ?? 1),
+    Number(body.sort_order || 0),
+    cleanText(body.event_image),
+    registrationMode,
+    externalRegistrationUrl,
+    Number(body.postage_enabled || 0),
+    Number(body.postage_fee || 0),
+    id
+  ).run();
 
   const categories = body.categories || [];
 
@@ -194,13 +254,12 @@ await context.env.DB.prepare(`
   });
 }
 
-
 export async function onRequestDelete(context) {
   try {
-    if (!isAdmin(context)) {
-      return json({ success: false, error: "UNAUTHORIZED" }, 401);
-    }
+    const auth = await requireAdmin(context);
+    if (!auth.ok) return auth.response;
 
+    const admin = auth.admin;
     const id = Number(new URL(context.request.url).searchParams.get("id") || 0);
 
     if (!id) {
@@ -208,7 +267,11 @@ export async function onRequestDelete(context) {
     }
 
     const event = await context.env.DB.prepare(`
-      SELECT id, slug
+      SELECT
+        id,
+        slug,
+        owner_admin_id,
+        owner_username
       FROM events
       WHERE id = ?
       LIMIT 1
@@ -216,6 +279,10 @@ export async function onRequestDelete(context) {
 
     if (!event) {
       return json({ success: false, error: "EVENT_NOT_FOUND" }, 404);
+    }
+
+    if (!canManageEvent(admin, event)) {
+      return json({ success: false, error: "FORBIDDEN_EVENT" }, 403);
     }
 
     const regTableInfo = await context.env.DB.prepare(`
