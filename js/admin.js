@@ -333,13 +333,15 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  if (getToken()) {
-  loadEventsForFilter();
+  if (getAdminToken()) {
+  loadEventsForFilter().then(() => {
+    const role = sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "master";
 
-  const role = sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "master";
-
-  if (role === "master") {
-    expirePending();
-  }
+    if (role === "master") {
+      expirePending();
+    } else {
+      loadRegistrations();
+    }
+  });
 }
 });
