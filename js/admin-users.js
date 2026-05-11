@@ -1,5 +1,9 @@
 requireAdminLogin("admin-users.html");
 
+function getAdminToken() {
+  return sessionStorage.getItem("RUNATION_ADMIN_TOKEN") || "";
+}
+
 function getValue(id) {
   const el = document.getElementById(id);
   return el ? String(el.value || "").trim() : "";
