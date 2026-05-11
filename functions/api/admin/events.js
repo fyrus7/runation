@@ -1,14 +1,9 @@
 import {
   json,
   requireAdmin,
+  requireMaster,
   isMaster
 } from "./_auth.js";
-
-const auth = await requireAdmin(context);
-if (!auth.ok) return auth.response;
-
-const admin = auth.admin;
-
 
 function cleanText(value) {
   return String(value || "").trim();
@@ -93,9 +88,8 @@ export async function onRequestGet(context) {
 }
 
 export async function onRequestPost(context) {
-  if (!isAdmin(context)) {
-    return json({ success: false, error: "UNAUTHORIZED" }, 401);
-  }
+  const auth = await requireMaster(context);
+  if (!auth.ok) return auth.response;
 
   const body = await context.request.json();
 
