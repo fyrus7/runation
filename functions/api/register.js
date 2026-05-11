@@ -611,8 +611,17 @@ if (isSandboxRegistration) {
     success: true,
     sandbox: true,
     test_mode: true,
+
     message: "Sandbox test registration saved. No payment was created.",
+
+    // Compatibility untuk frontend lama / baru
+    reg_no: groupId,
+    group_id: groupId,
+    registration_no: groupId,
     payment_url: "",
+    payment_status: "TEST",
+    payment_ref: `TEST-${groupId}`,
+
     registration: {
       reg_no: groupId,
       group_id: groupId,
@@ -631,7 +640,10 @@ if (isSandboxRegistration) {
       category: participantLabel,
       amount: totalAmount,
       payment_status: "TEST",
-      payment_ref: `TEST-${groupId}`
+      payment_gateway: "SANDBOX",
+      payment_ref: `TEST-${groupId}`,
+      payment_url: "",
+      is_test: 1
     }
   });
 }
