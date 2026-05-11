@@ -214,7 +214,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
     Number(body.postage_enabled || 0),
 	Number(body.postage_fee || 0),
 	ownerAdminId,
-	ownerUsername
+	ownerUsername,
 	approvalStatus,
 	approvedBy,
 	approvedAt,
