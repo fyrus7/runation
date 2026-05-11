@@ -94,22 +94,50 @@ function isMasterAdmin() {
   return getAdminAccessMode() === "master" || getAdminRole() === "master";
 }
 
+function isExternalOnlyAdmin() {
+  return getAdminAccessMode() === "external_only";
+}
+
 function getApprovalStatus(event) {
   return String(event.approval_status || "live").toLowerCase();
 }
 
 function renderApprovalText(event) {
   const approvalStatus = getApprovalStatus(event);
+  const isVisible = Number(event.is_visible || 0) === 1;
+  const mode = String(event.registration_mode || "internal").toLowerCase();
+
+  const modeLabel = mode === "external" ? "External" : "Runation";
 
   if (approvalStatus === "sandbox") {
-    return `<div class="muted">Approval: <strong>Sandbox / Pending Approval</strong></div>`;
+    return `
+      <div class="muted">
+        Publish Status: <strong>${modeLabel} / Sandbox / Pending Approval</strong>
+      </div>
+    `;
   }
 
-  if (approvalStatus === "live") {
-    return `<div class="muted">Approval: <strong>Live</strong></div>`;
+  if (approvalStatus === "live" && isVisible) {
+    return `
+      <div class="muted">
+        Publish Status: <strong>${modeLabel} / Live / Visible</strong>
+      </div>
+    `;
   }
 
-  return `<div class="muted">Approval: <strong>${escapeHtml(approvalStatus || "-")}</strong></div>`;
+  if (approvalStatus === "live" && !isVisible) {
+    return `
+      <div class="muted">
+        Publish Status: <strong>${modeLabel} / Live / Hidden</strong>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="muted">
+      Publish Status: <strong>${modeLabel} / ${escapeHtml(approvalStatus || "-")}</strong>
+    </div>
+  `;
 }
 
 function renderApprovalButton(event) {
@@ -136,6 +164,18 @@ function renderApprovalButton(event) {
 
   return "";
 }
+
+
+function renderDeleteButton(event) {
+  if (!isMasterAdmin()) return "";
+
+  return `
+    <button class="danger" type="button" onclick="deleteEvent(${Number(event.id)})">
+      Delete
+    </button>
+  `;
+}
+
 
 async function eventApprovalAction(eventId, action) {
   const label = action === "approve"
@@ -221,6 +261,12 @@ function hideEventForms() {
 }
 
 function showFullEventForm() {
+  if (isExternalOnlyAdmin()) {
+    showExternalEventForm();
+    setMessage("External-only admin can create external events only.");
+    return;
+  }
+
   hideEventForms();
 
   const full = document.getElementById("fullEventForm");
@@ -861,7 +907,6 @@ async function loadEvents() {
       const modeText = mode === "external" ? "External" : "Runation";
       const usedSlots = escapeHtml(event.used_slots || 0);
       const totalLimit = escapeHtml(event.total_limit || "Unlimited");
-      const visible = Number(event.is_visible) === 1 ? "Yes" : "No";
       const status = escapeHtml(event.status);
       const imageText = event.event_image ? "Yes" : "No";
 
@@ -878,7 +923,6 @@ async function loadEvents() {
               <div class="muted">Mode: ${modeText}</div>
               <div class="muted">Date: ${date}</div>
               <div class="muted">Registered: ${usedSlots} / ${totalLimit}</div>
-              <div class="muted">Visible: ${visible}</div>
               ${renderApprovalText(event)}
               <div class="muted">Image: ${imageText}</div>
               <div class="muted">Postage: ${postageText}</div>
@@ -898,9 +942,8 @@ async function loadEvents() {
 
 ${renderApprovalButton(event)}
 
-<button class="danger" type="button" onclick="deleteEvent(${Number(event.id)})">
-  Delete
-</button>
+${renderDeleteButton(event)}
+
           </div>
         </div>
       `;
@@ -909,6 +952,23 @@ ${renderApprovalButton(event)}
   } catch (err) {
     box.innerHTML = `<div class="muted">${escapeHtml(err.message || "Unable to load events.")}</div>`;
   }
+}
+
+function lockExternalOnlyUi() {
+  if (!isExternalOnlyAdmin()) return;
+
+  document.querySelectorAll("button, a").forEach(el => {
+    const onclick = String(el.getAttribute("onclick") || "");
+    const text = String(el.textContent || "").toLowerCase();
+
+    if (
+      onclick.includes("showFullEventForm") ||
+      text === "create event" ||
+      text === "add event"
+    ) {
+      el.style.display = "none";
+    }
+  });
 }
 
 /* =========================
@@ -963,6 +1023,11 @@ document.addEventListener("DOMContentLoaded", function () {
   resetForm();
   resetExternalEventForm();
   hideEventForms();
+  
+  if (isExternalOnlyAdmin()) {
+	  showExternalEventForm();
+	  lockExternalOnlyUi();
+  }
 
   const uploadBtn = document.getElementById("uploadEventImageBtn");
   if (uploadBtn) {
@@ -1016,4 +1081,12 @@ document.addEventListener("DOMContentLoaded", function () {
   if (getAdminToken()) {
     loadEvents();
   }
+  
+    const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
+  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
+  const isMaster = role === "master" || accessMode === "master";
+
+  document.querySelectorAll("[data-master-only]").forEach(el => {
+    el.style.display = isMaster ? "" : "none";
+  });
 });

@@ -51,7 +51,15 @@ loginForm.addEventListener("submit", async function (e) {
     sessionStorage.setItem("RUNATION_ADMIN_EVENT", data.event_slug || "");
 
     const next = new URLSearchParams(window.location.search).get("next");
-    window.location.href = next || "admin.html";
+	const accessMode = String(data.access_mode || "").toLowerCase();
+	
+	if (next) {
+		window.location.href = next;
+	} else if (accessMode === "external_only") {
+		window.location.href = "admin-events.html";
+	} else {
+		window.location.href = "admin.html";
+	}
 
   } catch (err) {
     showMessage(err.message || "Login failed.");

@@ -122,7 +122,8 @@ export async function onRequestPatch(context) {
       slug,
       owner_admin_id,
       owner_username,
-      registration_mode
+      registration_mode,
+      external_registration_url
     FROM events
     WHERE id = ?
     LIMIT 1
@@ -136,22 +137,36 @@ export async function onRequestPatch(context) {
     return json({ success: false, error: "FORBIDDEN_EVENT" }, 403);
   }
 
-  const requestedRegistrationMode = normalizeText(body.registration_mode || "internal");
+  const accessMode = String(admin.access_mode || "own_event").toLowerCase();
 
-  if (!isMaster(admin) && requestedRegistrationMode === "external") {
-    return json({
-      success: false,
-      error: "Event admin cannot change event to external mode."
-    }, 403);
+  let registrationMode = cleanText(body.registration_mode || existing.registration_mode || "internal").toLowerCase();
+
+  if (!["internal", "external"].includes(registrationMode)) {
+    registrationMode = "internal";
   }
 
-  const registrationMode = isMaster(admin)
-    ? requestedRegistrationMode
-    : "internal";
+  if (!isMaster(admin)) {
+    if (accessMode === "external_only") {
+      registrationMode = "external";
+    } else {
+      registrationMode = "internal";
+    }
+  }
 
-  const externalRegistrationUrl = isMaster(admin)
-    ? cleanText(body.external_registration_url)
-    : "";
+  let externalRegistrationUrl = "";
+
+  if (registrationMode === "external") {
+    externalRegistrationUrl = cleanText(
+      body.external_registration_url || existing.external_registration_url
+    );
+
+    if (!externalRegistrationUrl) {
+      return json({
+        success: false,
+        error: "External registration URL is required."
+      }, 400);
+    }
+  }
 
   await context.env.DB.prepare(`
     UPDATE events
@@ -260,6 +275,12 @@ export async function onRequestDelete(context) {
     if (!auth.ok) return auth.response;
 
     const admin = auth.admin;
+	if (!isMaster(admin)) {
+  return json({
+    success: false,
+    error: "Master only. Event admins can hide events instead of deleting."
+  }, 403);
+}
     const id = Number(new URL(context.request.url).searchParams.get("id") || 0);
 
     if (!id) {

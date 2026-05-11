@@ -160,6 +160,39 @@ async function rollbackExistingPendingSlot(context, eventId, categoryName) {
     .catch(() => {});
 }
 
+
+function getPaymentMode(event) {
+  const manualMode = String(event.payment_mode || "auto").toLowerCase();
+  const approvalStatus = String(event.approval_status || "live").toLowerCase();
+
+  if (manualMode && manualMode !== "auto") return manualMode;
+
+  if (approvalStatus === "sandbox") return "toyyibpay_sandbox";
+
+  return "toyyibpay_live";
+}
+
+function getToyyibPayConfig(env, paymentMode) {
+  if (paymentMode === "toyyibpay_sandbox") {
+    return {
+      baseUrl: env.TOYYIBPAY_SANDBOX_BASE_URL || "https://dev.toyyibpay.com",
+      secretKey: env.TOYYIBPAY_SANDBOX_SECRET_KEY,
+      categoryCode: env.TOYYIBPAY_SANDBOX_CATEGORY_CODE,
+      gateway: "TOYYIBPAY_SANDBOX",
+      isTest: 1
+    };
+  }
+
+  return {
+    baseUrl: env.TOYYIBPAY_LIVE_BASE_URL || env.TOYYIBPAY_BASE_URL || "https://toyyibpay.com",
+    secretKey: env.TOYYIBPAY_LIVE_SECRET_KEY || env.TOYYIBPAY_SECRET_KEY,
+    categoryCode: env.TOYYIBPAY_LIVE_CATEGORY_CODE || env.TOYYIBPAY_CATEGORY_CODE,
+    gateway: "TOYYIBPAY",
+    isTest: 0
+  };
+}
+
+
 export async function onRequestPost(context) {
   let groupId = null;
   const reservedSlots = [];
@@ -370,92 +403,89 @@ if (!isSandboxRegistration && eventStatus !== "OPEN") {
 
 if (!isSandboxRegistration) {
   for (const participant of preparedParticipants) {
-	  
-    for (const participant of preparedParticipants) {
-      const existing = await context.env.DB
-        .prepare(`
-          SELECT
-            id,
-            reg_no,
-            event_slug,
-            event_name,
-            name,
-            ic,
-            category,
-            amount,
-            payment_status,
-            payment_url,
-            payment_ref
-          FROM registrations
-          WHERE event_slug = ?
-            AND ic = ?
-          LIMIT 1
-        `)
-        .bind(event.slug, participant.ic_passport)
-        .first();
+    const existing = await context.env.DB
+      .prepare(`
+        SELECT
+          id,
+          reg_no,
+          event_slug,
+          event_name,
+          name,
+          ic,
+          category,
+          amount,
+          payment_status,
+          payment_url,
+          payment_ref
+        FROM registrations
+        WHERE event_slug = ?
+          AND ic = ?
+        LIMIT 1
+      `)
+      .bind(event.slug, participant.ic_passport)
+      .first();
 
-      if (existing) {
-        const existingStatus = String(existing.payment_status || "").toUpperCase();
+    if (existing) {
+      const existingStatus = String(existing.payment_status || "").toUpperCase();
 
-        if (existingStatus === "PAID") {
+      if (existingStatus === "PAID") {
+        return json({
+          success: false,
+          error: `${participant.ic_passport} is already registered and paid for this event.`,
+          existing: {
+            reg_no: existing.reg_no,
+            event_name: existing.event_name,
+            name: existing.name,
+            category: existing.category,
+            payment_status: existing.payment_status
+          }
+        }, 409);
+      }
+
+      if (existingStatus === "PENDING_PAYMENT") {
+        const recreate = body.recreate === true;
+        const hasPaymentLink = existing.payment_url && existing.payment_ref;
+
+        if (!recreate && hasPaymentLink) {
           return json({
-            success: false,
-            error: `${participant.ic_passport} is already registered and paid for this event.`,
-            existing: {
+            success: true,
+            duplicate_pending: true,
+            message: "Pending registration found.",
+            payment_url: existing.payment_url,
+            registration: {
               reg_no: existing.reg_no,
+              event_slug: existing.event_slug,
               event_name: existing.event_name,
               name: existing.name,
+              ic: existing.ic,
               category: existing.category,
-              payment_status: existing.payment_status
+              amount: existing.amount,
+              payment_status: existing.payment_status,
+              payment_ref: existing.payment_ref
             }
-          }, 409);
+          });
         }
 
-        if (existingStatus === "PENDING_PAYMENT") {
-          const recreate = body.recreate === true;
-          const hasPaymentLink = existing.payment_url && existing.payment_ref;
+        await context.env.DB
+          .prepare(`
+            DELETE FROM registrations
+            WHERE event_slug = ?
+              AND ic = ?
+              AND payment_status = 'PENDING_PAYMENT'
+          `)
+          .bind(event.slug, participant.ic_passport)
+          .run();
 
-          if (!recreate && hasPaymentLink) {
-            return json({
-              success: true,
-              duplicate_pending: true,
-              message: "Pending registration found.",
-              payment_url: existing.payment_url,
-              registration: {
-                reg_no: existing.reg_no,
-                event_slug: existing.event_slug,
-                event_name: existing.event_name,
-                name: existing.name,
-                ic: existing.ic,
-                category: existing.category,
-                amount: existing.amount,
-                payment_status: existing.payment_status,
-                payment_ref: existing.payment_ref
-              }
-            });
+        await rollbackExistingPendingSlot(context, event.id, existing.category);
+      } else {
+        return json({
+          success: false,
+          error: `${participant.ic_passport} already has a registration for this event. Please contact organizer.`,
+          existing: {
+            reg_no: existing.reg_no,
+            payment_status: existing.payment_status
           }
-
-          await context.env.DB
-            .prepare(`
-              DELETE FROM registrations
-              WHERE event_slug = ?
-                AND ic = ?
-                AND payment_status = 'PENDING_PAYMENT'
-            `)
-            .bind(event.slug, participant.ic_passport)
-            .run();
-
-          await rollbackExistingPendingSlot(context, event.id, existing.category);
-        } else {
-          return json({
-            success: false,
-            error: `${participant.ic_passport} already has a registration for this event. Please contact organizer.`,
-            existing: {
-              reg_no: existing.reg_no,
-              payment_status: existing.payment_status
-            }
-          }, 409);
-        }
+        }, 409);
       }
     }
   }
@@ -463,55 +493,52 @@ if (!isSandboxRegistration) {
 
 if (!isSandboxRegistration) {
   for (const participant of preparedParticipants) {
-	  
-    for (const participant of preparedParticipants) {
-      const eventSlotUpdate = await context.env.DB
-        .prepare(`
-          UPDATE events
-          SET used_slots = used_slots + 1,
-              updated_at = CURRENT_TIMESTAMP
-          WHERE id = ?
-            AND (total_limit = 0 OR used_slots < total_limit)
-        `)
-        .bind(event.id)
-        .run();
+    const eventSlotUpdate = await context.env.DB
+      .prepare(`
+        UPDATE events
+        SET used_slots = used_slots + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+          AND (total_limit = 0 OR used_slots < total_limit)
+      `)
+      .bind(event.id)
+      .run();
 
-      if (!eventSlotUpdate.meta || eventSlotUpdate.meta.changes < 1) {
-        await rollbackReservedSlots(context, reservedSlots);
+    if (!eventSlotUpdate.meta || eventSlotUpdate.meta.changes < 1) {
+      await rollbackReservedSlots(context, reservedSlots);
 
-        return json({
-          success: false,
-          error: "Event is full."
-        }, 400);
-      }
-
-      const categorySlotUpdate = await context.env.DB
-        .prepare(`
-          UPDATE event_categories
-          SET used_slots = used_slots + 1
-          WHERE id = ?
-            AND event_id = ?
-            AND is_active = 1
-            AND (slot_limit = 0 OR used_slots < slot_limit)
-        `)
-        .bind(participant.categoryRow.id, event.id)
-        .run();
-
-      if (!categorySlotUpdate.meta || categorySlotUpdate.meta.changes < 1) {
-        await rollbackSlot(context, event.id, participant.categoryRow.id);
-        await rollbackReservedSlots(context, reservedSlots);
-
-        return json({
-          success: false,
-          error: `${participant.category} is full.`
-        }, 400);
-      }
-
-      reservedSlots.push({
-        eventId: event.id,
-        categoryId: participant.categoryRow.id
-      });
+      return json({
+        success: false,
+        error: "Event is full."
+      }, 400);
     }
+
+    const categorySlotUpdate = await context.env.DB
+      .prepare(`
+        UPDATE event_categories
+        SET used_slots = used_slots + 1
+        WHERE id = ?
+          AND event_id = ?
+          AND is_active = 1
+          AND (slot_limit = 0 OR used_slots < slot_limit)
+      `)
+      .bind(participant.categoryRow.id, event.id)
+      .run();
+
+    if (!categorySlotUpdate.meta || categorySlotUpdate.meta.changes < 1) {
+      await rollbackSlot(context, event.id, participant.categoryRow.id);
+      await rollbackReservedSlots(context, reservedSlots);
+
+      return json({
+        success: false,
+        error: `${participant.category} is full.`
+      }, 400);
+    }
+
+    reservedSlots.push({
+      eventId: event.id,
+      categoryId: participant.categoryRow.id
+    });
   }
 }
 
@@ -526,6 +553,18 @@ if (!isSandboxRegistration) {
 const participantLabel = preparedParticipants.length > 1
   ? `${preparedParticipants.length} Participants`
   : primaryParticipant.category;
+
+const paymentMode = getPaymentMode(event);
+const toyyib = getToyyibPayConfig(context.env, paymentMode);
+
+if (!toyyib.secretKey || !toyyib.categoryCode) {
+  await rollbackReservedSlots(context, reservedSlots);
+
+  return json({
+    success: false,
+    error: `ToyyibPay config missing for ${paymentMode}.`
+  }, 500);
+}
 
 const regNos = [];
 
@@ -597,76 +636,19 @@ const regNos = [];
           rowAmount,
           deliveryMethod,
           rowPostageFee,
-          isSandboxRegistration ? "TEST" : "PENDING_PAYMENT",
-		  isSandboxRegistration ? "SANDBOX" : "TOYYIBPAY",
-		  isSandboxRegistration ? `TEST-${groupId}` : "",
+          "PENDING_PAYMENT",
+		  toyyib.gateway,
 		  "",
-		  isSandboxRegistration ? 1 : 0
+		  "",
+		  toyyib.isTest
         )
         .run();
     }
 
-if (isSandboxRegistration) {
-  return json({
-    success: true,
-    sandbox: true,
-    test_mode: true,
 
-    message: "Sandbox test registration saved. No payment was created.",
 
-    // Compatibility untuk frontend lama / baru
-    reg_no: groupId,
-    group_id: groupId,
-    registration_no: groupId,
-    payment_url: "",
-    payment_status: "TEST",
-    payment_ref: `TEST-${groupId}`,
-
-    registration: {
-      reg_no: groupId,
-      group_id: groupId,
-      reg_nos: regNos,
-      participant_count: preparedParticipants.length,
-      event_slug: event.slug,
-      event_name: event.title,
-      name: primaryParticipant.full_name,
-      ic: primaryParticipant.ic_passport,
-      email: primaryParticipant.email,
-      phone: primaryParticipant.phone,
-      gender: primaryParticipant.gender,
-      address: fallbackAddress,
-      delivery_method: deliveryMethod,
-      postage_fee: postageFeeRm,
-      category: participantLabel,
-      amount: totalAmount,
-      payment_status: "TEST",
-      payment_gateway: "SANDBOX",
-      payment_ref: `TEST-${groupId}`,
-      payment_url: "",
-      is_test: 1
-    }
-  });
-}
-
-    const secretKey = context.env.TOYYIBPAY_SECRET_KEY;
-    const categoryCode = context.env.TOYYIBPAY_CATEGORY_CODE;
-
-    if (!secretKey || !categoryCode) {
-      await deletePendingByGroupId(context, groupId);
-      await rollbackReservedSlots(context, reservedSlots);
-
-      return json({
-        success: false,
-        error: "ToyyibPay environment variables are not set."
-      }, 500);
-    }
-
-    const siteUrl = context.env.SITE_URL || new URL(context.request.url).origin;
-
-    const toyyibpayBase =
-      context.env.TOYYIBPAY_MODE === "sandbox"
-        ? "https://dev.toyyibpay.com"
-        : "https://toyyibpay.com";
+const siteUrl = context.env.SITE_URL || new URL(context.request.url).origin;
+const toyyibpayBase = toyyib.baseUrl;
 
 
     const billName = limitText(event.title || "Runation", 30);
@@ -676,8 +658,8 @@ if (isSandboxRegistration) {
     );
 
     const billData = new URLSearchParams();
-    billData.append("userSecretKey", secretKey);
-    billData.append("categoryCode", categoryCode);
+    billData.append("userSecretKey", toyyib.secretKey);
+	billData.append("categoryCode", toyyib.categoryCode);
     billData.append("billName", billName);
     billData.append("billDescription", billDescription);
     billData.append("billPriceSetting", "1");
@@ -768,7 +750,9 @@ if (isSandboxRegistration) {
         category: participantLabel,
         amount: totalAmount,
         payment_status: "PENDING_PAYMENT",
-        payment_ref: billCode
+		payment_gateway: toyyib.gateway,
+		payment_ref: billCode,
+		is_test: toyyib.isTest
       }
     });
 

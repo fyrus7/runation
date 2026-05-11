@@ -1,5 +1,20 @@
 import { json } from "../../server/lib/response.js";
 
+function getToyyibPayConfig(env, registration) {
+  const gateway = String(registration.payment_gateway || "").toUpperCase();
+  const isTest = Number(registration.is_test || 0) === 1;
+
+  if (gateway === "TOYYIBPAY_SANDBOX" || isTest) {
+    return {
+      baseUrl: env.TOYYIBPAY_SANDBOX_BASE_URL || "https://dev.toyyibpay.com"
+    };
+  }
+
+  return {
+    baseUrl: env.TOYYIBPAY_LIVE_BASE_URL || env.TOYYIBPAY_BASE_URL || "https://toyyibpay.com"
+  };
+}
+
 export async function onRequestPost(context) {
   try {
     const body = await context.request.json();
@@ -25,6 +40,8 @@ export async function onRequestPost(context) {
           group_id,
           payment_ref,
           payment_status,
+          payment_gateway,
+          is_test,
           amount,
           event_slug,
           event_name
@@ -65,16 +82,13 @@ export async function onRequestPost(context) {
       .bind(billcode, ref, ref)
       .first();
 
+    const toyyib = getToyyibPayConfig(context.env, existing);
+
     const form = new URLSearchParams();
     form.append("billCode", billcode);
     form.append("billpaymentStatus", "1");
 
-    const toyyibpayBase =
-      context.env.TOYYIBPAY_MODE === "sandbox"
-        ? "https://dev.toyyibpay.com"
-        : "https://toyyibpay.com";
-
-    const toyRes = await fetch(`${toyyibpayBase}/index.php/api/getBillTransactions`, {
+    const toyRes = await fetch(`${toyyib.baseUrl}/index.php/api/getBillTransactions`, {
       method: "POST",
       body: form
     });
@@ -96,6 +110,8 @@ export async function onRequestPost(context) {
         paid: false,
         message: "No successful ToyyibPay transaction found",
         registration_status: existing.payment_status,
+        payment_gateway: existing.payment_gateway,
+        is_test: Number(existing.is_test || 0),
         registration_no: existing.reg_no,
         group_id: existing.group_id || existing.reg_no,
         participant_count: Number(summary?.participant_count || 1),
@@ -144,6 +160,8 @@ export async function onRequestPost(context) {
         success: true,
         paid: true,
         payment_status: "PAID",
+        payment_gateway: existing.payment_gateway,
+        is_test: Number(existing.is_test || 0),
         transaction_id: tx.billpaymentInvoiceNo || "",
         payment_date: tx.billPaymentDate || "",
         registration_no: existing.reg_no,
@@ -159,6 +177,8 @@ export async function onRequestPost(context) {
       success: true,
       paid: false,
       payment_status: existing.payment_status,
+      payment_gateway: existing.payment_gateway,
+      is_test: Number(existing.is_test || 0),
       billpaymentStatus: billStatus,
       registration_no: existing.reg_no,
       group_id: existing.group_id || existing.reg_no,
