@@ -284,14 +284,17 @@ export async function onRequestPost(context) {
       }, 404);
     }
 
-    const eventStatus = calculateEventStatus(event);
+    const isSandboxRegistration =
+  String(event.approval_status || "live").toLowerCase() === "sandbox";
 
-    if (eventStatus !== "OPEN") {
-      return json({
-        success: false,
-        error: `Event is ${eventStatus}.`
-      }, 400);
-    }
+const eventStatus = calculateEventStatus(event);
+
+if (!isSandboxRegistration && eventStatus !== "OPEN") {
+  return json({
+    success: false,
+    error: `Event is ${eventStatus}.`
+  }, 400);
+}
 
     const postageEnabled = Number(event.postage_enabled || 0) === 1;
     const postageFeeRm = postageEnabled && deliveryMethod === "postage"
@@ -365,6 +368,9 @@ export async function onRequestPost(context) {
       });
     }
 
+if (!isSandboxRegistration) {
+  for (const participant of preparedParticipants) {
+	  
     for (const participant of preparedParticipants) {
       const existing = await context.env.DB
         .prepare(`
@@ -452,7 +458,12 @@ export async function onRequestPost(context) {
         }
       }
     }
+  }
+}
 
+if (!isSandboxRegistration) {
+  for (const participant of preparedParticipants) {
+	  
     for (const participant of preparedParticipants) {
       const eventSlotUpdate = await context.env.DB
         .prepare(`
@@ -501,6 +512,8 @@ export async function onRequestPost(context) {
         categoryId: participant.categoryRow.id
       });
     }
+  }
+}
 
     const prefix = event.slug || "RUN";
     groupId = makeRegNo(prefix);
@@ -509,7 +522,12 @@ export async function onRequestPost(context) {
     const totalAmount = totalCategoryAmount + postageAmount;
 
     const primaryParticipant = preparedParticipants[0];
-    const regNos = [];
+
+const participantLabel = preparedParticipants.length > 1
+  ? `${preparedParticipants.length} Participants`
+  : primaryParticipant.category;
+
+const regNos = [];
 
     for (let i = 0; i < preparedParticipants.length; i++) {
       const participant = preparedParticipants[i];
@@ -548,12 +566,13 @@ export async function onRequestPost(context) {
             payment_gateway,
             payment_ref,
             payment_url,
+			is_test,
 
             created_at,
             paid_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP)
         `)
         .bind(
           regNo,
@@ -578,13 +597,44 @@ export async function onRequestPost(context) {
           rowAmount,
           deliveryMethod,
           rowPostageFee,
-          "PENDING_PAYMENT",
-          "TOYYIBPAY",
-          "",
-          ""
+          isSandboxRegistration ? "TEST" : "PENDING_PAYMENT",
+		  isSandboxRegistration ? "SANDBOX" : "TOYYIBPAY",
+		  isSandboxRegistration ? `TEST-${groupId}` : "",
+		  "",
+		  isSandboxRegistration ? 1 : 0
         )
         .run();
     }
+
+if (isSandboxRegistration) {
+  return json({
+    success: true,
+    sandbox: true,
+    test_mode: true,
+    message: "Sandbox test registration saved. No payment was created.",
+    payment_url: "",
+    registration: {
+      reg_no: groupId,
+      group_id: groupId,
+      reg_nos: regNos,
+      participant_count: preparedParticipants.length,
+      event_slug: event.slug,
+      event_name: event.title,
+      name: primaryParticipant.full_name,
+      ic: primaryParticipant.ic_passport,
+      email: primaryParticipant.email,
+      phone: primaryParticipant.phone,
+      gender: primaryParticipant.gender,
+      address: fallbackAddress,
+      delivery_method: deliveryMethod,
+      postage_fee: postageFeeRm,
+      category: participantLabel,
+      amount: totalAmount,
+      payment_status: "TEST",
+      payment_ref: `TEST-${groupId}`
+    }
+  });
+}
 
     const secretKey = context.env.TOYYIBPAY_SECRET_KEY;
     const categoryCode = context.env.TOYYIBPAY_CATEGORY_CODE;
@@ -606,9 +656,6 @@ export async function onRequestPost(context) {
         ? "https://dev.toyyibpay.com"
         : "https://toyyibpay.com";
 
-    const participantLabel = preparedParticipants.length > 1
-      ? `${preparedParticipants.length} Participants`
-      : primaryParticipant.category;
 
     const billName = limitText(event.title || "Runation", 30);
     const billDescription = limitText(

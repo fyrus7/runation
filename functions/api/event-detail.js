@@ -77,7 +77,9 @@ const event = await env.DB.prepare(`
         used_slots: Number(event.used_slots || 0),
         organizer_name: event.organizer_name || "",
         organizer_url: event.organizer_url || "",
-        status: calculateEventStatus(event)
+        status: String(event.approval_status || "").toLowerCase() === "sandbox"
+  		  ? "OPEN"
+		  : calculateEventStatus(event)
       },
       categories: categories.results || []
     });
