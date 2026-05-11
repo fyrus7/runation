@@ -162,6 +162,18 @@ function renderApprovalButton(event) {
   return "";
 }
 
+
+function renderDeleteButton(event) {
+  if (!isMasterAdmin()) return "";
+
+  return `
+    <button class="danger" type="button" onclick="deleteEvent(${Number(event.id)})">
+      Delete
+    </button>
+  `;
+}
+
+
 async function eventApprovalAction(eventId, action) {
   const label = action === "approve"
     ? "approve this event and make it live"
@@ -927,9 +939,8 @@ async function loadEvents() {
 
 ${renderApprovalButton(event)}
 
-<button class="danger" type="button" onclick="deleteEvent(${Number(event.id)})">
-  Delete
-</button>
+${renderDeleteButton(event)}
+
           </div>
         </div>
       `;
