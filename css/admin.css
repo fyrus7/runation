@@ -1513,3 +1513,54 @@ td {
   color: #0f172a;
   font-weight: 900;
 }
+
+/* Admin Events spacing fix */
+body.admin-page > .admin-main {
+  padding-bottom: 0;
+}
+
+body.admin-page > .admin-main .admin-topbar {
+  margin-bottom: 0;
+}
+
+body.admin-page > .admin-wrap {
+  padding-top: 0;
+}
+
+/* Admin Events content polish */
+.admin-page .admin-wrap .admin-card {
+  border-radius: 24px;
+  border: 1px solid #e7edf5;
+  box-shadow: 0 16px 40px rgba(15,23,42,0.08);
+}
+
+.admin-page .admin-wrap .button-row {
+  gap: 10px;
+}
+
+.admin-page .admin-wrap .button-row button {
+  min-height: 40px;
+  padding: 10px 16px;
+  border-radius: 999px;
+}
+
+.admin-page .admin-wrap .button-row button.secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.admin-page .admin-wrap .button-row button.danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+@media (max-width: 700px) {
+  .admin-page .admin-wrap .button-row {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-page .admin-wrap .button-row button {
+    width: 100%;
+  }
+}
