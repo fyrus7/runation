@@ -59,7 +59,7 @@ function money(value) {
 function getLandingEventLabel(event) {
   return (
     cleanDisplay(event.event_type) ||
-    "Running Event"
+    "Event"
   );
 }
 
