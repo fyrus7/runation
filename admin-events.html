@@ -11,7 +11,7 @@
 
 </head>
 
-<body>
+<body class="admin-page">
 <div id="adminToast" class="admin-toast" role="status" aria-live="polite">
   <div class="admin-toast-content">
     <span id="adminToastText"></span>
@@ -19,22 +19,7 @@
   </div>
 </div>
 
-<header class="admin-header">
-  <div class="admin-header-inner">
-    <div>
-      <h1>RUNATION Dashboard</h1>
-      <div class="admin-signed-in">
-        Logged in as <strong id="topbarUsername">Admin</strong>
-      </div>
-    </div>
 
-    <div class="admin-nav">
-      <a href="admin.html" data-not-external-only>Dashboard</a>
-      <a href="admin-users.html" data-master-only>Users</a>
-      <a href="index.html">View Site</a>
-    </div>
-  </div>
-</header>
 
 <div id="deleteEventModal" class="admin-modal">
   <div class="admin-modal-box">
@@ -73,6 +58,40 @@
   </div>
 </div>
 
+<div class="admin-main">
+  <div class="admin-topbar">
+    <div>
+      <p class="admin-kicker">EVENT MANAGEMENT</p>
+      <h1>Events</h1>
+      <p class="admin-subtitle">
+        Create, edit, publish, and manage Runation events.
+        <span class="admin-signed-in">
+          Logged in as <strong id="topbarUsername">Admin</strong>
+        </span>
+      </p>
+    </div>
+
+    <div class="admin-actions">
+      <a href="admin.html" data-not-external-only>
+        <button type="button" class="ghost-btn">Dashboard</button>
+      </a>
+
+      <a href="admin-events.html" data-not-external-only>
+        <button type="button" class="ghost-btn">Events</button>
+      </a>
+
+      <a href="admin-users.html" data-master-only>
+        <button type="button" class="ghost-btn">Users</button>
+      </a>
+
+      <a href="index.html">
+        <button type="button" class="ghost-btn">View Site</button>
+      </a>
+
+      <button type="button" class="danger-outline-btn" onclick="logoutAdmin()">Logout</button>
+    </div>
+  </div>
+</div>
 
 <main class="admin-wrap">
 

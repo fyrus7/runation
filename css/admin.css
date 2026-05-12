@@ -1500,3 +1500,16 @@ td {
   color: #fff;
   font-weight: 900;
 }
+
+.admin-topbar .admin-signed-in {
+  display: block;
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-topbar .admin-signed-in strong {
+  color: #0f172a;
+  font-weight: 900;
+}
