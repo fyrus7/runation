@@ -23,6 +23,13 @@ function displayTbc(value) {
   return text || "T.B.C";
 }
 
+function formatRacepackDate(value) {
+  const text = String(value || "").trim();
+  if (!text) return "T.B.C";
+
+  return formatDate(text);
+}
+
 function applyEventFormBanner(event) {
   const banner = document.getElementById("eventFormBanner");
   if (!banner) return;
@@ -190,21 +197,36 @@ function normalizeWebsiteUrl(url) {
 }
 
 function renderOrganizerDetails(event) {
-  setText("eventOrganizer", event.organizer_name || "-");
-
+  const card = document.getElementById("organizerCard");
+  const nameEl = document.getElementById("eventOrganizer");
   const link = document.getElementById("eventOrganizerWebsite");
-  if (!link) return;
 
+  const organizerName = String(event.organizer_name || "").trim();
   const rawUrl = String(event.organizer_url || "").trim();
   const finalUrl = normalizeWebsiteUrl(rawUrl);
 
+  if (!organizerName && !rawUrl) {
+    if (card) card.hidden = true;
+    return;
+  }
+
+  if (card) card.hidden = false;
+
+  if (nameEl) {
+    nameEl.textContent = organizerName || "-";
+  }
+
+  if (!link) return;
+
   if (!rawUrl) {
-    link.textContent = "-";
-    link.href = "#";
+    link.textContent = "";
+    link.removeAttribute("href");
+    link.hidden = true;
     link.classList.add("is-empty");
     return;
   }
 
+  link.hidden = false;
   link.textContent = rawUrl.replace(/^https?:\/\//i, "").replace(/\/$/, "");
   link.href = finalUrl;
   link.classList.remove("is-empty");
@@ -212,7 +234,7 @@ function renderOrganizerDetails(event) {
 
 function renderRacepackDetails(event) {
   setText("racepackLocation", displayTbc(event.racepack_location));
-  setText("racepackDate", displayTbc(event.racepack_date));
+  setText("racepackDate", formatRacepackDate(event.racepack_date));
   setText("racepackTime", displayTbc(event.racepack_time));
 }
 

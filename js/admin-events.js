@@ -325,6 +325,36 @@ function fromIsoToDatetimeLocal(value) {
   ].join(":");
 }
 
+function buildRacepackTime(fromId, toId) {
+  const from = getValue(fromId);
+  const to = getValue(toId);
+
+  if (from && to) return `${from} - ${to}`;
+  if (from) return from;
+  if (to) return to;
+
+  return "";
+}
+
+function setRacepackTimeRange(fromId, toId, value) {
+  const text = String(value || "").trim();
+
+  setValue(fromId, "");
+  setValue(toId, "");
+
+  if (!text) return;
+
+  const parts = text.split(/\s*-\s*/);
+
+  if (parts[0] && /^\d{2}:\d{2}$/.test(parts[0])) {
+    setValue(fromId, parts[0]);
+  }
+
+  if (parts[1] && /^\d{2}:\d{2}$/.test(parts[1])) {
+    setValue(toId, parts[1]);
+  }
+}
+
 /* =========================
    IMAGE
 ========================= */
@@ -479,7 +509,8 @@ function resetForm() {
     "eventDate",
 	"racepackLocation",
 	"racepackDate",
-	"racepackTime",
+	"racepackTimeFrom",
+	"racepackTimeTo",
     "openAt",
     "closeAt",
     "totalLimit",
@@ -516,7 +547,7 @@ function buildEventPayload() {
     event_date: getValue("eventDate"),
 	racepack_location: getValue("racepackLocation"),
 	racepack_date: getValue("racepackDate"),
-	racepack_time: getValue("racepackTime"),
+	racepack_time: buildRacepackTime("racepackTimeFrom", "racepackTimeTo"),
     status_mode: getValue("statusMode"),
     open_at: toIsoMalaysia(getValue("openAt")),
     close_at: toIsoMalaysia(getValue("closeAt")),
@@ -582,7 +613,8 @@ function resetExternalEventForm() {
     "externalEventDate",
 	"externalRacepackLocation",
 	"externalRacepackDate",
-	"externalRacepackTime",
+	"externalRacepackTimeFrom",
+	"externalRacepackTimeTo",
     "externalCategories",
     "externalSlots",
     "externalOrganizerName",
@@ -618,7 +650,11 @@ function populateExternalEventForm(event, categories) {
   setValue("externalEventDate", event.event_date || "");
   setValue("externalRacepackLocation", event.racepack_location || "");
   setValue("externalRacepackDate", event.racepack_date || "");
-  setValue("externalRacepackTime", event.racepack_time || "");
+  setRacepackTimeRange(
+    "externalRacepackTimeFrom",
+    "externalRacepackTimeTo",
+    event.racepack_time || ""
+  );
 
   setValue(
     "externalCategories",
@@ -672,7 +708,7 @@ async function saveExternalEvent() {
     event_date: getValue("externalEventDate"),
 	racepack_location: getValue("externalRacepackLocation"),
 	racepack_date: getValue("externalRacepackDate"),
-	racepack_time: getValue("externalRacepackTime"),
+	racepack_time: buildRacepackTime("externalRacepackTimeFrom", "externalRacepackTimeTo"),
 
     status_mode: "force_open",
     open_at: "",
@@ -772,7 +808,7 @@ async function editEvent(id) {
     setValue("eventDate", event.event_date || "");
 	setValue("racepackLocation", event.racepack_location || "");
 	setValue("racepackDate", event.racepack_date || "");
-	setValue("racepackTime", event.racepack_time || "");
+	setRacepackTimeRange("racepackTimeFrom", "racepackTimeTo", event.racepack_time || "");
     setValue("statusMode", event.status_mode || "force_closed");
     setValue("openAt", fromIsoToDatetimeLocal(event.open_at));
     setValue("closeAt", fromIsoToDatetimeLocal(event.close_at));
