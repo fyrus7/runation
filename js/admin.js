@@ -80,8 +80,11 @@ async function loadEventsForFilter() {
     return;
   }
 
-  const events = data.events || [];
-  const current = select.value;
+const events = (data.events || []).filter(event => {
+  return String(event.registration_mode || "internal").toLowerCase() !== "external";
+});
+
+const current = select.value;
 
   select.innerHTML = role === "event_admin"
     ? ""
