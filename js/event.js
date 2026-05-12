@@ -81,6 +81,33 @@ function applyPostageOption(event) {
   }
 }
 
+function applyTeeOptions(event) {
+  const eventTeeBox = document.getElementById("eventTeeBox");
+  const eventTeeSelect = document.getElementById("teeSize");
+
+  const finisherBox = document.getElementById("finisherTeeBox");
+  const finisherSelect = document.getElementById("finisherTeeSize");
+
+  const eventTeeEnabled = Number(event.event_tee_enabled ?? 1) === 1;
+  const finisherTeeEnabled = Number(event.finisher_tee_enabled ?? 0) === 1;
+
+  if (eventTeeBox) {
+    eventTeeBox.style.display = eventTeeEnabled ? "" : "none";
+  }
+
+  if (!eventTeeEnabled && eventTeeSelect) {
+    eventTeeSelect.value = "";
+  }
+
+  if (finisherBox) {
+    finisherBox.style.display = finisherTeeEnabled ? "" : "none";
+  }
+
+  if (!finisherTeeEnabled && finisherSelect) {
+    finisherSelect.value = "";
+  }
+}
+
 
 function setText(id, value) {
   const el = document.getElementById(id);
@@ -257,20 +284,17 @@ function renderCategories(categories) {
 }
 
 function toggleFinisherTee() {
-  const select = document.getElementById("categorySelect");
   const box = document.getElementById("finisherTeeBox");
   const finisherSelect = document.getElementById("finisherTeeSize");
 
-  if (!select || !box) return;
+  const event = window.RUNATION_EVENT || {};
+  const finisherTeeEnabled = Number(event.finisher_tee_enabled ?? 0) === 1;
 
-  const selectedOption = select.options[select.selectedIndex];
-  const categoryName = String(selectedOption?.dataset?.name || "").toUpperCase();
+  if (!box) return;
 
-  const needFinisherTee = categoryName.includes("21KM");
+  box.style.display = finisherTeeEnabled ? "block" : "none";
 
-  box.style.display = needFinisherTee ? "block" : "none";
-
-  if (!needFinisherTee && finisherSelect) {
+  if (!finisherTeeEnabled && finisherSelect) {
     finisherSelect.value = "";
   }
 }
@@ -437,22 +461,36 @@ function autoSetAdditionalGenderFromIc(card) {
 }
 
 function toggleAdditionalFinisherTee(card) {
-  const select = card.querySelector(".additional-category");
   const box = card.querySelector(".additional-finisher-box");
   const finisherSelect = card.querySelector(".additional-finisher-size");
 
-  if (!select || !box) return;
+  const event = window.RUNATION_EVENT || {};
+  const finisherTeeEnabled = Number(event.finisher_tee_enabled ?? 0) === 1;
 
-  const selectedOption = select.options[select.selectedIndex];
-  const categoryName = String(selectedOption?.dataset?.name || "").toUpperCase();
+  if (!box) return;
 
-  const needFinisherTee = categoryName.includes("21KM");
+  box.style.display = finisherTeeEnabled ? "block" : "none";
 
-  box.style.display = needFinisherTee ? "block" : "none";
-
-  if (!needFinisherTee && finisherSelect) {
+  if (!finisherTeeEnabled && finisherSelect) {
     finisherSelect.value = "";
     finisherSelect.classList.remove("input-error");
+  }
+}
+
+function toggleAdditionalEventTee(card) {
+  const box = card.querySelector(".additional-tee-box");
+  const teeSelect = card.querySelector(".additional-tee-size");
+
+  const event = window.RUNATION_EVENT || {};
+  const eventTeeEnabled = Number(event.event_tee_enabled ?? 1) === 1;
+
+  if (!box) return;
+
+  box.style.display = eventTeeEnabled ? "block" : "none";
+
+  if (!eventTeeEnabled && teeSelect) {
+    teeSelect.value = "";
+    teeSelect.classList.remove("input-error");
   }
 }
 
@@ -537,7 +575,7 @@ function addAdditionalParticipant() {
         <input class="additional-email" type="email" placeholder="Enter email">
       </div>
 
-      <div class="form-group">
+      <div class="form-group additional-tee-box">
         <label>T-Shirt Size</label>
         <select class="additional-tee-size">
           <option value="">Select size</option>
@@ -590,6 +628,7 @@ function addAdditionalParticipant() {
   container.appendChild(card);
 
   updateAdditionalIdInputMode(card);
+  toggleAdditionalEventTee(card);
   toggleAdditionalFinisherTee(card);
   renumberAdditionalParticipants();
 }
@@ -662,10 +701,12 @@ function validateAdditionalParticipants() {
       [".additional-phone", "Phone number"],
       [".additional-gender", "Gender"],
       [".additional-email", "Email"],
-      [".additional-tee-size", "T-shirt size"],
       [".additional-emergency-name", "Emergency contact name"],
       [".additional-emergency-phone", "Emergency contact number"]
     ];
+	
+	const event = window.RUNATION_EVENT || {};
+	const eventTeeEnabled = Number(event.event_tee_enabled ?? 1) === 1;
 
     required.forEach(([selector]) => {
       const el = getAdditionalField(card, selector);
@@ -675,6 +716,15 @@ function validateAdditionalParticipants() {
         isValid = false;
       }
     });
+	
+	if (eventTeeEnabled) {
+		const tee = getAdditionalField(card, ".additional-tee-size");
+		
+	if (!String(tee?.value || "").trim()) {
+		markInvalidElement(tee);
+		isValid = false;
+	}
+   }
 
     const idType = getAdditionalValue(card, ".additional-id-type") || "ic";
     const idValue = getAdditionalValue(card, ".additional-ic");
@@ -715,18 +765,16 @@ function validateAdditionalParticipants() {
       isValid = false;
     }
 
-    const categorySelect = getAdditionalField(card, ".additional-category");
-    const selectedOption = categorySelect?.options?.[categorySelect.selectedIndex];
-    const categoryName = String(selectedOption?.dataset?.name || "").toUpperCase();
-
-    if (categoryName.includes("21KM")) {
-      const finisher = getAdditionalField(card, ".additional-finisher-size");
-
-      if (!String(finisher?.value || "").trim()) {
-        markInvalidElement(finisher);
-        isValid = false;
-      }
-    }
+    const finisherTeeEnabled = Number(event.finisher_tee_enabled ?? 0) === 1;
+	
+	if (finisherTeeEnabled) {
+		const finisher = getAdditionalField(card, ".additional-finisher-size");
+		
+	if (!String(finisher?.value || "").trim()) {
+		markInvalidElement(finisher);
+		isValid = false;
+	  }
+	}
   });
 
   return isValid;
@@ -736,16 +784,22 @@ function validateAdditionalParticipants() {
 function validateRegistrationForm() {
   clearInvalidFields();
 
-  const required = [
-    ["participantName", "Full name"],
-    ["participantPhone", "Phone number"],
-    ["participantGender", "Gender"],
-    ["participantEmail", "Email"],
-    ["categorySelect", "Category"],
-    ["teeSize", "T-shirt size"],
-    ["emergencyName", "Emergency contact name"],
-    ["emergencyPhone", "Emergency contact number"]
-  ];
+const event = window.RUNATION_EVENT || {};
+const eventTeeEnabled = Number(event.event_tee_enabled ?? 1) === 1;
+
+const required = [
+  ["participantName", "Full name"],
+  ["participantPhone", "Phone number"],
+  ["participantGender", "Gender"],
+  ["participantEmail", "Email"],
+  ["categorySelect", "Category"],
+  ["emergencyName", "Emergency contact name"],
+  ["emergencyPhone", "Emergency contact number"]
+];
+
+if (eventTeeEnabled) {
+  required.push(["teeSize", "T-shirt size"]);
+}
 
   const missing = [];
 
@@ -797,12 +851,12 @@ function validateRegistrationForm() {
     markInvalidField("participantEmail");
   }
 
-  const categoryName = getSelectedCategoryName().toUpperCase();
+const finisherTeeEnabled = Number(event.finisher_tee_enabled ?? 0) === 1;
 
-  if (categoryName.includes("21KM") && !getValue("finisherTeeSize")) {
-    missing.push("Finisher tee size");
-    markInvalidField("finisherTeeSize");
-  }
+if (finisherTeeEnabled && !getValue("finisherTeeSize")) {
+  missing.push("Finisher tee size");
+  markInvalidField("finisherTeeSize");
+}
   
   if (!validateAdditionalParticipants()) {
    missing.push("Additional participant details");
@@ -1075,8 +1129,10 @@ async function loadEvent() {
     }
 
     const event = data.event;
+	window.RUNATION_EVENT = event;
 	applyEventFormBanner(event);
 	applyPostageOption(event);
+	applyTeeOptions(event);
     const categories = data.categories || [];
 
     document.title = `${event.title} | Runation`;

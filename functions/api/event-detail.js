@@ -32,16 +32,13 @@ function getEventDateEnd(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function calculateEventStatus(event) {
+function calculateEventStatus(event, categories = []) {
   const now = new Date();
 
   const statusMode = String(event.status_mode || "").trim();
   const openAt = parseRunationDateTime(event.open_at);
   const closeAt = parseRunationDateTime(event.close_at);
   const eventDateEnd = getEventDateEnd(event.event_date);
-
-  const totalLimit = Number(event.total_limit || 0);
-  const usedSlots = Number(event.used_slots || 0);
 
   if (statusMode === "force_closed") {
     return "CLOSED";
@@ -59,7 +56,20 @@ function calculateEventStatus(event) {
     return "CLOSED";
   }
 
-  if (totalLimit > 0 && usedSlots >= totalLimit) {
+  const activeCategories = (categories || []).filter(cat => {
+    return Number(cat.is_active) === 1;
+  });
+
+  const allActiveCategoriesFull = activeCategories.length > 0 && activeCategories.every(cat => {
+    const limit = Number(cat.slot_limit || 0);
+    const used = Number(cat.used_slots || 0);
+
+    if (limit <= 0) return false;
+
+    return used >= limit;
+  });
+
+  if (allActiveCategoriesFull) {
     return "FULL";
   }
 
@@ -118,6 +128,8 @@ const event = await env.DB.prepare(`
         ...event,
         postage_enabled: Number(event.postage_enabled || 0),
         postage_fee: Number(event.postage_fee || 0),
+		event_tee_enabled: Number(event.event_tee_enabled ?? 1),
+		finisher_tee_enabled: Number(event.finisher_tee_enabled ?? 0),
         show_slot_counter: Number(event.show_slot_counter || 0),
         total_limit: Number(event.total_limit || 0),
         used_slots: Number(event.used_slots || 0),
@@ -126,9 +138,7 @@ const event = await env.DB.prepare(`
 		racepack_location: event.racepack_location || "",
 		racepack_date: event.racepack_date || "",
 		racepack_time: event.racepack_time || "",
-        status: String(event.approval_status || "").toLowerCase() === "sandbox"
-  		  ? "OPEN"
-		  : calculateEventStatus(event)
+        status: calculateEventStatus(event, categories.results || [])
       },
       categories: categories.results || []
     });

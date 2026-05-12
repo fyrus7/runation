@@ -253,6 +253,8 @@ export async function onRequestPatch(context) {
         external_registration_url = ?,
         postage_enabled = ?,
         postage_fee = ?,
+		event_tee_enabled = ?,
+		finisher_tee_enabled = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
@@ -279,6 +281,8 @@ export async function onRequestPatch(context) {
       externalRegistrationUrl,
       Number(body.postage_enabled || 0),
       Number(body.postage_fee || 0),
+	  Number(body.event_tee_enabled ?? 1),
+	  Number(body.finisher_tee_enabled ?? 0),
       id
     ).run();
 

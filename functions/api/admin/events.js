@@ -195,6 +195,8 @@ const result = await context.env.DB.prepare(`
     external_registration_url,
     postage_enabled,
     postage_fee,
+	event_tee_enabled,
+	finisher_tee_enabled,
     owner_admin_id,
     owner_username,
     approval_status,
@@ -205,7 +207,7 @@ const result = await context.env.DB.prepare(`
     created_at,
     updated_at
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 `).bind(
   slug,
   title,
@@ -230,6 +232,8 @@ const result = await context.env.DB.prepare(`
   externalRegistrationUrl,
   Number(body.postage_enabled || 0),
   Number(body.postage_fee || 0),
+  Number(body.event_tee_enabled ?? 1),
+  Number(body.finisher_tee_enabled ?? 0),
   ownerAdminId,
   ownerUsername,
   approvalStatus,

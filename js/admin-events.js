@@ -519,10 +519,12 @@ function resetForm() {
     "postageFee"
   ].forEach(id => setValue(id, ""));
 
-  setValue("statusMode", "force_closed");
-  setValue("isVisible", "1");
-  setValue("showSlotCounter", "1");
-  setValue("postageEnabled", "0");
+setValue("statusMode", "force_closed");
+setValue("isVisible", "1");
+setValue("showSlotCounter", "1");
+setValue("eventTeeEnabled", "1");
+setValue("finisherTeeEnabled", "0");
+setValue("postageEnabled", "0");
 
   clearEventImageInput();
 
@@ -556,9 +558,11 @@ function buildEventPayload() {
     is_visible: Number(getValue("isVisible") || 1),
     sort_order: Number(getValue("sortOrder") || 0),
     event_image: getValue("eventImage"),
-    postage_enabled: Number(getValue("postageEnabled") || 0),
-    postage_fee: Number(getValue("postageFee") || 0),
-    categories: getCategoriesFromForm()
+postage_enabled: Number(getValue("postageEnabled") || 0),
+postage_fee: Number(getValue("postageFee") || 0),
+event_tee_enabled: Number(getValue("eventTeeEnabled") || 0),
+finisher_tee_enabled: Number(getValue("finisherTeeEnabled") || 0),
+categories: getCategoriesFromForm()
   };
 }
 
@@ -817,8 +821,10 @@ async function editEvent(id) {
     setValue("isVisible", String(event.is_visible ?? 1));
     setValue("sortOrder", event.sort_order || 0);
     setValue("shortDescription", event.short_description || "");
-    setValue("postageEnabled", String(event.postage_enabled ?? 0));
-    setValue("postageFee", event.postage_fee || "");
+setValue("postageEnabled", String(event.postage_enabled ?? 0));
+setValue("postageFee", event.postage_fee || "");
+setValue("eventTeeEnabled", String(event.event_tee_enabled ?? 1));
+setValue("finisherTeeEnabled", String(event.finisher_tee_enabled ?? 0));
 
     setValue("eventImage", event.event_image || "");
     updateEventImagePreview(event.event_image || "");

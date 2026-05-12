@@ -42,28 +42,67 @@ function makeRegNo(prefix) {
   return `${safePrefix}-${Date.now().toString(36).toUpperCase()}`;
 }
 
+function parseRunationDateTime(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  let text = raw.replace(" ", "T");
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    text = `${text}T00:00:00+08:00`;
+  } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(text)) {
+    text = `${text}:00+08:00`;
+  } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(text)) {
+    text = `${text}+08:00`;
+  }
+
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getEventDateEnd(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  const dateOnly = raw.slice(0, 10);
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+    return null;
+  }
+
+  const date = new Date(`${dateOnly}T23:59:59+08:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function calculateEventStatus(event) {
   const now = new Date();
 
-  if (event.status_mode === "force_open") return "OPEN";
-  if (event.status_mode === "force_closed") return "CLOSED";
+  const statusMode = String(event.status_mode || "").trim();
+  const openAt = parseRunationDateTime(event.open_at);
+  const closeAt = parseRunationDateTime(event.close_at);
+  const eventDateEnd = getEventDateEnd(event.event_date);
 
-  if (event.open_at) {
-    const openAt = new Date(event.open_at);
-    if (now < openAt) return "UPCOMING";
+  if (statusMode === "force_closed") {
+    return "CLOSED";
   }
 
-  if (event.close_at) {
-    const closeAt = new Date(event.close_at);
-    if (now > closeAt) return "CLOSED";
+  if (openAt && now < openAt) {
+    return "UPCOMING";
   }
 
-  const totalLimit = Number(event.total_limit || 0);
-  const usedSlots = Number(event.used_slots || 0);
+  if (closeAt && now > closeAt) {
+    return "CLOSED";
+  }
 
-  if (totalLimit > 0 && usedSlots >= totalLimit) return "FULL";
+  if (eventDateEnd && now > eventDateEnd) {
+    return "CLOSED";
+  }
 
-  return "OPEN";
+  if (statusMode === "force_open") {
+    return "OPEN";
+  }
+
+  return "CLOSED";
 }
 
 async function deletePendingByRegNo(context, regNo) {
@@ -243,7 +282,6 @@ export async function onRequestPost(context) {
         !participant.email ||
         !participant.phone ||
         !participant.gender ||
-        !participant.tee_size ||
         !participant.emergency_name ||
         !participant.emergency_phone
       ) {
@@ -316,6 +354,25 @@ export async function onRequestPost(context) {
         error: "Event not found."
       }, 404);
     }
+	
+const eventTeeEnabled = Number(event.event_tee_enabled ?? 1) === 1;
+const finisherTeeEnabled = Number(event.finisher_tee_enabled ?? 0) === 1;
+
+for (const participant of participants) {
+  if (eventTeeEnabled && !String(participant.tee_size || "").trim()) {
+    return json({
+      success: false,
+      error: "T-shirt size is required."
+    }, 400);
+  }
+
+  if (finisherTeeEnabled && !String(participant.finisher_tee_size || "").trim()) {
+    return json({
+      success: false,
+      error: "Finisher tee size is required."
+    }, 400);
+  }
+}
 
     const isSandboxRegistration =
   String(event.approval_status || "live").toLowerCase() === "sandbox";
@@ -374,7 +431,7 @@ if (!isSandboxRegistration && eventStatus !== "OPEN") {
       const category = cleanText(categoryRow.name).toUpperCase();
       const requireFinisherTee = category.includes("21KM");
 
-      if (requireFinisherTee && !participant.finisher_tee_size) {
+      if (finisherTeeEnabled && !participant.finisher_tee_size) {
         return json({
           success: false,
           error: `Please select Finisher Tee Size for ${participant.full_name}.`
@@ -493,26 +550,6 @@ if (!isSandboxRegistration) {
 
 if (!isSandboxRegistration) {
   for (const participant of preparedParticipants) {
-    const eventSlotUpdate = await context.env.DB
-      .prepare(`
-        UPDATE events
-        SET used_slots = used_slots + 1,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-          AND (total_limit = 0 OR used_slots < total_limit)
-      `)
-      .bind(event.id)
-      .run();
-
-    if (!eventSlotUpdate.meta || eventSlotUpdate.meta.changes < 1) {
-      await rollbackReservedSlots(context, reservedSlots);
-
-      return json({
-        success: false,
-        error: "Event is full."
-      }, 400);
-    }
-
     const categorySlotUpdate = await context.env.DB
       .prepare(`
         UPDATE event_categories
@@ -526,7 +563,6 @@ if (!isSandboxRegistration) {
       .run();
 
     if (!categorySlotUpdate.meta || categorySlotUpdate.meta.changes < 1) {
-      await rollbackSlot(context, event.id, participant.categoryRow.id);
       await rollbackReservedSlots(context, reservedSlots);
 
       return json({
@@ -534,6 +570,16 @@ if (!isSandboxRegistration) {
         error: `${participant.category} is full.`
       }, 400);
     }
+
+    await context.env.DB
+      .prepare(`
+        UPDATE events
+        SET used_slots = used_slots + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `)
+      .bind(event.id)
+      .run();
 
     reservedSlots.push({
       eventId: event.id,

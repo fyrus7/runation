@@ -40,9 +40,6 @@ function calculateEventStatus(event) {
   const closeAt = parseRunationDateTime(event.close_at);
   const eventDateEnd = getEventDateEnd(event.event_date);
 
-  const totalLimit = Number(event.total_limit || 0);
-  const usedSlots = Number(event.used_slots || 0);
-
   if (statusMode === "force_closed") {
     return "CLOSED";
   }
@@ -59,7 +56,15 @@ function calculateEventStatus(event) {
     return "CLOSED";
   }
 
-  if (totalLimit > 0 && usedSlots >= totalLimit) {
+  const activeCategoryCount = Number(event.active_category_count || 0);
+  const limitedCategoryCount = Number(event.limited_category_count || 0);
+  const fullCategoryCount = Number(event.full_category_count || 0);
+
+  if (
+    activeCategoryCount > 0 &&
+    limitedCategoryCount === activeCategoryCount &&
+    fullCategoryCount === activeCategoryCount
+  ) {
     return "FULL";
   }
 
@@ -83,39 +88,50 @@ export async function onRequestGet(context) {
       }, 500);
     }
 
-    const rows = await DB.prepare(`
-      SELECT
-        e.id,
-        e.slug,
-        e.title,
-        e.event_type,
-        e.short_description,
-        e.venue,
-        e.event_date,
-        e.status_mode,
-        e.open_at,
-        e.close_at,
-        e.total_limit,
-        e.used_slots,
-        e.show_slot_counter,
-        e.sort_order,
-        e.event_image,
-        e.registration_mode,
+const rows = await DB.prepare(`
+  SELECT
+    e.id,
+    e.slug,
+    e.title,
+    e.event_type,
+    e.short_description,
+    e.venue,
+    e.event_date,
+    e.status_mode,
+    e.open_at,
+    e.close_at,
+    e.total_limit,
+    e.used_slots,
+    e.show_slot_counter,
+    e.sort_order,
+    e.event_image,
+    e.registration_mode,
 
-        COALESCE(GROUP_CONCAT(c.name, ' / '), '-') AS categories_text,
-        MIN(CASE WHEN c.is_active = 1 THEN c.price END) AS fee_from
+    COALESCE(GROUP_CONCAT(c.name, ' / '), '-') AS categories_text,
+    MIN(CASE WHEN c.is_active = 1 THEN c.price END) AS fee_from,
 
-      FROM events e
-      LEFT JOIN event_categories c
-        ON c.event_id = e.id
-        AND c.is_active = 1
+    COUNT(c.id) AS active_category_count,
+    SUM(CASE WHEN c.slot_limit > 0 THEN 1 ELSE 0 END) AS limited_category_count,
+    SUM(
+      CASE
+        WHEN c.slot_limit > 0
+          AND c.used_slots >= c.slot_limit
+        THEN 1
+        ELSE 0
+      END
+    ) AS full_category_count
 
-      WHERE e.is_visible = 1
-        AND COALESCE(e.approval_status, 'live') = 'live'
+  FROM events e
+  LEFT JOIN event_categories c
+    ON c.event_id = e.id
+    AND c.is_active = 1
 
-      GROUP BY e.id
-      ORDER BY e.sort_order ASC, e.id DESC
-    `).all();
+  WHERE e.is_visible = 1
+    AND COALESCE(e.approval_status, 'live') = 'live'
+
+  GROUP BY e.id
+  ORDER BY e.sort_order ASC, e.id DESC
+`).all();
 
     const events = (rows.results || []).map(event => ({
       ...event,
