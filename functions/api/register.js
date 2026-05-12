@@ -1,5 +1,12 @@
 import { json } from "../../server/lib/response.js";
 
+function malaysiaNow() {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
+}
+
 function limitText(value, max) {
   return String(value || "").trim().slice(0, max);
 }
@@ -153,6 +160,8 @@ function normalizeParticipant(raw, fallbackAddress = "") {
 
 
 async function rollbackSlot(context, eventId, categoryId) {
+  const now = malaysiaNow();
+
   await context.env.DB
     .prepare(`
       UPDATE event_categories
@@ -167,15 +176,17 @@ async function rollbackSlot(context, eventId, categoryId) {
     .prepare(`
       UPDATE events
       SET used_slots = CASE WHEN used_slots > 0 THEN used_slots - 1 ELSE 0 END,
-          updated_at = CURRENT_TIMESTAMP
+          updated_at = ?
       WHERE id = ?
     `)
-    .bind(eventId)
+    .bind(now, eventId)
     .run()
     .catch(() => {});
 }
 
 async function rollbackExistingPendingSlot(context, eventId, categoryName) {
+  const now = malaysiaNow();
+
   await context.env.DB
     .prepare(`
       UPDATE event_categories
@@ -191,10 +202,10 @@ async function rollbackExistingPendingSlot(context, eventId, categoryName) {
     .prepare(`
       UPDATE events
       SET used_slots = CASE WHEN used_slots > 0 THEN used_slots - 1 ELSE 0 END,
-          updated_at = CURRENT_TIMESTAMP
+          updated_at = ?
       WHERE id = ?
     `)
-    .bind(eventId)
+    .bind(now, eventId)
     .run()
     .catch(() => {});
 }
@@ -238,6 +249,7 @@ export async function onRequestPost(context) {
 
   try {
     const body = await context.request.json();
+const now = malaysiaNow();
 
     const eventId = Number(body.event_id || 0);
     const deliveryMethod = cleanText(body.delivery_method).toLowerCase() === "postage"
@@ -572,14 +584,14 @@ if (!isSandboxRegistration) {
     }
 
     await context.env.DB
-      .prepare(`
-        UPDATE events
-        SET used_slots = used_slots + 1,
-            updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `)
-      .bind(event.id)
-      .run();
+  .prepare(`
+    UPDATE events
+    SET used_slots = used_slots + 1,
+        updated_at = ?
+    WHERE id = ?
+  `)
+  .bind(now, event.id)
+  .run();
 
     reservedSlots.push({
       eventId: event.id,
@@ -657,7 +669,7 @@ const regNos = [];
             paid_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, NULL, CURRENT_TIMESTAMP)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
         `)
         .bind(
           regNo,
@@ -686,7 +698,9 @@ const regNos = [];
 		  toyyib.gateway,
 		  "",
 		  "",
-		  toyyib.isTest
+		  toyyib.isTest,
+		  now,
+		  now
         )
         .run();
     }
@@ -759,20 +773,21 @@ const toyyibpayBase = toyyib.baseUrl;
     const paymentUrl = `${toyyibpayBase}/${billCode}`;
 
     await context.env.DB
-      .prepare(`
-        UPDATE registrations
-        SET
-          payment_ref = ?,
-          payment_url = ?,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE group_id = ?
-      `)
-      .bind(
-        billCode,
-        paymentUrl,
-        groupId
-      )
-      .run();
+  .prepare(`
+    UPDATE registrations
+    SET
+      payment_ref = ?,
+      payment_url = ?,
+      updated_at = ?
+    WHERE group_id = ?
+  `)
+  .bind(
+    billCode,
+    paymentUrl,
+    now,
+    groupId
+  )
+  .run();
 
     return json({
       success: true,

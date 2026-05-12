@@ -1,5 +1,12 @@
 import { json } from "../../server/lib/response.js";
 
+function malaysiaNow() {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
+}
+
 function md5(input) {
   function cmn(q, a, b, x, s, t) {
     a = add32(add32(a, q), add32(x, t));
@@ -168,7 +175,7 @@ export async function onRequestGet() {
 }
 
 export async function onRequestPost(context) {
-  const now = new Date().toISOString();
+  const now = malaysiaNow();
   let raw = "";
   let data = {};
   let hashValid = "NO";

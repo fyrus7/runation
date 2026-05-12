@@ -4,11 +4,20 @@ import {
   canAccessEvent
 } from "./_auth.js";
 
+function malaysiaNow() {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
+}
+
 function cleanText(value) {
   return String(value || "").trim();
 }
 
 async function releaseSlot(env, registration) {
+  const now = malaysiaNow();
+
   const event = await env.DB.prepare(`
     SELECT id
     FROM events
@@ -23,9 +32,9 @@ async function releaseSlot(env, registration) {
         WHEN used_slots > 0 THEN used_slots - 1
         ELSE 0
       END,
-      updated_at = CURRENT_TIMESTAMP
+      updated_at = ?
     WHERE slug = ?
-  `).bind(registration.event_slug).run();
+  `).bind(now, registration.event_slug).run();
 
   if (event && registration.category) {
     await env.DB.prepare(`
@@ -52,6 +61,7 @@ export async function onRequestPost(context) {
 
   try {
     const body = await context.request.json();
+	const now = malaysiaNow();
 
     const regNo = cleanText(body.reg_no);
     const action = cleanText(body.action);
@@ -110,13 +120,13 @@ export async function onRequestPost(context) {
       }
 
       await context.env.DB.prepare(`
-        UPDATE registrations
-        SET
-          payment_status = 'PAID',
-          paid_at = COALESCE(paid_at, CURRENT_TIMESTAMP),
-          updated_at = CURRENT_TIMESTAMP
-        WHERE reg_no = ?
-      `).bind(regNo).run();
+  UPDATE registrations
+  SET
+    payment_status = 'PAID',
+    paid_at = COALESCE(paid_at, ?),
+    updated_at = ?
+  WHERE reg_no = ?
+`).bind(now, now, regNo).run();
 
       return json({
         success: true,
@@ -137,12 +147,12 @@ export async function onRequestPost(context) {
       }
 
       await context.env.DB.prepare(`
-        UPDATE registrations
-        SET
-          payment_status = 'CANCELLED',
-          updated_at = CURRENT_TIMESTAMP
-        WHERE reg_no = ?
-      `).bind(regNo).run();
+  UPDATE registrations
+  SET
+    payment_status = 'CANCELLED',
+    updated_at = ?
+  WHERE reg_no = ?
+`).bind(now, regNo).run();
 
       return json({
         success: true,
@@ -163,12 +173,12 @@ export async function onRequestPost(context) {
       }
 
       await context.env.DB.prepare(`
-        UPDATE registrations
-        SET
-          payment_status = 'EXPIRED',
-          updated_at = CURRENT_TIMESTAMP
-        WHERE reg_no = ?
-      `).bind(regNo).run();
+  UPDATE registrations
+  SET
+    payment_status = 'EXPIRED',
+    updated_at = ?
+  WHERE reg_no = ?
+`).bind(now, regNo).run();
 
       return json({
         success: true,

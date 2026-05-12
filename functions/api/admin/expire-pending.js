@@ -1,12 +1,29 @@
 import { json } from "../../../server/lib/response.js";
 import { isAdmin } from "../../../server/lib/auth.js";
 
+function malaysiaNow() {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
+}
+
+function malaysiaMinutesAgo(minutes) {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000 - minutes * 60 * 1000)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
+}
+
 export async function onRequestPost(context) {
   if (!isAdmin(context)) {
     return json({ success: false, error: "UNAUTHORIZED" }, 401);
   }
 
   try {
+    const now = malaysiaNow();
+    const cutoff = malaysiaMinutesAgo(60);
+
     const rows = await context.env.DB.prepare(`
       SELECT
         r.id,
@@ -20,10 +37,10 @@ export async function onRequestPost(context) {
       LEFT JOIN events e
         ON e.slug = r.event_slug
       WHERE r.payment_status = 'PENDING_PAYMENT'
-        AND r.created_at <= datetime('now', '-1 hour')
+        AND r.created_at <= ?
       ORDER BY r.id ASC
       LIMIT 500
-    `).all();
+    `).bind(cutoff).all();
 
     const expiredRows = rows.results || [];
 
@@ -36,10 +53,10 @@ export async function onRequestPost(context) {
         UPDATE registrations
         SET
           payment_status = 'EXPIRED',
-          updated_at = CURRENT_TIMESTAMP
+          updated_at = ?
         WHERE id = ?
           AND payment_status = 'PENDING_PAYMENT'
-      `).bind(row.id).run();
+      `).bind(now, row.id).run();
 
       if (!updateReg.meta || updateReg.meta.changes < 1) {
         continue;
@@ -54,9 +71,9 @@ export async function onRequestPost(context) {
             WHEN used_slots > 0 THEN used_slots - 1
             ELSE 0
           END,
-          updated_at = CURRENT_TIMESTAMP
+          updated_at = ?
         WHERE slug = ?
-      `).bind(row.event_slug).run();
+      `).bind(now, row.event_slug).run();
 
       if (eventUpdate.meta && eventUpdate.meta.changes > 0) {
         releasedEventSlots++;

@@ -1,5 +1,12 @@
 import { json } from "../../server/lib/response.js";
 
+function malaysiaNow() {
+  return new Date(Date.now() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 19)
+    .replace("T", " ");
+}
+
 function getToyyibPayConfig(env, registration) {
   const gateway = String(registration.payment_gateway || "").toUpperCase();
   const isTest = Number(registration.is_test || 0) === 1;
@@ -138,7 +145,7 @@ export async function onRequestPost(context) {
     }
 
     if (billStatus === "1") {
-      const now = new Date().toISOString();
+      const now = malaysiaNow();
 
       await context.env.DB
         .prepare(`

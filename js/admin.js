@@ -483,6 +483,32 @@ async function expirePending() {
 }
 }
 
+function escapeCsvText(value) {
+  const text = String(value ?? "").trim();
+
+  if (!text) return "";
+
+  const escaped = text.replace(/"/g, '""');
+
+  return `"=""${escaped}"""`;
+}
+
+function formatExportValue(key, value) {
+  const forceTextFields = new Set([
+    "reg_no",
+    "ic",
+    "phone",
+    "emergency_phone",
+    "payment_ref"
+  ]);
+
+  if (forceTextFields.has(key)) {
+    return escapeCsvText(value);
+  }
+
+  return escapeCsv(value);
+}
+
 function exportCsv() {
   if (!CURRENT_ROWS.length) {
     setMessage("No data to export.");
@@ -514,9 +540,9 @@ function exportCsv() {
   ];
 
   const lines = [
-    headers.map(escapeCsv).join(","),
-    ...CURRENT_ROWS.map(row => headers.map(key => escapeCsv(row[key])).join(","))
-  ];
+  headers.map(escapeCsv).join(","),
+  ...CURRENT_ROWS.map(row => headers.map(key => formatExportValue(key, row[key])).join(","))
+];
 
   const blob = new Blob([lines.join("\n")], {
     type: "text/csv;charset=utf-8"
