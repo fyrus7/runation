@@ -5,12 +5,24 @@ if (String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCa
 }
 
 let CURRENT_ROWS = [];
+let ADMIN_EVENTS = [];
+let HAS_LOADED_REGISTRATIONS = false;
 
 function setMessage(message) {
   const el = document.getElementById("adminMessage");
   if (el) el.textContent = message || "";
 }
 
+function showParticipantEmptyState(message = "Press Refresh to load participants.") {
+  const tbody = document.getElementById("registrationRows");
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="16">${message}</td>
+    </tr>
+  `;
+}
 
 function adminHeaders() {
   return {
@@ -69,8 +81,18 @@ async function loadEventsForFilter() {
     return;
   }
 
+<<<<<<< HEAD
   const events = data.events || [];
   const current = select.value;
+=======
+const events = (data.events || []).filter(event => {
+  return String(event.registration_mode || "internal").toLowerCase() !== "external";
+});
+
+ADMIN_EVENTS = events;
+
+const current = select.value;
+>>>>>>> cleanup-file-structure
 
   select.innerHTML = role === "event_admin"
     ? ""
@@ -124,13 +146,107 @@ function updateSummary(rows) {
   document.getElementById("sumFailed").textContent = failed;
 }
 
+function findSelectedEvent() {
+  const slug = getValue("eventFilter");
+
+  if (!slug) return null;
+
+  return ADMIN_EVENTS.find(event => {
+    return String(event.slug || "") === slug;
+  }) || null;
+}
+
+function renderCategoryGraphMessage(message) {
+  const box = document.getElementById("categoryGraphBox");
+  if (!box) return;
+
+  box.innerHTML = `<div class="muted">${message}</div>`;
+}
+
+function renderCategoryGraph(categories) {
+  const box = document.getElementById("categoryGraphBox");
+  if (!box) return;
+
+  const activeCategories = (categories || []).filter(cat => {
+    return Number(cat.is_active ?? 1) === 1;
+  });
+
+  if (!activeCategories.length) {
+    renderCategoryGraphMessage("No active categories found.");
+    return;
+  }
+
+  box.innerHTML = activeCategories.map(cat => {
+    const name = String(cat.name || "-");
+    const used = Number(cat.used_slots || 0);
+    const limit = Number(cat.slot_limit || 0);
+
+    let percent = 0;
+    let meta = "";
+
+    if (limit > 0) {
+      const balance = Math.max(limit - used, 0);
+      percent = Math.min((used / limit) * 100, 100);
+      meta = `${used} registered / ${limit} slots · ${balance} balance`;
+    } else {
+      percent = used > 0 ? 100 : 0;
+      meta = `${used} registered · No slot limit`;
+    }
+
+    return `
+      <div class="category-progress-item">
+        <div class="category-progress-head">
+          <strong>${name}</strong>
+          <span>${Math.round(percent)}%</span>
+        </div>
+
+        <div class="category-progress-bar">
+          <div style="width:${percent}%"></div>
+        </div>
+
+        <div class="category-progress-meta">
+          ${meta}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadCategoryGraph() {
+  const selectedEvent = findSelectedEvent();
+
+  if (!selectedEvent) {
+    renderCategoryGraphMessage("Select a specific event to view category progress.");
+    return;
+  }
+
+  renderCategoryGraphMessage("Loading category progress...");
+
+  try {
+    const res = await fetch(`/api/admin/event?id=${encodeURIComponent(selectedEvent.id)}`, {
+      headers: adminHeaders()
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      renderCategoryGraphMessage(data.error || "Unable to load category progress.");
+      return;
+    }
+
+    renderCategoryGraph(data.categories || []);
+  } catch (err) {
+    renderCategoryGraphMessage(err.message || "Unable to load category progress.");
+  }
+}
+
 function renderRows(rows) {
   const tbody = document.getElementById("registrationRows");
 
   if (!rows.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="15">No registrations found.</td>
+        <td colspan="16">No registrations found.</td>
       </tr>
     `;
     return;
@@ -185,6 +301,10 @@ function renderRows(rows) {
     <button class="cancel-btn" type="button" onclick="registrationAction('${row.reg_no}', 'cancel')">
       Cancel
     </button>
+
+    <button class="danger" type="button" onclick="deleteRegistration('${row.reg_no}')">
+      Delete
+    </button>
   </div>
 </td>
     </tr>
@@ -192,10 +312,12 @@ function renderRows(rows) {
 }
 
 async function loadRegistrations() {
+	HAS_LOADED_REGISTRATIONS = true;
+	
   const tbody = document.getElementById("registrationRows");
   tbody.innerHTML = `
     <tr>
-      <td colspan="15">Loading...</td>
+      <td colspan="16">Loading...</td>
     </tr>
   `;
 
@@ -211,17 +333,18 @@ async function loadRegistrations() {
   if (!res.ok || !data.success) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="15">${data.error || "Unable to load registrations."}</td>
+        <td colspan="16">${data.error || "Unable to load registrations."}</td>
       </tr>
     `;
     return;
   }
 
-  CURRENT_ROWS = data.registrations || [];
-  updateSummary(CURRENT_ROWS);
-  renderRows(CURRENT_ROWS);
+CURRENT_ROWS = data.registrations || [];
+updateSummary(CURRENT_ROWS);
+renderRows(CURRENT_ROWS);
+loadCategoryGraph();
 
-  setMessage(`${CURRENT_ROWS.length} registrations loaded.`);
+setMessage(`${CURRENT_ROWS.length} registrations loaded.`);
 }
 
 async function registrationAction(regNo, action) {
@@ -259,6 +382,88 @@ async function registrationAction(regNo, action) {
   loadRegistrations();
 }
 
+async function deleteRegistration(regNo) {
+  const confirmText =
+    `Delete this registration permanently?\n\n` +
+    `Registration No: ${regNo}\n\n` +
+    `This cannot be undone. Export CSV first if needed.`;
+
+  if (!confirm(confirmText)) {
+    return;
+  }
+
+  setMessage("Deleting registration...");
+
+  const res = await fetch("/api/admin/registration-delete", {
+    method: "POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({
+      mode: "single",
+      reg_no: regNo
+    })
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok || !data || !data.success) {
+    setMessage(data?.error || "Delete failed.");
+    return;
+  }
+
+  setMessage(data.message || "Registration deleted.");
+  loadRegistrations();
+}
+
+async function deleteCurrentList() {
+  if (!CURRENT_ROWS.length) {
+    setMessage("No loaded registrations to delete.");
+    return;
+  }
+
+  const eventSlug = getValue("eventFilter");
+  const status = getValue("statusFilter");
+  const search = getValue("searchInput");
+
+  const confirmText =
+    `Delete ${CURRENT_ROWS.length} loaded registration(s)?\n\n` +
+    `This follows the current Event / Status / Search filter.\n` +
+    `Export CSV first if needed.\n\n` +
+    `Type DELETE to confirm.`;
+
+  const typed = prompt(confirmText);
+
+  if (typed !== "DELETE") {
+    setMessage("Delete cancelled.");
+    return;
+  }
+
+  setMessage("Deleting current list...");
+
+  const res = await fetch("/api/admin/registration-delete", {
+    method: "POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({
+      mode: "current_list",
+      event_slug: eventSlug,
+      status,
+      search
+    })
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok || !data || !data.success) {
+    setMessage(data?.error || "Delete current list failed.");
+    return;
+  }
+
+  CURRENT_ROWS = [];
+  updateSummary(CURRENT_ROWS);
+  renderRows(CURRENT_ROWS);
+  setMessage(data.message || `Deleted ${data.deleted_count || 0} registration(s).`);
+}
+
+
 async function expirePending() {
   setMessage("Checking expired pending payments...");
 
@@ -278,7 +483,9 @@ async function expirePending() {
     `Expired ${data.expired_count} pending registrations. Released ${data.released_event_slots} event slots and ${data.released_category_slots} category slots.`
   );
 
+  if (HAS_LOADED_REGISTRATIONS) {
   loadRegistrations();
+}
 }
 
 function exportCsv() {
@@ -331,28 +538,31 @@ function exportCsv() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  showParticipantEmptyState();
 
   ["eventFilter", "statusFilter"].forEach(id => {
-    document.getElementById(id).addEventListener("change", loadRegistrations);
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener("change", function () {
+      if (HAS_LOADED_REGISTRATIONS) {
+        loadRegistrations();
+      }
+    });
   });
 
-  document.getElementById("searchInput").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      loadRegistrations();
-    }
-  });
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        loadRegistrations();
+      }
+    });
+  }
 
   if (getAdminToken()) {
-  loadEventsForFilter().then(() => {
-    const role = sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "master";
-
-    if (role === "master") {
-      expirePending();
-    } else {
-      loadRegistrations();
-    }
-  });
-}
+    loadEventsForFilter();
+  }
 
   const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
   const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
@@ -362,4 +572,23 @@ document.addEventListener("DOMContentLoaded", function () {
     el.style.display = isMaster ? "" : "none";
   });
   
+  const sidebarUsername = document.getElementById("sidebarUsername");
+if (sidebarUsername) {
+  sidebarUsername.textContent =
+    sessionStorage.getItem("RUNATION_ADMIN_USERNAME") ||
+    sessionStorage.getItem("RUNATION_ADMIN_ROLE") ||
+    "Admin";
+}
+
+<<<<<<< HEAD
+  const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
+  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
+  const isMaster = role === "master" || accessMode === "master";
+
+  document.querySelectorAll("[data-master-only]").forEach(el => {
+    el.style.display = isMaster ? "" : "none";
+  });
+  
+=======
+>>>>>>> cleanup-file-structure
 });

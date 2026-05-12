@@ -325,6 +325,36 @@ function fromIsoToDatetimeLocal(value) {
   ].join(":");
 }
 
+function buildRacepackTime(fromId, toId) {
+  const from = getValue(fromId);
+  const to = getValue(toId);
+
+  if (from && to) return `${from} - ${to}`;
+  if (from) return from;
+  if (to) return to;
+
+  return "";
+}
+
+function setRacepackTimeRange(fromId, toId, value) {
+  const text = String(value || "").trim();
+
+  setValue(fromId, "");
+  setValue(toId, "");
+
+  if (!text) return;
+
+  const parts = text.split(/\s*-\s*/);
+
+  if (parts[0] && /^\d{2}:\d{2}$/.test(parts[0])) {
+    setValue(fromId, parts[0]);
+  }
+
+  if (parts[1] && /^\d{2}:\d{2}$/.test(parts[1])) {
+    setValue(toId, parts[1]);
+  }
+}
+
 /* =========================
    IMAGE
 ========================= */
@@ -477,6 +507,10 @@ function resetForm() {
     "organizerName",
     "organizerUrl",
     "eventDate",
+	"racepackLocation",
+	"racepackDate",
+	"racepackTimeFrom",
+	"racepackTimeTo",
     "openAt",
     "closeAt",
     "totalLimit",
@@ -487,7 +521,7 @@ function resetForm() {
 
   setValue("statusMode", "force_closed");
   setValue("isVisible", "1");
-  setValue("showSlotCounter", "0");
+  setValue("showSlotCounter", "1");
   setValue("postageEnabled", "0");
 
   clearEventImageInput();
@@ -511,6 +545,9 @@ function buildEventPayload() {
     organizer_name: getValue("organizerName"),
     organizer_url: getValue("organizerUrl"),
     event_date: getValue("eventDate"),
+	racepack_location: getValue("racepackLocation").toUpperCase(),
+	racepack_date: getValue("racepackDate"),
+	racepack_time: buildRacepackTime("racepackTimeFrom", "racepackTimeTo"),
     status_mode: getValue("statusMode"),
     open_at: toIsoMalaysia(getValue("openAt")),
     close_at: toIsoMalaysia(getValue("closeAt")),
@@ -571,8 +608,13 @@ function resetExternalEventForm() {
     "externalSlug",
     "externalRegistrationUrl",
     "externalTitle",
+	"externalEventType",
     "externalVenue",
     "externalEventDate",
+	"externalRacepackLocation",
+	"externalRacepackDate",
+	"externalRacepackTimeFrom",
+	"externalRacepackTimeTo",
     "externalCategories",
     "externalSlots",
     "externalOrganizerName",
@@ -580,6 +622,8 @@ function resetExternalEventForm() {
     "externalShortDescription",
     "externalEventImage"
   ].forEach(id => setValue(id, ""));
+
+  setValue("externalShowSlotCounter", "1");
 }
 
 function populateExternalEventForm(event, categories) {
@@ -596,8 +640,21 @@ function populateExternalEventForm(event, categories) {
   setValue("externalSlug", event.slug || "");
   setValue("externalRegistrationUrl", event.external_registration_url || "");
   setValue("externalTitle", event.title || "");
+  
+  const externalEventType = String(event.event_type || "").toLowerCase() === "external event"
+    ? ""
+	: event.event_type || "";
+	
+  setValue("externalEventType", externalEventType);
   setValue("externalVenue", event.venue || "");
   setValue("externalEventDate", event.event_date || "");
+  setValue("externalRacepackLocation", event.racepack_location || "");
+  setValue("externalRacepackDate", event.racepack_date || "");
+  setRacepackTimeRange(
+    "externalRacepackTimeFrom",
+    "externalRacepackTimeTo",
+    event.racepack_time || ""
+  );
 
   setValue(
     "externalCategories",
@@ -609,6 +666,7 @@ function populateExternalEventForm(event, categories) {
   );
 
   setValue("externalSlots", Number(event.total_limit || 0) || "");
+  setValue("externalShowSlotCounter", String(event.show_slot_counter ?? 1));
   setValue("externalOrganizerName", event.organizer_name || "");
   setValue("externalOrganizerUrl", event.organizer_url || "");
   setValue("externalShortDescription", event.short_description || "");
@@ -629,7 +687,9 @@ async function saveExternalEvent() {
   const title = getValue("externalTitle");
   const externalUrl = normalizeUrl(getValue("externalRegistrationUrl"));
   const categoriesText = getValue("externalCategories").toUpperCase();
+  const externalEventType = getValue("externalEventType");
   const externalSlots = Number(getValue("externalSlots") || 0);
+  const externalShowSlotCounter = Number(getValue("externalShowSlotCounter") || 0);
 
   if (!slug || !title || !externalUrl) {
     setMessage("Event URL, title, and external registration URL are required.");
@@ -642,16 +702,19 @@ async function saveExternalEvent() {
 
     slug,
     title,
-    event_type: "External Event",
+    event_type: externalEventType,
     short_description: getValue("externalShortDescription"),
     venue: getValue("externalVenue"),
     event_date: getValue("externalEventDate"),
+	racepack_location: getValue("externalRacepackLocation").toUpperCase(),
+	racepack_date: getValue("externalRacepackDate"),
+	racepack_time: buildRacepackTime("externalRacepackTimeFrom", "externalRacepackTimeTo"),
 
     status_mode: "force_open",
     open_at: "",
     close_at: "",
     total_limit: externalSlots,
-    show_slot_counter: externalSlots > 0 ? 1 : 0,
+    show_slot_counter: externalShowSlotCounter,
     is_visible: 1,
     sort_order: 0,
 
@@ -743,6 +806,9 @@ async function editEvent(id) {
     setValue("organizerName", event.organizer_name || "");
     setValue("organizerUrl", event.organizer_url || "");
     setValue("eventDate", event.event_date || "");
+	setValue("racepackLocation", event.racepack_location || "");
+	setValue("racepackDate", event.racepack_date || "");
+	setRacepackTimeRange("racepackTimeFrom", "racepackTimeTo", event.racepack_time || "");
     setValue("statusMode", event.status_mode || "force_closed");
     setValue("openAt", fromIsoToDatetimeLocal(event.open_at));
     setValue("closeAt", fromIsoToDatetimeLocal(event.close_at));
@@ -906,7 +972,12 @@ async function loadEvents() {
       const mode = String(event.registration_mode || "internal").toLowerCase();
       const modeText = mode === "external" ? "External" : "Runation";
       const usedSlots = escapeHtml(event.used_slots || 0);
+<<<<<<< HEAD
       const totalLimit = escapeHtml(event.total_limit || "Unlimited");
+=======
+      const totalLimit = escapeHtml(Number(event.total_limit || 0) > 0 ? event.total_limit : "Available");
+	  const publicSlotText = Number(event.show_slot_counter || 0) === 1 ? "Shown" : "Hidden";
+>>>>>>> cleanup-file-structure
       const status = escapeHtml(event.status);
       const imageText = event.event_image ? "Yes" : "No";
 
@@ -923,6 +994,10 @@ async function loadEvents() {
               <div class="muted">Mode: ${modeText}</div>
               <div class="muted">Date: ${date}</div>
               <div class="muted">Registered: ${usedSlots} / ${totalLimit}</div>
+<<<<<<< HEAD
+=======
+			  <div class="muted">Public Slots: ${publicSlotText}</div>
+>>>>>>> cleanup-file-structure
               ${renderApprovalText(event)}
               <div class="muted">Image: ${imageText}</div>
               <div class="muted">Postage: ${postageText}</div>
@@ -1002,6 +1077,8 @@ document.addEventListener("input", function (e) {
 
   if (
     e.target.id === "externalCategories" ||
+    e.target.id === "racepackLocation" ||
+    e.target.id === "externalRacepackLocation" ||
     e.target.classList.contains("cat-name")
   ) {
     const start = e.target.selectionStart;
@@ -1018,6 +1095,21 @@ document.addEventListener("input", function (e) {
 /* =========================
    INIT
 ========================= */
+function applyAdminRoleVisibility() {
+  const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
+  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
+
+  const isMaster = role === "master" || accessMode === "master";
+  const isExternalOnly = accessMode === "external_only";
+
+  document.querySelectorAll("[data-master-only]").forEach(el => {
+    el.style.display = isMaster ? "" : "none";
+  });
+
+  document.querySelectorAll("[data-not-external-only]").forEach(el => {
+    el.style.display = isExternalOnly ? "none" : "";
+  });
+}
 
 document.addEventListener("DOMContentLoaded", function () {
   resetForm();
@@ -1082,6 +1174,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadEvents();
   }
   
+<<<<<<< HEAD
     const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
   const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
   const isMaster = role === "master" || accessMode === "master";
@@ -1089,4 +1182,14 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("[data-master-only]").forEach(el => {
     el.style.display = isMaster ? "" : "none";
   });
+=======
+applyAdminRoleVisibility();
+const topbarUsername = document.getElementById("topbarUsername");
+if (topbarUsername) {
+  topbarUsername.textContent =
+    sessionStorage.getItem("RUNATION_ADMIN_USERNAME") ||
+    sessionStorage.getItem("RUNATION_ADMIN_ROLE") ||
+    "Admin";
+}
+>>>>>>> cleanup-file-structure
 });

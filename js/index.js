@@ -1,3 +1,30 @@
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function escapeAttr(value) {
+  return escapeHtml(value).replaceAll("`", "&#096;");
+}
+
+function cleanDisplay(value) {
+  const text = String(value || "").trim();
+
+  if (!text) return "";
+  if (text === "-") return "";
+
+  const lower = text.toLowerCase();
+
+  if (lower === "external event") return "";
+  if (lower === "external") return "";
+
+  return text;
+}
+
 function formatDate(value) {
   if (!value) return "-";
 
@@ -20,7 +47,6 @@ function getStatusText(status) {
 }
 
 function getButtonText(status) {
-  if (status === "OPEN") return "Event Info";
   return "Event Info";
 }
 
@@ -30,18 +56,35 @@ function money(value) {
   return `RM${num.toFixed(2)}`;
 }
 
-function getImageClass(event) {
-  const slug = String(event.slug || "").toLowerCase();
+function getLandingEventLabel(event) {
+  return (
+    cleanDisplay(event.event_type) ||
+    "Event"
+  );
+}
 
-  if (slug.includes("tanjongkarang") || slug.includes("tkhm")) {
-    return "tk-event";
+function getLandingCategories(event) {
+  return (
+    cleanDisplay(event.categories_text) ||
+    cleanDisplay(event.category) ||
+    cleanDisplay(event.event_type) ||
+    "-"
+  );
+}
+
+function getLandingSlotText(event) {
+  const showCounter = Number(event.show_slot_counter || 0) === 1;
+
+  if (!showCounter) return "";
+
+  const totalLimit = Number(event.total_limit || 0);
+  const usedSlots = Number(event.used_slots || 0);
+
+  if (totalLimit <= 0) {
+    return "Available";
   }
 
-  if (slug.includes("lsptk") || slug.includes("sawah")) {
-    return "sawah-event";
-  }
-
-  return "tk-event";
+  return `${usedSlots} / ${totalLimit}`;
 }
 
 async function loadEvents() {
@@ -68,75 +111,65 @@ async function loadEvents() {
     }
 
     box.innerHTML = events.map((event, index) => {
-  const status = event.status || "";
-  const eventType = event.event_type || "Running Event";
-  const categories = event.categories_text || "-";
-  const feeFrom = money(event.fee_from);
-  const featuredClass = index === 0 ? " featured-event" : "";
-  
-  const imageStyle = event.event_image
-    ? `style="background-image:
-      linear-gradient(135deg, rgba(37,99,235,0.08), rgba(15,23,42,0.1)),
-      url('${event.event_image}')"`
-    : "";
+      const status = event.status || "";
+      const eventType = getLandingEventLabel(event);
+      const categories = getLandingCategories(event);
+      const featuredClass = index === 0 ? " featured-event" : "";
 
-  const totalLimit = Number(event.total_limit || 0);
-  const usedSlots = Number(event.used_slots || 0);
-  const showCounter = Number(event.show_slot_counter || 0) === 1;
+      const imageStyle = event.event_image
+        ? `style="background-image:
+          linear-gradient(135deg, rgba(37,99,235,0.08), rgba(15,23,42,0.1)),
+          url('${escapeAttr(event.event_image)}')"`
+        : "";
 
-  const slotText = totalLimit > 0
-    ? (showCounter ? `${usedSlots} / ${totalLimit}` : `${totalLimit} slots`)
-    : "Unlimited";
+      const slotText = getLandingSlotText(event);
 
-  return `
-    <article class="event-card${featuredClass}">
-      <div class="event-image" ${imageStyle}>
-        <div class="event-status">${getStatusText(status)}</div>
-      </div>
-
-      <div class="event-content">
-        <p class="event-type">${eventType}</p>
-
-        <h3>${event.title || "-"}</h3>
-
-        <div class="event-info-grid">
-          <div>
-            <small>Date</small>
-            <strong>${formatDateOnly(event.event_date)}</strong>
-          </div>
-
-          <div>
-            <small>Venue</small>
-            <strong>${event.venue || "-"}</strong>
-          </div>
-
-          <div>
-            <small>Categories</small>
-            <strong>${categories}</strong>
-          </div>
-
+      const slotHtml = slotText
+        ? `
           <div>
             <small>Slots</small>
-            <strong>${slotText}</strong>
+            <strong>${escapeHtml(slotText)}</strong>
           </div>
-        </div>
-<!--
-        <p class="event-desc">
-          ${event.short_description || ""}
-        </p>
+        `
+        : "";
 
-        <div class="event-price-row">
-          <span>Fee From</span>
-          <strong>${feeFrom}</strong>
-        </div>
--->
-        <a href="event.html?event=${encodeURIComponent(event.slug)}" class="event-btn">
-          ${getButtonText(status)}
-        </a>
-      </div>
-    </article>
-  `;
-}).join("");
+      return `
+        <article class="event-card${featuredClass}">
+          <div class="event-image" ${imageStyle}>
+            <div class="event-status">${escapeHtml(getStatusText(status))}</div>
+          </div>
+
+          <div class="event-content">
+            <p class="event-type">${escapeHtml(eventType)}</p>
+
+            <h3>${escapeHtml(event.title || "-")}</h3>
+
+            <div class="event-info-grid">
+              <div>
+                <small>Date</small>
+                <strong>${escapeHtml(formatDate(event.event_date))}</strong>
+              </div>
+
+              <div>
+                <small>Venue</small>
+                <strong>${escapeHtml(event.venue || "-")}</strong>
+              </div>
+
+              <div>
+                <small>Categories</small>
+                <strong>${escapeHtml(categories)}</strong>
+              </div>
+
+              ${slotHtml}
+            </div>
+
+            <a href="event.html?event=${encodeURIComponent(event.slug)}" class="event-btn">
+              ${escapeHtml(getButtonText(status))}
+            </a>
+          </div>
+        </article>
+      `;
+    }).join("");
 
   } catch (err) {
     console.error(err);

@@ -159,9 +159,13 @@
 
 .event-image {
   position: relative;
-  height: 260px;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  height: auto;
+  overflow: hidden;
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
 }
 
 .event-image::after {
@@ -175,10 +179,6 @@
   background-image:
     linear-gradient(135deg, rgba(37,99,235,0.08), rgba(15,23,42,0.1)),
     url("https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1200&q=80");
-
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .event-status {
@@ -354,10 +354,6 @@
   .event-list-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .event-image {
-    height: 300px;
-  }
 }
 
 /* Desktop */
@@ -392,10 +388,6 @@
 
   .event-btn:hover {
     filter: brightness(1.05);
-  }
-  
-  .event-image{
-	  height: 340px;
   }
 }
 

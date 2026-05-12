@@ -167,6 +167,12 @@ export async function onRequestPatch(context) {
       }, 400);
     }
   }
+<<<<<<< HEAD
+=======
+  
+  const showSlotCounter = Number(body.show_slot_counter || 0) ? 1 : 0;
+  const isVisible = Number(body.is_visible ?? 1) ? 1 : 0;
+>>>>>>> cleanup-file-structure
 
   await context.env.DB.prepare(`
     UPDATE events
@@ -179,6 +185,9 @@ export async function onRequestPatch(context) {
       organizer_name = ?,
       organizer_url = ?,
       event_date = ?,
+	  racepack_location = ?,
+	  racepack_date = ?,
+	  racepack_time = ?,
       status_mode = ?,
       open_at = ?,
       close_at = ?,
@@ -202,13 +211,16 @@ export async function onRequestPatch(context) {
     cleanText(body.organizer_name),
     cleanText(body.organizer_url),
     cleanText(body.event_date),
+	cleanText(body.racepack_location),
+	cleanText(body.racepack_date),
+	cleanText(body.racepack_time),
     cleanText(body.status_mode || "force_closed"),
     cleanText(body.open_at),
     cleanText(body.close_at),
     Number(body.total_limit || 0),
-    Number(body.show_slot_counter || 0),
-    Number(body.is_visible ?? 1),
-    Number(body.sort_order || 0),
+	showSlotCounter,
+	isVisible,
+	Number(body.sort_order || 0),
     cleanText(body.event_image),
     registrationMode,
     externalRegistrationUrl,

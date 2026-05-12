@@ -3,354 +3,443 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Runation Create</title>
-  
+  <title>Runation Events</title>
+
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/admin.css">
-
-
 </head>
 
-<body>
-<div id="adminToast" class="admin-toast" role="status" aria-live="polite">
-  <div class="admin-toast-content">
-    <span id="adminToastText"></span>
-    <button type="button" class="admin-toast-close" onclick="closeAdminToast()">Dismiss</button>
-  </div>
-</div>
-
-<header class="admin-header">
-  <div class="admin-header-inner">
-    <h1>RUNATION Dashboard</h1>
-
-    <div class="admin-nav">
-      <a href="admin-events.html">Create Event</a>
-      <a href="admin-users.html" data-master-only>Users</a>
-      <a href="index.html">View Site</a>
+<body class="admin-page">
+  <div id="adminToast" class="admin-toast" role="status" aria-live="polite">
+    <div class="admin-toast-content">
+      <span id="adminToastText"></span>
+      <button type="button" class="admin-toast-close" onclick="closeAdminToast()">Dismiss</button>
     </div>
   </div>
-</header>
 
-<div id="deleteEventModal" class="admin-modal">
-  <div class="admin-modal-box">
-    <h2>Delete Event</h2>
+  <div id="deleteEventModal" class="admin-modal">
+    <div class="admin-modal-box">
+      <h2>Delete Event</h2>
 
-    <p class="modal-warning">
-      This action cannot be undone.
-    </p>
+      <p class="modal-warning">
+        This action cannot be undone.
+      </p>
 
-    <p>
-      To confirm delete, type this Event ID:
-    </p>
+      <p>
+        To confirm delete, type this Event ID:
+      </p>
 
-    <div class="delete-id-box">
-      ID: <strong id="deleteEventIdText">-</strong>
-    </div>
+      <div class="delete-id-box">
+        ID: <strong id="deleteEventIdText">-</strong>
+      </div>
 
-    <input
-      id="deleteEventConfirmInput"
-      type="text"
-      placeholder="Type Event ID here"
-      autocomplete="off"
-    >
+      <input
+        id="deleteEventConfirmInput"
+        type="text"
+        placeholder="Type Event ID here"
+        autocomplete="off"
+      >
 
-    <div id="deleteEventError"></div>
+      <div id="deleteEventError"></div>
 
-    <div class="button-row">
-      <button type="button" class="danger" onclick="confirmDeleteEvent()">
-        Delete Event
-      </button>
+      <div class="button-row">
+        <button type="button" class="danger" onclick="confirmDeleteEvent()">
+          Delete Event
+        </button>
 
-      <button type="button" class="secondary" onclick="closeDeleteEventModal()">
-        Cancel
-      </button>
+        <button type="button" class="secondary" onclick="closeDeleteEventModal()">
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
-</div>
 
+  <main class="admin-main">
+    <div class="admin-topbar">
+      <div>
+        <p class="admin-kicker">EVENT MANAGEMENT</p>
+        <h1>Events</h1>
+        <p class="admin-subtitle">
+          Create, edit, publish, and manage Runation events.
+          <span class="admin-signed-in">
+            Logged in as <strong id="topbarUsername">Admin</strong>
+          </span>
+        </p>
+      </div>
 
-<main class="admin-wrap">
+      <div class="admin-actions">
+        <a href="admin.html" data-not-external-only>
+          <button type="button" class="ghost-btn">Dashboard</button>
+        </a>
 
-  <section class="admin-card">
-    <h2>Admin Session</h2>
+        <a href="admin-events.html" data-not-external-only>
+          <button type="button" class="ghost-btn">Events</button>
+        </a>
 
-    <div class="button-row">
-      <button class="secondary" type="button" onclick="loadEvents()">Refresh Events</button>
-      <button class="danger" type="button" onclick="logoutAdmin()">Logout</button>
+        <a href="admin-users.html" data-master-only>
+          <button type="button" class="ghost-btn">Users</button>
+        </a>
+
+        <a href="index.html">
+          <button type="button" class="ghost-btn">View Site</button>
+        </a>
+
+        <button type="button" class="danger-outline-btn" onclick="logoutAdmin()">Logout</button>
+      </div>
     </div>
 
-    <div id="adminMessage"></div>
-  </section>
-  
-  <section class="admin-card">
-  <h2>Event Setup</h2>
-
-  <div class="button-row">
-    <button type="button" onclick="showFullEventForm()">
-      Create Event
-    </button>
-
-    <button type="button" class="secondary" onclick="showExternalEventForm()">
-      Add External Event
-    </button>
-  </div>
-</section>
-
-  <section id="fullEventForm" class="admin-card" hidden>
-  <h2 id="formTitle">Create Event</h2>
-
-    <input id="editingId" type="hidden">
-
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Event URL</label>
-        <input id="slug" placeholder="example: running">
-		<small class="field-hint">
-		  This will become: ?event=running
-		  </small>
-      </div>
-
-      <div class="form-group">
-        <label>Title</label>
-        <input id="title" placeholder="Event title">
-      </div>
-
-      <div class="form-group">
-        <label>Event Type</label>
-        <input id="eventType" placeholder="Half Marathon / Fun Run">
-      </div>
-
-      <div class="form-group">
-        <label>Venue</label>
-        <input id="venue" placeholder="Venue">
-      </div>
-	  
-	  <div class="form-group">
-  <label>Organizer Name</label>
-  <input id="organizerName" placeholder="Organizer name">
-</div>
-
-<div class="form-group">
-  <label>Organizer Website</label>
-  <input id="organizerUrl" type="url" placeholder="https://example.com">
-</div>
-
-      <div class="form-group">
-        <label>Event Date</label>
-        <input id="eventDate" type="date">
-      </div>
-
-      <div class="form-group">
-        <label>Status Mode</label>
-        <select id="statusMode">
-          <option value="force_closed">Force Closed</option>
-          <option value="force_open">Force Open</option>
-          <option value="auto">Auto Schedule</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Open At</label>
-        <input id="openAt" type="datetime-local">
-      </div>
-
-      <div class="form-group">
-        <label>Close At</label>
-        <input id="closeAt" type="datetime-local">
-      </div>
-
-      <div class="form-group">
-        <label>Total Limit</label>
-        <input id="totalLimit" type="number" placeholder="0 = unlimited">
-      </div>
-
-      <div class="form-group">
-        <label>Slot Display</label>
-        <select id="showSlotCounter">
-          <option value="0">Show total only</option>
-          <option value="1">Show registered counter</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Visible</label>
-        <select id="isVisible">
-          <option value="1">Visible</option>
-          <option value="0">Hidden</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Sort Order</label>
-        <input id="sortOrder" type="number" value="0">
-      </div>
-	  
-	  <div class="form-group">
-	    <label>Postage</label>
-		<select id="postageEnabled">
-		  <option value="0">Off</option>
-		  <option value="1">On</option>
-		</select>
-	  </div>
-
-      <div class="form-group">
-	    <label>Postage Fee</label>
-		<input id="postageFee" type="number" step="0.01" placeholder="Example: 10.00">
-	  </div>
-	  
-	  <div class="form-group full">
-	      <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
-		  
-		  <h3>Categories</h3>
-		  
-		  <div id="categoryEditor"></div>
-		  
-		  <button class="secondary" type="button" onclick="addCategoryRow()">
-		  + Add Category
-		  </button>
-		  </div>
-		  <br>
-
-
-      <div class="form-group full">
-        <label>Short Description</label>
-        <textarea id="shortDescription" placeholder="Short event description"></textarea>
-      </div>
-
-      <div class="form-group full">
-        <label>Event Image</label>
-
-        <div class="image-upload-box">
-         <label>Banner Image URL</label>
-<input
-  id="eventImage"
-  type="url"
-  placeholder="Paste image URL or upload image below"
->
-
-<small class="field-hint">
-  You can paste an image URL directly, or upload JPG/PNG/WEBP below.
-</small>
-
-<br>
-
-<label>Upload Image</label>
-<input
-  type="file"
-  id="eventImageFile"
-  accept="image/jpeg,image/png,image/webp"
->
-
-          <div class="image-upload-actions">
-  <button type="button" id="uploadEventImageBtn">Upload Image</button>
-  <button type="button" id="removeEventImageBtn" class="secondary">Remove Image</button>
-  <span class="muted">JPG, PNG, WEBP only. Max 2MB.</span>
-</div>
-
-
-          <div id="eventImageStatus"></div>
-
-          <img
-            id="eventImagePreview"
-            alt="Event image preview"
-          >
+    <div class="admin-events-content">
+      <section class="admin-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Event Setup</h2>
+            <p>Create a Runation registration event or list an external event.</p>
+          </div>
         </div>
-      </div>
+
+        <div class="button-row">
+          <button type="button" onclick="showFullEventForm()">
+            Create Event
+          </button>
+
+          <button type="button" class="secondary" onclick="showExternalEventForm()">
+            Add External Event
+          </button>
+        </div>
+
+        <div id="adminMessage" class="muted"></div>
+      </section>
+
+      <section id="fullEventForm" class="admin-panel" hidden>
+        <div class="panel-head">
+          <div>
+            <h2 id="formTitle">Create Event</h2>
+            <p>Setup registration details, categories, slots, postage, racepack info, and event image.</p>
+          </div>
+        </div>
+
+        <input id="editingId" type="hidden">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Event URL</label>
+            <input id="slug" placeholder="example: running">
+            <small class="field-hint">
+              This will become: ?event=running
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Title</label>
+            <input id="title" placeholder="Event title">
+          </div>
+
+          <div class="form-group">
+            <label>Event Type</label>
+            <input id="eventType" placeholder="Half Marathon / Fun Run">
+          </div>
+
+          <div class="form-group">
+            <label>Venue</label>
+            <input id="venue" placeholder="Venue">
+          </div>
+
+          <div class="form-group">
+            <label>Organizer Name</label>
+            <input id="organizerName" placeholder="Organizer name">
+          </div>
+
+          <div class="form-group">
+            <label>Organizer Website</label>
+            <input id="organizerUrl" type="url" placeholder="https://example.com">
+          </div>
+
+          <div class="form-group">
+            <label>Event Date</label>
+            <input id="eventDate" type="date">
+          </div>
+
+          <div class="form-group">
+            <label>Racepack Location</label>
+            <input id="racepackLocation" placeholder="Location / T.B.C">
+          </div>
+
+          <div class="form-group">
+            <label>Racepack Date</label>
+            <input id="racepackDate" type="date">
+          </div>
+
+          <div class="form-group">
+            <label>Racepack Time From</label>
+            <input id="racepackTimeFrom" type="time">
+          </div>
+
+          <div class="form-group">
+            <label>Racepack Time To</label>
+            <input id="racepackTimeTo" type="time">
+          </div>
+
+          <div class="form-group">
+            <label>Status Mode</label>
+            <select id="statusMode">
+              <option value="force_closed">Force Closed</option>
+              <option value="force_open">Force Open</option>
+              <option value="auto">Auto Schedule</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Open At</label>
+            <input id="openAt" type="datetime-local">
+          </div>
+
+          <div class="form-group">
+            <label>Close At</label>
+            <input id="closeAt" type="datetime-local">
+          </div>
+
+          <div class="form-group">
+            <label>Total Limit</label>
+            <input id="totalLimit" type="number" placeholder="0 = unlimited">
+          </div>
+
+          <div class="form-group">
+            <label>Public Slot Display</label>
+            <select id="showSlotCounter">
+              <option value="1">Show slots on public card</option>
+              <option value="0">Hide slots from public card</option>
+            </select>
+            <small class="field-hint">
+              If total limit is 0, public card will show Available.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Visible</label>
+            <select id="isVisible">
+              <option value="1">Visible</option>
+              <option value="0">Hidden</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Sort Order</label>
+            <input id="sortOrder" type="number" value="0">
+          </div>
+
+          <div class="form-group">
+            <label>Postage</label>
+            <select id="postageEnabled">
+              <option value="0">Off</option>
+              <option value="1">On</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Postage Fee</label>
+            <input id="postageFee" type="number" step="0.01" placeholder="Example: 10.00">
+          </div>
+
+          <div class="form-group full">
+            <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
+
+            <h3>Categories</h3>
+
+            <div id="categoryEditor"></div>
+
+            <button class="secondary" type="button" onclick="addCategoryRow()">
+              + Add Category
+            </button>
+          </div>
+
+          <div class="form-group full">
+            <label>Short Description</label>
+            <textarea id="shortDescription" placeholder="Short event description"></textarea>
+          </div>
+
+          <div class="form-group full">
+            <label>Event Image</label>
+
+            <div class="image-upload-box">
+              <label>Banner Image URL</label>
+              <input
+                id="eventImage"
+                type="url"
+                placeholder="Paste image URL or upload image below"
+              >
+
+              <small class="field-hint">
+                You can paste an image URL directly, or upload JPG/PNG/WEBP below.
+              </small>
+
+              <br>
+
+              <label>Upload Image</label>
+              <input
+                type="file"
+                id="eventImageFile"
+                accept="image/jpeg,image/png,image/webp"
+              >
+
+              <div class="image-upload-actions">
+                <button type="button" id="uploadEventImageBtn">Upload Image</button>
+                <button type="button" id="removeEventImageBtn" class="secondary">Remove Image</button>
+                <span class="muted">JPG, PNG, WEBP only. Max 2MB.</span>
+              </div>
+
+              <div id="eventImageStatus"></div>
+
+              <img
+                id="eventImagePreview"
+                alt="Event image preview"
+              >
+            </div>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="button" onclick="saveEvent()">Save Event</button>
+          <button class="secondary" type="button" onclick="resetForm()">Clear Form</button>
+        </div>
+      </section>
+
+      <section id="externalEventForm" class="admin-panel" hidden>
+        <div class="panel-head">
+          <div>
+            <h2>Add External Event</h2>
+            <p>List an external event with an outside registration link.</p>
+          </div>
+        </div>
+
+        <input id="externalEditingId" type="hidden">
+        <input id="externalCategoryId" type="hidden">
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Event URL</label>
+            <input id="externalSlug" placeholder="example: external-run">
+            <small class="field-hint">
+              This will become: ?event=external-run
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>External Registration URL</label>
+            <input id="externalRegistrationUrl" type="url" placeholder="https://external-site.com/register">
+            <small class="field-hint">
+              Register Now button will redirect to this URL.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Title</label>
+            <input id="externalTitle" placeholder="Event title">
+          </div>
+
+          <div class="form-group">
+            <label>Event Type</label>
+            <input id="externalEventType" placeholder="Half Marathon / Fun Run">
+          </div>
+
+          <div class="form-group">
+            <label>Venue</label>
+            <input id="externalVenue" placeholder="Venue">
+          </div>
+
+          <div class="form-group">
+            <label>Event Date</label>
+            <input id="externalEventDate" type="date">
+          </div>
+
+          <div class="form-group">
+            <label>Racepack Location</label>
+            <input id="externalRacepackLocation" placeholder="Location / T.B.C">
+          </div>
+
+          <div class="form-group">
+            <label>Racepack Date</label>
+            <input id="externalRacepackDate" type="date">
+          </div>
+
+          <div class="form-group">
+            <label>Racepack Time From</label>
+            <input id="externalRacepackTimeFrom" type="time">
+          </div>
+
+          <div class="form-group">
+            <label>Racepack Time To</label>
+            <input id="externalRacepackTimeTo" type="time">
+          </div>
+
+          <div class="form-group">
+            <label>Categories</label>
+            <input id="externalCategories" placeholder="Example: 21KM, 10KM, 5KM">
+          </div>
+
+          <div class="form-group">
+            <label>Slots</label>
+            <input id="externalSlots" type="number" placeholder="Example: 5000">
+            <small class="field-hint">
+              Leave empty if not applicable.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Public Slot Display</label>
+            <select id="externalShowSlotCounter">
+              <option value="1">Show slots on public card</option>
+              <option value="0">Hide slots from public card</option>
+            </select>
+            <small class="field-hint">
+              If slots are empty or 0, public card will show Available.
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label>Organizer Name</label>
+            <input id="externalOrganizerName" placeholder="Organizer name">
+          </div>
+
+          <div class="form-group">
+            <label>Organizer Website</label>
+            <input id="externalOrganizerUrl" type="url" placeholder="https://example.com">
+          </div>
+
+          <div class="form-group full">
+            <label>Short Description</label>
+            <textarea id="externalShortDescription" placeholder="Short event description"></textarea>
+          </div>
+
+          <div class="form-group full">
+            <label>Banner Image URL</label>
+            <input id="externalEventImage" type="url" placeholder="https://example.com/banner.jpg">
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="button" onclick="saveExternalEvent()">Save External Event</button>
+          <button type="button" class="secondary" onclick="resetExternalEventForm()">Clear Form</button>
+        </div>
+      </section>
+
+      <section class="admin-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Events</h2>
+            <p>Manage visibility, approval status, event images, and registration mode.</p>
+          </div>
+
+          <button class="ghost-btn" type="button" onclick="loadEvents()">
+            Refresh
+          </button>
+        </div>
+
+        <div id="eventList">Loading...</div>
+      </section>
     </div>
+  </main>
 
-
-    <div class="button-row">
-      <button type="button" onclick="saveEvent()">Save Event</button>
-      <button class="secondary" type="button" onclick="resetForm()">Clear Form</button>
-    </div>
-  </section>
-
-<section id="externalEventForm" class="admin-card" hidden>
-  <h2>Add External Event</h2>
-  <input id="externalEditingId" type="hidden">
-  <input id="externalCategoryId" type="hidden">
-
-  <div class="form-grid">
-    <div class="form-group">
-      <label>Event URL</label>
-      <input id="externalSlug" placeholder="example: external-run">
-      <small class="field-hint">
-        This will become: ?event=external-run
-      </small>
-    </div>
-
-    <div class="form-group">
-      <label>External Registration URL</label>
-      <input id="externalRegistrationUrl" type="url" placeholder="https://external-site.com/register">
-      <small class="field-hint">
-        Register Now button will redirect to this URL.
-      </small>
-    </div>
-
-    <div class="form-group">
-      <label>Title</label>
-      <input id="externalTitle" placeholder="Event title">
-    </div>
-
-    <div class="form-group">
-      <label>Venue</label>
-      <input id="externalVenue" placeholder="Venue">
-    </div>
-
-    <div class="form-group">
-      <label>Event Date</label>
-      <input id="externalEventDate" type="date">
-    </div>
-
-    <div class="form-group">
-      <label>Categories</label>
-      <input id="externalCategories" placeholder="Example: 21KM, 10KM, 5KM">
-    </div>
-	
-	<div class="form-group">
-  <label>Slots</label>
-  <input id="externalSlots" type="number" placeholder="Example: 5000">
-  <small class="field-hint">
-    Leave empty if not applicable.
-  </small>
-</div>
-
-<div class="form-group">
-  <label>Organizer Name</label>
-  <input id="externalOrganizerName" placeholder="Organizer name">
-</div>
-
-<div class="form-group">
-  <label>Organizer Website</label>
-  <input id="externalOrganizerUrl" type="url" placeholder="https://example.com">
-</div>
-
-    <div class="form-group full">
-      <label>Short Description</label>
-      <textarea id="externalShortDescription" placeholder="Short event description"></textarea>
-    </div>
-
-    <div class="form-group full">
-      <label>Banner Image URL</label>
-      <input id="externalEventImage" type="url" placeholder="https://example.com/banner.jpg">
-    </div>
-  </div>
-
-  <div class="button-row">
-    <button type="button" onclick="saveExternalEvent()">Save External Event</button>
-    <button type="button" class="secondary" onclick="resetExternalEventForm()">Clear Form</button>
-  </div>
-</section>
-
-  <section class="admin-card">
-    <h2>Events</h2>
-    <div id="eventList">Loading...</div>
-  </section>
-
-</main>
-
-<script src="js/shared.js"></script>
-<script src="js/admin-events.js"></script>
-
+  <script src="js/shared.js"></script>
+  <script src="js/admin-events.js"></script>
 </body>
 </html>
