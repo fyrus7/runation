@@ -1,27 +1,73 @@
 import { json } from "../../server/lib/response.js";
 
+function parseRunationDateTime(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  let text = raw.replace(" ", "T");
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    text = `${text}T00:00:00+08:00`;
+  } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(text)) {
+    text = `${text}:00+08:00`;
+  } else if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/.test(text)) {
+    text = `${text}+08:00`;
+  }
+
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getEventDateEnd(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return null;
+
+  const dateOnly = raw.slice(0, 10);
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) {
+    return null;
+  }
+
+  const date = new Date(`${dateOnly}T23:59:59+08:00`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 function calculateEventStatus(event) {
   const now = new Date();
 
-  if (event.status_mode === "force_open") return "OPEN";
-  if (event.status_mode === "force_closed") return "CLOSED";
-
-  if (event.open_at) {
-    const openAt = new Date(event.open_at);
-    if (now < openAt) return "UPCOMING";
-  }
-
-  if (event.close_at) {
-    const closeAt = new Date(event.close_at);
-    if (now > closeAt) return "CLOSED";
-  }
+  const statusMode = String(event.status_mode || "").trim();
+  const openAt = parseRunationDateTime(event.open_at);
+  const closeAt = parseRunationDateTime(event.close_at);
+  const eventDateEnd = getEventDateEnd(event.event_date);
 
   const totalLimit = Number(event.total_limit || 0);
   const usedSlots = Number(event.used_slots || 0);
 
-  if (totalLimit > 0 && usedSlots >= totalLimit) return "FULL";
+  if (statusMode === "force_closed") {
+    return "CLOSED";
+  }
 
-  return "OPEN";
+  if (openAt && now < openAt) {
+    return "UPCOMING";
+  }
+
+  if (closeAt && now > closeAt) {
+    return "CLOSED";
+  }
+
+  if (eventDateEnd && now > eventDateEnd) {
+    return "CLOSED";
+  }
+
+  if (totalLimit > 0 && usedSlots >= totalLimit) {
+    return "FULL";
+  }
+
+  if (statusMode === "force_open") {
+    return "OPEN";
+  }
+
+  return "CLOSED";
 }
 
 export async function onRequestGet(context) {

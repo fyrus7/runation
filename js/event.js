@@ -143,38 +143,15 @@ function getActiveCategories(categories) {
   return (categories || []).filter(cat => Number(cat.is_active) === 1);
 }
 
-function getPublicAvailabilityText(event, categories) {
+function getPublicAvailabilityText(event) {
   const status = String(event.status || "").toUpperCase();
 
-  if (status === "FULL") {
-    return "Sold Out!";
-  }
+  if (status === "OPEN") return "Available";
+  if (status === "FULL") return "Sold Out!";
+  if (status === "CLOSED") return "Closed";
+  if (status === "UPCOMING") return "Coming Soon";
 
-  const totalLimit = Number(event.total_limit || 0);
-  const usedSlots = Number(event.used_slots || 0);
-
-  if (totalLimit > 0 && usedSlots >= totalLimit) {
-    return "Sold Out!";
-  }
-
-  const activeCategories = getActiveCategories(categories);
-  const limitedCategories = activeCategories.filter(cat => {
-    return Number(cat.slot_limit || 0) > 0;
-  });
-
-  if (totalLimit <= 0 && limitedCategories.length) {
-    const allLimitedCategoriesFull = limitedCategories.every(cat => {
-      const limit = Number(cat.slot_limit || 0);
-      const used = Number(cat.used_slots || 0);
-      return used >= limit;
-    });
-
-    if (allLimitedCategoriesFull) {
-      return "Sold Out!";
-    }
-  }
-
-  return "Available";
+  return "Closed";
 }
 
 function renderEventDetails(event, categories) {
@@ -188,7 +165,7 @@ function renderEventDetails(event, categories) {
 
   // Public event page must never expose slot numbers.
   // Always show public availability only.
-  setText("eventSlots", getPublicAvailabilityText(event, categories));
+  setText("eventSlots", getPublicAvailabilityText(event));
 }
 
 function normalizeWebsiteUrl(url) {

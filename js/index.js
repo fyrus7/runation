@@ -78,18 +78,13 @@ function getLandingSlotText(event) {
   if (!showPublicAvailability) return "";
 
   const status = String(event.status || "").toUpperCase();
-  const totalLimit = Number(event.total_limit || 0);
-  const usedSlots = Number(event.used_slots || 0);
 
-  if (status === "FULL") {
-    return "Sold Out!";
-  }
+  if (status === "OPEN") return "Available";
+  if (status === "FULL") return "Sold Out!";
+  if (status === "CLOSED") return "Closed";
+  if (status === "UPCOMING") return "Coming Soon";
 
-  if (totalLimit > 0 && usedSlots >= totalLimit) {
-    return "Sold Out!";
-  }
-
-  return "Available";
+  return "";
 }
 
 async function loadEvents() {
