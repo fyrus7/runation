@@ -1462,3 +1462,29 @@ td {
     width: 100%;
   }
 }
+
+/* ==========================
+   NO SIDEBAR ADMIN LAYOUT
+========================== */
+
+.admin-page .admin-shell {
+  display: block;
+  min-height: 100vh;
+}
+
+.admin-page .admin-sidebar {
+  display: none !important;
+}
+
+.admin-page .admin-main {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+@media (max-width: 768px) {
+  .admin-page .admin-main {
+    padding: 14px;
+  }
+}

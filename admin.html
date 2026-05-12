@@ -41,11 +41,21 @@
           <p class="admin-subtitle">Manage participants, payments, exports, and category progress.</p>
         </div>
 
-        <div class="admin-actions">
-          <a href="admin-events.html"><button type="button" class="ghost-btn">Events</button></a>
-		  <a href="admin-users.html"><button type="button" class="ghost-btn">Users</button></a>
-          <button type="button" class="danger-outline-btn" onclick="logoutAdmin()">Logout</button>
-        </div>
+<div class="admin-actions">
+  <a href="admin-events.html" data-not-external-only>
+    <button type="button" class="ghost-btn">Events</button>
+  </a>
+
+  <a href="admin-users.html" data-master-only>
+    <button type="button" class="ghost-btn">Users</button>
+  </a>
+
+  <a href="index.html">
+    <button type="button" class="ghost-btn">View Site</button>
+  </a>
+
+  <button type="button" class="danger-outline-btn" onclick="logoutAdmin()">Logout</button>
+</div>
       </div>
 
       <section class="admin-stat-grid">

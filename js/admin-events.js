@@ -1088,6 +1088,21 @@ document.addEventListener("input", function (e) {
 /* =========================
    INIT
 ========================= */
+function applyAdminRoleVisibility() {
+  const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
+  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
+
+  const isMaster = role === "master" || accessMode === "master";
+  const isExternalOnly = accessMode === "external_only";
+
+  document.querySelectorAll("[data-master-only]").forEach(el => {
+    el.style.display = isMaster ? "" : "none";
+  });
+
+  document.querySelectorAll("[data-not-external-only]").forEach(el => {
+    el.style.display = isExternalOnly ? "none" : "";
+  });
+}
 
 document.addEventListener("DOMContentLoaded", function () {
   resetForm();
@@ -1152,11 +1167,5 @@ document.addEventListener("DOMContentLoaded", function () {
     loadEvents();
   }
   
-    const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
-  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
-  const isMaster = role === "master" || accessMode === "master";
-
-  document.querySelectorAll("[data-master-only]").forEach(el => {
-    el.style.display = isMaster ? "" : "none";
-  });
+applyAdminRoleVisibility();
 });
