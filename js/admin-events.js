@@ -654,7 +654,7 @@ async function saveExternalEvent() {
 
     slug,
     title,
-    event_type: externalEventType || "Running Event",
+    event_type: externalEventType,
     short_description: getValue("externalShortDescription"),
     venue: getValue("externalVenue"),
     event_date: getValue("externalEventDate"),
