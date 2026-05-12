@@ -574,6 +574,10 @@ tbody tr:hover {
    ADMIN EVENTS
 ========================== */
 
+.admin-events-content {
+  width: 100%;
+}
+
 .event-row {
   border: 1px solid #e6edf6;
   border-radius: 18px;
