@@ -571,6 +571,7 @@ function resetExternalEventForm() {
     "externalSlug",
     "externalRegistrationUrl",
     "externalTitle",
+	"externalEventType",
     "externalVenue",
     "externalEventDate",
     "externalCategories",
@@ -598,6 +599,12 @@ function populateExternalEventForm(event, categories) {
   setValue("externalSlug", event.slug || "");
   setValue("externalRegistrationUrl", event.external_registration_url || "");
   setValue("externalTitle", event.title || "");
+  
+  const externalEventType = String(event.event_type || "").toLowerCase() === "external event"
+    ? ""
+	: event.event_type || "";
+	
+  setValue("externalEventType", externalEventType);
   setValue("externalVenue", event.venue || "");
   setValue("externalEventDate", event.event_date || "");
 
@@ -632,6 +639,7 @@ async function saveExternalEvent() {
   const title = getValue("externalTitle");
   const externalUrl = normalizeUrl(getValue("externalRegistrationUrl"));
   const categoriesText = getValue("externalCategories").toUpperCase();
+  const externalEventType = getValue("externalEventType");
   const externalSlots = Number(getValue("externalSlots") || 0);
   const externalShowSlotCounter = Number(getValue("externalShowSlotCounter") || 0);
 
@@ -646,7 +654,7 @@ async function saveExternalEvent() {
 
     slug,
     title,
-    event_type: "External Event",
+    event_type: externalEventType || "Running Event",
     short_description: getValue("externalShortDescription"),
     venue: getValue("externalVenue"),
     event_date: getValue("externalEventDate"),
