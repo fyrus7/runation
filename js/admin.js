@@ -566,4 +566,13 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("[data-master-only]").forEach(el => {
     el.style.display = isMaster ? "" : "none";
   });
+  
+  const sidebarUsername = document.getElementById("sidebarUsername");
+if (sidebarUsername) {
+  sidebarUsername.textContent =
+    sessionStorage.getItem("RUNATION_ADMIN_USERNAME") ||
+    sessionStorage.getItem("RUNATION_ADMIN_ROLE") ||
+    "Admin";
+}
+
 });

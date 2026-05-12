@@ -1,148 +1,173 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Runation Dashboard</title>
-  
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/admin.css">
 
-
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/admin.css">
 </head>
 
-<body>
+<body class="admin-page">
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <div class="admin-logo">
+        <div class="logo-mark">R</div>
+        <div>
+          <strong>RUNATION</strong>
+          <span>Admin Console</span>
+        </div>
+      </div>
 
-<header class="admin-header">
-  <div class="admin-header-inner">
-    <h1>RUNATION Dashboard</h1>
+      <nav class="side-menu">
+        <a class="side-item active" href="admin.html">Dashboard</a>
+        <a class="side-item" href="admin-events.html">Events</a>
+        <a class="side-item" href="admin-users.html" data-master-only>Add Users</a>
+        <a class="side-item" href="index.html">View Site</a>
+      </nav>
 
-    <div class="admin-nav">
-      <a href="admin-events.html">Create</a>
-      <a href="admin-users.html" data-master-only>Users</a>
-      <a href="index.html">View Site</a>
-    </div>
+      <div class="side-footer">
+        <span>Signed in as</span>
+        <strong id="sidebarUsername">Admin</strong>
+      </div>
+    </aside>
+
+    <main class="admin-main">
+      <div class="admin-topbar">
+        <div>
+          <p class="admin-kicker">ADMIN DASHBOARD</p>
+          <h1>Registrations</h1>
+          <p class="admin-subtitle">Manage participants, payments, exports, and category progress.</p>
+        </div>
+
+        <div class="admin-actions">
+          <button type="button" class="ghost-btn" onclick="loadRegistrations()">Refresh</button>
+          <button type="button" class="ghost-btn" onclick="exportCsv()">Export CSV</button>
+          <button type="button" class="danger-outline-btn" onclick="logoutAdmin()">Logout</button>
+        </div>
+      </div>
+
+      <section class="admin-stat-grid">
+        <div class="admin-stat-card">
+          <span>Total</span>
+          <strong id="sumTotal">0</strong>
+          <small>Loaded registrations</small>
+        </div>
+
+        <div class="admin-stat-card paid-card">
+          <span>Paid</span>
+          <strong id="sumPaid">0</strong>
+          <small>Payment completed</small>
+        </div>
+
+        <div class="admin-stat-card pending-card">
+          <span>Pending</span>
+          <strong id="sumPending">0</strong>
+          <small>Awaiting payment</small>
+        </div>
+
+        <div class="admin-stat-card">
+          <span>Failed</span>
+          <strong id="sumFailed">0</strong>
+          <small>Failed transactions</small>
+        </div>
+      </section>
+
+      <section class="admin-panel" style="margin-bottom:20px;">
+        <div class="panel-head">
+          <div>
+            <h2>Filters</h2>
+            <p>Select event, status, or search before refreshing the participant list.</p>
+          </div>
+        </div>
+
+        <div class="premium-controls admin-dashboard-controls">
+          <select id="eventFilter">
+            <option value="">All Events</option>
+          </select>
+
+          <select id="statusFilter">
+            <option value="">All Status</option>
+            <option value="PAID">PAID</option>
+            <option value="PENDING_PAYMENT">PENDING_PAYMENT</option>
+            <option value="FAILED">FAILED</option>
+            <option value="EXPIRED">EXPIRED</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+
+          <input id="searchInput" placeholder="Name / IC / Reg No / Phone / Email">
+
+          <button type="button" class="primary-btn" onclick="loadRegistrations()">Refresh</button>
+        </div>
+
+        <div class="button-row">
+          <button type="button" class="secondary" onclick="expirePending()">Expire Pending &gt; 1 Hour</button>
+          <button type="button" class="secondary" onclick="exportCsv()">Export CSV</button>
+          <button type="button" class="danger" onclick="deleteCurrentList()">Delete Current List</button>
+        </div>
+
+        <div id="adminMessage" class="muted" style="margin-top:12px;"></div>
+      </section>
+
+      <section class="admin-panel" id="categoryGraphCard" style="margin-bottom:20px;">
+        <div class="panel-head">
+          <div>
+            <h2>Category Progress</h2>
+            <p>View registered slots, category limits, and available balance.</p>
+          </div>
+        </div>
+
+        <div id="categoryGraphBox" class="category-graph-box">
+          Select an event and press Refresh to view category progress.
+        </div>
+      </section>
+
+      <section class="admin-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Participant List</h2>
+            <p>Participants only load after pressing Refresh.</p>
+          </div>
+
+          <button type="button" class="ghost-btn" onclick="loadRegistrations()">Refresh</button>
+        </div>
+
+        <div class="premium-table-wrap">
+          <table class="premium-table">
+            <thead>
+              <tr>
+                <th>Reg No</th>
+                <th>Status</th>
+                <th>Name</th>
+                <th>IC</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Gender</th>
+                <th>Category</th>
+                <th>Event Tee</th>
+                <th>Finisher Tee</th>
+                <th>Emergency</th>
+                <th>Event</th>
+                <th>Amount</th>
+                <th>Created</th>
+                <th>Paid</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+
+            <tbody id="registrationRows">
+              <tr>
+                <td colspan="16" class="empty-cell">Press Refresh to load participants.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
   </div>
-</header>
 
-<main class="admin-wrap">
-
-  <section class="admin-card">
-    <h2>Admin Access</h2>
-
-    <div class="filter-grid">
-
-      <div>
-        <label>Event</label>
-        <select id="eventFilter">
-          <option value="">All Events</option>
-        </select>
-      </div>
-
-      <div>
-        <label>Search</label>
-        <input id="searchInput" placeholder="Name / IC / Reg No / Phone / Email">
-      </div>
-    </div>
-
-    <div class="filter-grid" style="margin-top:12px;">
-      <div>
-        <label>Status</label>
-        <select id="statusFilter">
-          <option value="">All Status</option>
-          <option value="PAID">PAID</option>
-          <option value="PENDING_PAYMENT">PENDING_PAYMENT</option>
-          <option value="FAILED">FAILED</option>
-		  <option value="EXPIRED">EXPIRED</option>
-		  <option value="CANCELLED">CANCELLED</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="button-row">
-	  <button class="secondary" onclick="loadRegistrations()">Refresh</button>
-	  <button class="secondary" onclick="expirePending()">Expire Pending > 1 Hour</button>
-<button class="secondary" onclick="exportCsv()">Export CSV</button>
-<button class="danger" onclick="deleteCurrentList()">Delete Current List</button>
-<button class="danger" onclick="logoutAdmin()">Logout</button>
-    </div>
-
-    <div id="adminMessage"></div>
-  </section>
-
-  <section class="admin-card">
-    <h2>Summary</h2>
-
-    <div class="summary-row">
-      <div class="summary-box">
-        <small>Total</small>
-        <strong id="sumTotal">0</strong>
-      </div>
-
-      <div class="summary-box">
-        <small>Paid</small>
-        <strong id="sumPaid">0</strong>
-      </div>
-
-      <div class="summary-box">
-        <small>Pending</small>
-        <strong id="sumPending">0</strong>
-      </div>
-
-      <div class="summary-box">
-        <small>Failed</small>
-        <strong id="sumFailed">0</strong>
-      </div>
-    </div>
-  </section>
-  
-<section class="admin-card" id="categoryGraphCard">
-  <h2>Category Progress</h2>
-
-  <div id="categoryGraphBox" class="category-graph-box">
-    Select an event and press Refresh to view category progress.
-  </div>
-</section>
-
-  <section class="admin-card">
-    <h2>Participant List</h2>
-
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Reg No</th>
-            <th>Status</th>
-            <th>Name</th>
-            <th>IC</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Gender</th>
-            <th>Category</th>
-            <th>Event Tee</th>
-            <th>Finisher Tee</th>
-            <th>Emergency</th>
-            <th>Event</th>
-            <th>Amount</th>
-            <th>Created</th>
-            <th>Paid</th>
-			<th>Action</th>
-          </tr>
-        </thead>
-
-<tbody id="registrationRows">
-  <tr>
-    <td colspan="16">Press Refresh to load participants.</td>
-  </tr>
-</tbody>
-      </table>
-    </div>
-  </section>
-
-</main>
-
-<script src="js/shared.js"></script>
-<script src="js/admin.js"></script>
-
+  <script src="js/shared.js"></script>
+  <script src="js/admin.js"></script>
 </body>
 </html>

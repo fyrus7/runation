@@ -1448,3 +1448,17 @@ td {
     padding: 18px;
   }
 }
+
+.admin-dashboard-controls {
+  grid-template-columns: 220px 180px 1fr 120px;
+}
+
+@media (max-width: 900px) {
+  .admin-dashboard-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard-controls button {
+    width: 100%;
+  }
+}
