@@ -1168,4 +1168,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
   
 applyAdminRoleVisibility();
+const topbarUsername = document.getElementById("topbarUsername");
+if (topbarUsername) {
+  topbarUsername.textContent =
+    sessionStorage.getItem("RUNATION_ADMIN_USERNAME") ||
+    sessionStorage.getItem("RUNATION_ADMIN_ROLE") ||
+    "Admin";
+}
 });
