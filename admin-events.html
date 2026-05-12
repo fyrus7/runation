@@ -24,7 +24,7 @@
     <h1>RUNATION Dashboard</h1>
 
     <div class="admin-nav">
-      <a href="admin.html">Dashboard</a>
+      <a href="admin-events.html">Create Event</a>
       <a href="admin-users.html" data-master-only>Users</a>
       <a href="index.html">View Site</a>
     </div>
@@ -114,11 +114,6 @@
         <label>Title</label>
         <input id="title" placeholder="Event title">
       </div>
-	  
-	  <div class="form-group">
-	    <label>Event Type</label>
-	    <input id="externalEventType" placeholder="Fun Run / Half Marathon / Ultra">
-	  </div>
 
       <div class="form-group">
         <label>Event Type</label>
@@ -169,16 +164,13 @@
         <input id="totalLimit" type="number" placeholder="0 = unlimited">
       </div>
 
-<div class="form-group">
-  <label>Public Slot Display</label>
-  <select id="showSlotCounter">
-    <option value="1">Show slots on public card</option>
-    <option value="0">Hide slots from public card</option>
-  </select>
-  <small class="field-hint">
-    If total limit is 0, public card will show Available.
-  </small>
-</div>
+      <div class="form-group">
+        <label>Slot Display</label>
+        <select id="showSlotCounter">
+          <option value="0">Show total only</option>
+          <option value="1">Show registered counter</option>
+        </select>
+      </div>
 
       <div class="form-group">
         <label>Visible</label>
@@ -300,10 +292,10 @@
       <input id="externalTitle" placeholder="Event title">
     </div>
 	
-	<div class="form-group">
-	  <label>Event Type</label>
-	  <input id="externalEventType" placeholder="Fun Run / Half Marathon / Ultra">
-	</div>
+      <div class="form-group">
+        <label>Event Type</label>
+        <input id="externalEventTyp" placeholder="Half Marathon / Fun Run">
+      </div>
 
     <div class="form-group">
       <label>Venue</label>
@@ -325,17 +317,6 @@
   <input id="externalSlots" type="number" placeholder="Example: 5000">
   <small class="field-hint">
     Leave empty if not applicable.
-  </small>
-</div>
-
-<div class="form-group">
-  <label>Public Slot Display</label>
-  <select id="externalShowSlotCounter">
-    <option value="1">Show slots on public card</option>
-    <option value="0">Hide slots from public card</option>
-  </select>
-  <small class="field-hint">
-    If slots are empty or 0, public card will show Available.
   </small>
 </div>
 
