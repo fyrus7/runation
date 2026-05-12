@@ -81,18 +81,13 @@ async function loadEventsForFilter() {
     return;
   }
 
-<<<<<<< HEAD
-  const events = data.events || [];
+  const events = (data.events || []).filter(event => {
+    return String(event.registration_mode || "internal").toLowerCase() !== "external";
+  });
+
+  ADMIN_EVENTS = events;
+
   const current = select.value;
-=======
-const events = (data.events || []).filter(event => {
-  return String(event.registration_mode || "internal").toLowerCase() !== "external";
-});
-
-ADMIN_EVENTS = events;
-
-const current = select.value;
->>>>>>> cleanup-file-structure
 
   select.innerHTML = role === "event_admin"
     ? ""
@@ -579,16 +574,4 @@ if (sidebarUsername) {
     sessionStorage.getItem("RUNATION_ADMIN_ROLE") ||
     "Admin";
 }
-
-<<<<<<< HEAD
-  const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
-  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
-  const isMaster = role === "master" || accessMode === "master";
-
-  document.querySelectorAll("[data-master-only]").forEach(el => {
-    el.style.display = isMaster ? "" : "none";
-  });
-  
-=======
->>>>>>> cleanup-file-structure
 });

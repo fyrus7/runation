@@ -972,12 +972,8 @@ async function loadEvents() {
       const mode = String(event.registration_mode || "internal").toLowerCase();
       const modeText = mode === "external" ? "External" : "Runation";
       const usedSlots = escapeHtml(event.used_slots || 0);
-<<<<<<< HEAD
-      const totalLimit = escapeHtml(event.total_limit || "Unlimited");
-=======
       const totalLimit = escapeHtml(Number(event.total_limit || 0) > 0 ? event.total_limit : "Available");
 	  const publicSlotText = Number(event.show_slot_counter || 0) === 1 ? "Shown" : "Hidden";
->>>>>>> cleanup-file-structure
       const status = escapeHtml(event.status);
       const imageText = event.event_image ? "Yes" : "No";
 
@@ -994,10 +990,7 @@ async function loadEvents() {
               <div class="muted">Mode: ${modeText}</div>
               <div class="muted">Date: ${date}</div>
               <div class="muted">Registered: ${usedSlots} / ${totalLimit}</div>
-<<<<<<< HEAD
-=======
-			  <div class="muted">Public Slots: ${publicSlotText}</div>
->>>>>>> cleanup-file-structure
+              <div class="muted">Public Slots: ${publicSlotText}</div>
               ${renderApprovalText(event)}
               <div class="muted">Image: ${imageText}</div>
               <div class="muted">Postage: ${postageText}</div>
@@ -1174,22 +1167,13 @@ document.addEventListener("DOMContentLoaded", function () {
     loadEvents();
   }
   
-<<<<<<< HEAD
-    const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
-  const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
-  const isMaster = role === "master" || accessMode === "master";
+  applyAdminRoleVisibility();
 
-  document.querySelectorAll("[data-master-only]").forEach(el => {
-    el.style.display = isMaster ? "" : "none";
-  });
-=======
-applyAdminRoleVisibility();
-const topbarUsername = document.getElementById("topbarUsername");
-if (topbarUsername) {
-  topbarUsername.textContent =
-    sessionStorage.getItem("RUNATION_ADMIN_USERNAME") ||
-    sessionStorage.getItem("RUNATION_ADMIN_ROLE") ||
-    "Admin";
-}
->>>>>>> cleanup-file-structure
+  const topbarUsername = document.getElementById("topbarUsername");
+  if (topbarUsername) {
+    topbarUsername.textContent =
+      sessionStorage.getItem("RUNATION_ADMIN_USERNAME") ||
+      sessionStorage.getItem("RUNATION_ADMIN_ROLE") ||
+      "Admin";
+  }
 });
