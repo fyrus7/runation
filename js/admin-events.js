@@ -545,7 +545,7 @@ function buildEventPayload() {
     organizer_name: getValue("organizerName"),
     organizer_url: getValue("organizerUrl"),
     event_date: getValue("eventDate"),
-	racepack_location: getValue("racepackLocation"),
+	racepack_location: getValue("racepackLocation").toUpperCase(),
 	racepack_date: getValue("racepackDate"),
 	racepack_time: buildRacepackTime("racepackTimeFrom", "racepackTimeTo"),
     status_mode: getValue("statusMode"),
@@ -706,7 +706,7 @@ async function saveExternalEvent() {
     short_description: getValue("externalShortDescription"),
     venue: getValue("externalVenue"),
     event_date: getValue("externalEventDate"),
-	racepack_location: getValue("externalRacepackLocation"),
+	racepack_location: getValue("externalRacepackLocation").toUpperCase(),
 	racepack_date: getValue("externalRacepackDate"),
 	racepack_time: buildRacepackTime("externalRacepackTimeFrom", "externalRacepackTimeTo"),
 
@@ -1070,6 +1070,8 @@ document.addEventListener("input", function (e) {
 
   if (
     e.target.id === "externalCategories" ||
+    e.target.id === "racepackLocation" ||
+    e.target.id === "externalRacepackLocation" ||
     e.target.classList.contains("cat-name")
   ) {
     const start = e.target.selectionStart;
