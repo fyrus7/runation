@@ -143,6 +143,40 @@ function getActiveCategories(categories) {
   return (categories || []).filter(cat => Number(cat.is_active) === 1);
 }
 
+function getPublicAvailabilityText(event, categories) {
+  const status = String(event.status || "").toUpperCase();
+
+  if (status === "FULL") {
+    return "Sold Out!";
+  }
+
+  const totalLimit = Number(event.total_limit || 0);
+  const usedSlots = Number(event.used_slots || 0);
+
+  if (totalLimit > 0 && usedSlots >= totalLimit) {
+    return "Sold Out!";
+  }
+
+  const activeCategories = getActiveCategories(categories);
+  const limitedCategories = activeCategories.filter(cat => {
+    return Number(cat.slot_limit || 0) > 0;
+  });
+
+  if (totalLimit <= 0 && limitedCategories.length) {
+    const allLimitedCategoriesFull = limitedCategories.every(cat => {
+      const limit = Number(cat.slot_limit || 0);
+      const used = Number(cat.used_slots || 0);
+      return used >= limit;
+    });
+
+    if (allLimitedCategoriesFull) {
+      return "Sold Out!";
+    }
+  }
+
+  return "Available";
+}
+
 function renderEventDetails(event, categories) {
   const activeCategories = getActiveCategories(categories);
 
@@ -152,36 +186,9 @@ function renderEventDetails(event, categories) {
 
   setText("eventCategories", categoryText);
 
-  const showSlotCounter = Number(event.show_slot_counter || 0) === 1;
-
-  if (!showSlotCounter) {
-    setText("eventSlots", "Available");
-    return;
-  }
-
-  let totalLimit = Number(event.total_limit || 0);
-  let usedSlots = Number(event.used_slots || 0);
-
-  if (!totalLimit && activeCategories.length) {
-    totalLimit = activeCategories.reduce((sum, cat) => {
-      return sum + Number(cat.slot_limit || 0);
-    }, 0);
-  }
-
-  if (!usedSlots && activeCategories.length) {
-    usedSlots = activeCategories.reduce((sum, cat) => {
-      return sum + Number(cat.used_slots || 0);
-    }, 0);
-  }
-
-  if (!totalLimit) {
-    setText("eventSlots", "Available");
-    return;
-  }
-
-  const balance = Math.max(totalLimit - usedSlots, 0);
-
-  setText("eventSlots", `${balance} / ${totalLimit} slots left`);
+  // Public event page must never expose slot numbers.
+  // Always show public availability only.
+  setText("eventSlots", getPublicAvailabilityText(event, categories));
 }
 
 function normalizeWebsiteUrl(url) {

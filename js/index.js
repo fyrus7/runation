@@ -73,18 +73,23 @@ function getLandingCategories(event) {
 }
 
 function getLandingSlotText(event) {
-  const showCounter = Number(event.show_slot_counter || 0) === 1;
+  const showPublicAvailability = Number(event.show_slot_counter || 0) === 1;
 
-  if (!showCounter) return "";
+  if (!showPublicAvailability) return "";
 
+  const status = String(event.status || "").toUpperCase();
   const totalLimit = Number(event.total_limit || 0);
   const usedSlots = Number(event.used_slots || 0);
 
-  if (totalLimit <= 0) {
-    return "Available";
+  if (status === "FULL") {
+    return "Sold Out!";
   }
 
-  return `${usedSlots} / ${totalLimit}`;
+  if (totalLimit > 0 && usedSlots >= totalLimit) {
+    return "Sold Out!";
+  }
+
+  return "Available";
 }
 
 async function loadEvents() {
