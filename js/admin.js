@@ -296,6 +296,10 @@ function renderRows(rows) {
     <button class="cancel-btn" type="button" onclick="registrationAction('${row.reg_no}', 'cancel')">
       Cancel
     </button>
+
+    <button class="danger" type="button" onclick="deleteRegistration('${row.reg_no}')">
+      Delete
+    </button>
   </div>
 </td>
     </tr>
@@ -372,6 +376,88 @@ async function registrationAction(regNo, action) {
   setMessage(data.message || "Action completed.");
   loadRegistrations();
 }
+
+async function deleteRegistration(regNo) {
+  const confirmText =
+    `Delete this registration permanently?\n\n` +
+    `Registration No: ${regNo}\n\n` +
+    `This cannot be undone. Export CSV first if needed.`;
+
+  if (!confirm(confirmText)) {
+    return;
+  }
+
+  setMessage("Deleting registration...");
+
+  const res = await fetch("/api/admin/registration-delete", {
+    method: "POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({
+      mode: "single",
+      reg_no: regNo
+    })
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok || !data || !data.success) {
+    setMessage(data?.error || "Delete failed.");
+    return;
+  }
+
+  setMessage(data.message || "Registration deleted.");
+  loadRegistrations();
+}
+
+async function deleteCurrentList() {
+  if (!CURRENT_ROWS.length) {
+    setMessage("No loaded registrations to delete.");
+    return;
+  }
+
+  const eventSlug = getValue("eventFilter");
+  const status = getValue("statusFilter");
+  const search = getValue("searchInput");
+
+  const confirmText =
+    `Delete ${CURRENT_ROWS.length} loaded registration(s)?\n\n` +
+    `This follows the current Event / Status / Search filter.\n` +
+    `Export CSV first if needed.\n\n` +
+    `Type DELETE to confirm.`;
+
+  const typed = prompt(confirmText);
+
+  if (typed !== "DELETE") {
+    setMessage("Delete cancelled.");
+    return;
+  }
+
+  setMessage("Deleting current list...");
+
+  const res = await fetch("/api/admin/registration-delete", {
+    method: "POST",
+    headers: adminHeaders(),
+    body: JSON.stringify({
+      mode: "current_list",
+      event_slug: eventSlug,
+      status,
+      search
+    })
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok || !data || !data.success) {
+    setMessage(data?.error || "Delete current list failed.");
+    return;
+  }
+
+  CURRENT_ROWS = [];
+  updateSummary(CURRENT_ROWS);
+  renderRows(CURRENT_ROWS);
+  setMessage(data.message || `Deleted ${data.deleted_count || 0} registration(s).`);
+}
+
 
 async function expirePending() {
   setMessage("Checking expired pending payments...");
