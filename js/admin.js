@@ -5,12 +5,23 @@ if (String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCa
 }
 
 let CURRENT_ROWS = [];
+let HAS_LOADED_REGISTRATIONS = false;
 
 function setMessage(message) {
   const el = document.getElementById("adminMessage");
   if (el) el.textContent = message || "";
 }
 
+function showParticipantEmptyState(message = "Press Refresh to load participants.") {
+  const tbody = document.getElementById("registrationRows");
+  if (!tbody) return;
+
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="16">${message}</td>
+    </tr>
+  `;
+}
 
 function adminHeaders() {
   return {
@@ -130,7 +141,7 @@ function renderRows(rows) {
   if (!rows.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="15">No registrations found.</td>
+        <td colspan="16">No registrations found.</td>
       </tr>
     `;
     return;
@@ -192,10 +203,12 @@ function renderRows(rows) {
 }
 
 async function loadRegistrations() {
+	HAS_LOADED_REGISTRATIONS = true;
+	
   const tbody = document.getElementById("registrationRows");
   tbody.innerHTML = `
     <tr>
-      <td colspan="15">Loading...</td>
+      <td colspan="16">Loading...</td>
     </tr>
   `;
 
@@ -211,7 +224,7 @@ async function loadRegistrations() {
   if (!res.ok || !data.success) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="15">${data.error || "Unable to load registrations."}</td>
+        <td colspan="16">${data.error || "Unable to load registrations."}</td>
       </tr>
     `;
     return;
@@ -278,7 +291,9 @@ async function expirePending() {
     `Expired ${data.expired_count} pending registrations. Released ${data.released_event_slots} event slots and ${data.released_category_slots} category slots.`
   );
 
+  if (HAS_LOADED_REGISTRATIONS) {
   loadRegistrations();
+}
 }
 
 function exportCsv() {
@@ -331,28 +346,31 @@ function exportCsv() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  showParticipantEmptyState();
 
   ["eventFilter", "statusFilter"].forEach(id => {
-    document.getElementById(id).addEventListener("change", loadRegistrations);
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener("change", function () {
+      if (HAS_LOADED_REGISTRATIONS) {
+        loadRegistrations();
+      }
+    });
   });
 
-  document.getElementById("searchInput").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      loadRegistrations();
-    }
-  });
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) {
+    searchInput.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        loadRegistrations();
+      }
+    });
+  }
 
   if (getAdminToken()) {
-  loadEventsForFilter().then(() => {
-    const role = sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "master";
-
-    if (role === "master") {
-      expirePending();
-    } else {
-      loadRegistrations();
-    }
-  });
-}
+    loadEventsForFilter();
+  }
 
   const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();
   const accessMode = String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCase();
@@ -361,5 +379,4 @@ document.addEventListener("DOMContentLoaded", function () {
   document.querySelectorAll("[data-master-only]").forEach(el => {
     el.style.display = isMaster ? "" : "none";
   });
-  
 });
