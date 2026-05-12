@@ -18,6 +18,10 @@ function formatDate(value) {
   });
 }
 
+function displayTbc(value) {
+  const text = String(value || "").trim();
+  return text || "T.B.C";
+}
 
 function applyEventFormBanner(event) {
   const banner = document.getElementById("eventFormBanner");
@@ -204,6 +208,12 @@ function renderOrganizerDetails(event) {
   link.textContent = rawUrl.replace(/^https?:\/\//i, "").replace(/\/$/, "");
   link.href = finalUrl;
   link.classList.remove("is-empty");
+}
+
+function renderRacepackDetails(event) {
+  setText("racepackLocation", displayTbc(event.racepack_location));
+  setText("racepackDate", displayTbc(event.racepack_date));
+  setText("racepackTime", displayTbc(event.racepack_time));
 }
 
 function renderCategories(categories) {
@@ -1074,6 +1084,7 @@ async function loadEvent() {
 	
 	renderEventDetails(event, categories);
 	renderOrganizerDetails(event);
+	renderRacepackDetails(event);
 	renderCategories(categories);
 	applyEventStatus(event);
 	

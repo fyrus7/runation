@@ -77,6 +77,9 @@ const event = await env.DB.prepare(`
         used_slots: Number(event.used_slots || 0),
         organizer_name: event.organizer_name || "",
         organizer_url: event.organizer_url || "",
+		racepack_location: event.racepack_location || "",
+		racepack_date: event.racepack_date || "",
+		racepack_time: event.racepack_time || "",
         status: String(event.approval_status || "").toLowerCase() === "sandbox"
   		  ? "OPEN"
 		  : calculateEventStatus(event)
