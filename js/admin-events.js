@@ -477,6 +477,9 @@ function resetForm() {
     "organizerName",
     "organizerUrl",
     "eventDate",
+	"racepackLocation",
+	"racepackDate",
+	"racepackTime",
     "openAt",
     "closeAt",
     "totalLimit",
@@ -511,6 +514,9 @@ function buildEventPayload() {
     organizer_name: getValue("organizerName"),
     organizer_url: getValue("organizerUrl"),
     event_date: getValue("eventDate"),
+	racepack_location: getValue("racepackLocation"),
+	racepack_date: getValue("racepackDate"),
+	racepack_time: getValue("racepackTime"),
     status_mode: getValue("statusMode"),
     open_at: toIsoMalaysia(getValue("openAt")),
     close_at: toIsoMalaysia(getValue("closeAt")),
@@ -574,6 +580,9 @@ function resetExternalEventForm() {
 	"externalEventType",
     "externalVenue",
     "externalEventDate",
+	"externalRacepackLocation",
+	"externalRacepackDate",
+	"externalRacepackTime",
     "externalCategories",
     "externalSlots",
     "externalOrganizerName",
@@ -607,6 +616,9 @@ function populateExternalEventForm(event, categories) {
   setValue("externalEventType", externalEventType);
   setValue("externalVenue", event.venue || "");
   setValue("externalEventDate", event.event_date || "");
+  setValue("externalRacepackLocation", event.racepack_location || "");
+  setValue("externalRacepackDate", event.racepack_date || "");
+  setValue("externalRacepackTime", event.racepack_time || "");
 
   setValue(
     "externalCategories",
@@ -658,6 +670,9 @@ async function saveExternalEvent() {
     short_description: getValue("externalShortDescription"),
     venue: getValue("externalVenue"),
     event_date: getValue("externalEventDate"),
+	racepack_location: getValue("externalRacepackLocation"),
+	racepack_date: getValue("externalRacepackDate"),
+	racepack_time: getValue("externalRacepackTime"),
 
     status_mode: "force_open",
     open_at: "",
@@ -755,6 +770,9 @@ async function editEvent(id) {
     setValue("organizerName", event.organizer_name || "");
     setValue("organizerUrl", event.organizer_url || "");
     setValue("eventDate", event.event_date || "");
+	setValue("racepackLocation", event.racepack_location || "");
+	setValue("racepackDate", event.racepack_date || "");
+	setValue("racepackTime", event.racepack_time || "");
     setValue("statusMode", event.status_mode || "force_closed");
     setValue("openAt", fromIsoToDatetimeLocal(event.open_at));
     setValue("closeAt", fromIsoToDatetimeLocal(event.close_at));

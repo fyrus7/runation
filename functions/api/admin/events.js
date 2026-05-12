@@ -179,6 +179,9 @@ const result = await context.env.DB.prepare(`
     organizer_name,
     organizer_url,
     event_date,
+	racepack_location,
+	racepack_date,
+	racepack_time,
     status_mode,
     open_at,
     close_at,
@@ -202,7 +205,7 @@ const result = await context.env.DB.prepare(`
     created_at,
     updated_at
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 `).bind(
   slug,
   title,
@@ -212,6 +215,9 @@ const result = await context.env.DB.prepare(`
   organizerName,
   organizerUrl,
   cleanText(body.event_date),
+  cleanText(body.racepack_location),
+  cleanText(body.racepack_date),
+  cleanText(body.racepack_time),
   cleanText(body.status_mode || "force_closed"),
   cleanText(body.open_at),
   cleanText(body.close_at),
