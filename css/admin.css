@@ -1152,3 +1152,299 @@
   font-weight: 800;
   line-height: 1.4;
 }
+
+
+/* ==========================
+   RUNATION ADMIN CLEAN OVERRIDE
+   Mobile-first polish
+========================== */
+
+body {
+  background: #f4f6f8;
+  color: #0f172a;
+}
+
+/* Header */
+.admin-header {
+  background: rgba(15, 23, 42, 0.98);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.admin-header-inner {
+  width: 100%;
+  max-width: 1180px;
+  padding: 0;
+}
+
+.admin-header h1 {
+  font-size: 18px;
+  letter-spacing: -0.2px;
+}
+
+.admin-nav {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 8px 11px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+/* Layout */
+.admin-wrap {
+  width: 100%;
+  max-width: 1180px;
+  padding: 14px;
+}
+
+.admin-card {
+  border-radius: 22px;
+  padding: 16px;
+  margin-bottom: 14px;
+  border: 1px solid #e6edf6;
+  box-shadow: 0 12px 30px rgba(15,23,42,0.07);
+}
+
+.admin-card h2 {
+  margin-bottom: 14px;
+  font-size: 19px;
+  letter-spacing: -0.2px;
+}
+
+/* Forms / filters */
+.filter-grid,
+.form-grid {
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+label {
+  color: #334155;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+input,
+select,
+textarea {
+  min-height: 44px;
+  border-radius: 14px;
+  background: #fff;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37,99,235,0.1);
+}
+
+/* Buttons */
+.button-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+button,
+button.secondary,
+button.danger {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+button {
+  background: linear-gradient(135deg, #0f172a, #1e293b);
+}
+
+button.secondary {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+button.danger {
+  background: #ef4444;
+  color: #fff;
+}
+
+/* Summary */
+.summary-row {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.summary-box {
+  border-radius: 18px;
+  padding: 14px;
+  background: #f8fafc;
+}
+
+.summary-box strong {
+  font-size: 24px;
+}
+
+/* Tables */
+.table-wrap {
+  border: 1px solid #e6edf6;
+  border-radius: 18px;
+  overflow-x: auto;
+  background: #fff;
+}
+
+table {
+  min-width: 1180px;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f8fafc;
+}
+
+th,
+td {
+  padding: 11px 10px;
+}
+
+/* Participant action buttons */
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 150px;
+}
+
+.action-buttons button {
+  width: 100%;
+  min-height: 32px;
+  padding: 7px 9px;
+  font-size: 10px;
+  border-radius: 999px;
+}
+
+/* Event rows */
+.event-row {
+  border-radius: 18px;
+  padding: 14px;
+}
+
+.event-row-top {
+  gap: 14px;
+}
+
+/* Category row */
+.cat-row {
+  grid-template-columns: 1fr;
+}
+
+.cat-remove-btn {
+  width: 100%;
+}
+
+/* Toast */
+.admin-toast-content {
+  border-radius: 18px;
+}
+
+/* Graph */
+.category-graph-box {
+  display: grid;
+  gap: 12px;
+}
+
+.category-progress-item {
+  border-radius: 18px;
+  background: #f8fafc;
+}
+
+.category-progress-head strong {
+  font-size: 14px;
+}
+
+.category-progress-meta {
+  font-size: 12px;
+}
+
+/* Tablet */
+@media (min-width: 700px) {
+  .admin-wrap {
+    padding: 18px;
+  }
+
+  .button-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  button,
+  button.secondary,
+  button.danger {
+    width: auto;
+  }
+
+  .filter-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-group.full {
+    grid-column: 1 / -1;
+  }
+
+  .cat-row {
+    grid-template-columns: 1.4fr 0.8fr 0.8fr 0.7fr auto;
+  }
+
+  .cat-remove-btn {
+    width: auto;
+  }
+
+  .summary-row {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .action-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    min-width: 220px;
+  }
+
+  .action-buttons button {
+    width: auto;
+  }
+}
+
+/* Desktop */
+@media (min-width: 1000px) {
+  .admin-header-inner {
+    flex-direction: row;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr 1.3fr;
+  }
+
+  .admin-card {
+    padding: 18px;
+  }
+}
