@@ -1097,4 +1097,58 @@
 [hidden] {
   display: none !important;
 }
- 
+
+
+/* GRAPH */
+.category-graph-box {
+  display: grid;
+  gap: 14px;
+}
+
+.category-progress-item {
+  padding: 14px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.category-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.category-progress-head strong {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.category-progress-head span {
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.category-progress-bar {
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.category-progress-bar div {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #2563eb, #22c55e);
+}
+
+.category-progress-meta {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+}

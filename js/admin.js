@@ -5,6 +5,7 @@ if (String(sessionStorage.getItem("RUNATION_ADMIN_ACCESS_MODE") || "").toLowerCa
 }
 
 let CURRENT_ROWS = [];
+let ADMIN_EVENTS = [];
 let HAS_LOADED_REGISTRATIONS = false;
 
 function setMessage(message) {
@@ -84,6 +85,8 @@ const events = (data.events || []).filter(event => {
   return String(event.registration_mode || "internal").toLowerCase() !== "external";
 });
 
+ADMIN_EVENTS = events;
+
 const current = select.value;
 
   select.innerHTML = role === "event_admin"
@@ -136,6 +139,100 @@ function updateSummary(rows) {
   document.getElementById("sumPaid").textContent = paid;
   document.getElementById("sumPending").textContent = pending;
   document.getElementById("sumFailed").textContent = failed;
+}
+
+function findSelectedEvent() {
+  const slug = getValue("eventFilter");
+
+  if (!slug) return null;
+
+  return ADMIN_EVENTS.find(event => {
+    return String(event.slug || "") === slug;
+  }) || null;
+}
+
+function renderCategoryGraphMessage(message) {
+  const box = document.getElementById("categoryGraphBox");
+  if (!box) return;
+
+  box.innerHTML = `<div class="muted">${message}</div>`;
+}
+
+function renderCategoryGraph(categories) {
+  const box = document.getElementById("categoryGraphBox");
+  if (!box) return;
+
+  const activeCategories = (categories || []).filter(cat => {
+    return Number(cat.is_active ?? 1) === 1;
+  });
+
+  if (!activeCategories.length) {
+    renderCategoryGraphMessage("No active categories found.");
+    return;
+  }
+
+  box.innerHTML = activeCategories.map(cat => {
+    const name = String(cat.name || "-");
+    const used = Number(cat.used_slots || 0);
+    const limit = Number(cat.slot_limit || 0);
+
+    let percent = 0;
+    let meta = "";
+
+    if (limit > 0) {
+      const balance = Math.max(limit - used, 0);
+      percent = Math.min((used / limit) * 100, 100);
+      meta = `${used} registered / ${limit} slots · ${balance} balance`;
+    } else {
+      percent = used > 0 ? 100 : 0;
+      meta = `${used} registered · No slot limit`;
+    }
+
+    return `
+      <div class="category-progress-item">
+        <div class="category-progress-head">
+          <strong>${name}</strong>
+          <span>${Math.round(percent)}%</span>
+        </div>
+
+        <div class="category-progress-bar">
+          <div style="width:${percent}%"></div>
+        </div>
+
+        <div class="category-progress-meta">
+          ${meta}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadCategoryGraph() {
+  const selectedEvent = findSelectedEvent();
+
+  if (!selectedEvent) {
+    renderCategoryGraphMessage("Select a specific event to view category progress.");
+    return;
+  }
+
+  renderCategoryGraphMessage("Loading category progress...");
+
+  try {
+    const res = await fetch(`/api/admin/event?id=${encodeURIComponent(selectedEvent.id)}`, {
+      headers: adminHeaders()
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      renderCategoryGraphMessage(data.error || "Unable to load category progress.");
+      return;
+    }
+
+    renderCategoryGraph(data.categories || []);
+  } catch (err) {
+    renderCategoryGraphMessage(err.message || "Unable to load category progress.");
+  }
 }
 
 function renderRows(rows) {
@@ -233,11 +330,12 @@ async function loadRegistrations() {
     return;
   }
 
-  CURRENT_ROWS = data.registrations || [];
-  updateSummary(CURRENT_ROWS);
-  renderRows(CURRENT_ROWS);
+CURRENT_ROWS = data.registrations || [];
+updateSummary(CURRENT_ROWS);
+renderRows(CURRENT_ROWS);
+loadCategoryGraph();
 
-  setMessage(`${CURRENT_ROWS.length} registrations loaded.`);
+setMessage(`${CURRENT_ROWS.length} registrations loaded.`);
 }
 
 async function registrationAction(regNo, action) {
