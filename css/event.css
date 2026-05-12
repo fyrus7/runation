@@ -69,15 +69,14 @@ body.event-page * {
 
 .event-form-banner {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  height: auto;
+  height: 600px;
   margin-bottom: 18px;
 
   border-radius: 0;
   overflow: hidden;
 
   background-size: cover;
-  background-position: center;
+  background-position: center top;
   background-repeat: no-repeat;
 
   box-shadow: 0 18px 50px rgba(15,23,42,0.14);
@@ -95,8 +94,7 @@ body.event-page * {
 
 @media (max-width: 640px) {
   .event-form-banner {
-    aspect-ratio: 16 / 9;
-    height: auto;
+    height: 240px;
     border-radius: 0;
     margin-bottom: 14px;
   }
