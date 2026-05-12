@@ -54,6 +54,7 @@ export async function onRequestGet(context) {
         e.show_slot_counter,
         e.sort_order,
         e.event_image,
+        e.registration_mode,
 
         COALESCE(GROUP_CONCAT(c.name, ' / '), '-') AS categories_text,
         MIN(CASE WHEN c.is_active = 1 THEN c.price END) AS fee_from
@@ -64,7 +65,7 @@ export async function onRequestGet(context) {
         AND c.is_active = 1
 
       WHERE e.is_visible = 1
-	    AND COALESCE(e.approval_status, 'live') = 'live'
+        AND COALESCE(e.approval_status, 'live') = 'live'
 
       GROUP BY e.id
       ORDER BY e.sort_order ASC, e.id DESC
@@ -73,6 +74,11 @@ export async function onRequestGet(context) {
     const events = (rows.results || []).map(event => ({
       ...event,
       event_image: event.event_image || "",
+      categories_text: event.categories_text || "",
+      total_limit: Number(event.total_limit || 0),
+      used_slots: Number(event.used_slots || 0),
+      show_slot_counter: Number(event.show_slot_counter || 0),
+      fee_from: Number(event.fee_from || 0),
       status: calculateEventStatus(event)
     }));
 

@@ -84,10 +84,19 @@ export async function onRequestGet(context) {
     ).all();
   }
 
-  return json({
-    success: true,
-    events: result.results || []
-  });
+  const events = (result.results || []).map(event => ({
+  ...event,
+  total_limit: Number(event.total_limit || 0),
+  used_slots: Number(event.used_slots || 0),
+  show_slot_counter: Number(event.show_slot_counter || 0),
+  is_visible: Number(event.is_visible || 0),
+  status: calculateEventStatus(event)
+}));
+
+return json({
+  success: true,
+  events
+});
 }
 
 export async function onRequestPost(context) {
@@ -157,6 +166,8 @@ const createdByUsername = isMaster(admin) ? "master" : admin.username;
 
   const organizerName = cleanText(body.organizer_name);
   const organizerUrl = cleanText(body.organizer_url);
+  const showSlotCounter = Number(body.show_slot_counter || 0) ? 1 : 0;
+  const isVisible = Number(body.is_visible ?? 1) ? 1 : 0;
 
 const result = await context.env.DB.prepare(`
   INSERT INTO events (
@@ -205,8 +216,8 @@ const result = await context.env.DB.prepare(`
   cleanText(body.open_at),
   cleanText(body.close_at),
   Number(body.total_limit || 0),
-  Number(body.show_slot_counter || 0),
-  Number(body.is_visible ?? 1),
+  showSlotCounter,
+  isVisible,
   Number(body.sort_order || 0),
   cleanText(body.event_image),
   registrationMode,
@@ -224,9 +235,7 @@ const result = await context.env.DB.prepare(`
 
   const eventId = result.meta.last_row_id;
 
-if (registrationMode === "internal") {
-  await insertCategories(context.env, eventId, body.categories || []);
-}
+await insertCategories(context.env, eventId, body.categories || []);
 
 if (!isMaster(admin)) {
   await context.env.DB.prepare(`

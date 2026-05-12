@@ -487,7 +487,7 @@ function resetForm() {
 
   setValue("statusMode", "force_closed");
   setValue("isVisible", "1");
-  setValue("showSlotCounter", "0");
+  setValue("showSlotCounter", "1");
   setValue("postageEnabled", "0");
 
   clearEventImageInput();
@@ -580,6 +580,8 @@ function resetExternalEventForm() {
     "externalShortDescription",
     "externalEventImage"
   ].forEach(id => setValue(id, ""));
+
+  setValue("externalShowSlotCounter", "1");
 }
 
 function populateExternalEventForm(event, categories) {
@@ -609,6 +611,7 @@ function populateExternalEventForm(event, categories) {
   );
 
   setValue("externalSlots", Number(event.total_limit || 0) || "");
+  setValue("externalShowSlotCounter", String(event.show_slot_counter ?? 1));
   setValue("externalOrganizerName", event.organizer_name || "");
   setValue("externalOrganizerUrl", event.organizer_url || "");
   setValue("externalShortDescription", event.short_description || "");
@@ -630,6 +633,7 @@ async function saveExternalEvent() {
   const externalUrl = normalizeUrl(getValue("externalRegistrationUrl"));
   const categoriesText = getValue("externalCategories").toUpperCase();
   const externalSlots = Number(getValue("externalSlots") || 0);
+  const externalShowSlotCounter = Number(getValue("externalShowSlotCounter") || 0);
 
   if (!slug || !title || !externalUrl) {
     setMessage("Event URL, title, and external registration URL are required.");
@@ -651,7 +655,7 @@ async function saveExternalEvent() {
     open_at: "",
     close_at: "",
     total_limit: externalSlots,
-    show_slot_counter: externalSlots > 0 ? 1 : 0,
+    show_slot_counter: externalShowSlotCounter,
     is_visible: 1,
     sort_order: 0,
 
@@ -906,7 +910,8 @@ async function loadEvents() {
       const mode = String(event.registration_mode || "internal").toLowerCase();
       const modeText = mode === "external" ? "External" : "Runation";
       const usedSlots = escapeHtml(event.used_slots || 0);
-      const totalLimit = escapeHtml(event.total_limit || "Unlimited");
+      const totalLimit = escapeHtml(Number(event.total_limit || 0) > 0 ? event.total_limit : "Available");
+	  const publicSlotText = Number(event.show_slot_counter || 0) === 1 ? "Shown" : "Hidden";
       const status = escapeHtml(event.status);
       const imageText = event.event_image ? "Yes" : "No";
 
@@ -923,6 +928,7 @@ async function loadEvents() {
               <div class="muted">Mode: ${modeText}</div>
               <div class="muted">Date: ${date}</div>
               <div class="muted">Registered: ${usedSlots} / ${totalLimit}</div>
+			  <div class="muted">Public Slots: ${publicSlotText}</div>
               ${renderApprovalText(event)}
               <div class="muted">Image: ${imageText}</div>
               <div class="muted">Postage: ${postageText}</div>

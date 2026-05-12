@@ -167,6 +167,9 @@ export async function onRequestPatch(context) {
       }, 400);
     }
   }
+  
+  const showSlotCounter = Number(body.show_slot_counter || 0) ? 1 : 0;
+  const isVisible = Number(body.is_visible ?? 1) ? 1 : 0;
 
   await context.env.DB.prepare(`
     UPDATE events
@@ -206,9 +209,9 @@ export async function onRequestPatch(context) {
     cleanText(body.open_at),
     cleanText(body.close_at),
     Number(body.total_limit || 0),
-    Number(body.show_slot_counter || 0),
-    Number(body.is_visible ?? 1),
-    Number(body.sort_order || 0),
+	showSlotCounter,
+	isVisible,
+	Number(body.sort_order || 0),
     cleanText(body.event_image),
     registrationMode,
     externalRegistrationUrl,
