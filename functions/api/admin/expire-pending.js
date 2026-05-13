@@ -15,6 +15,37 @@ function malaysiaMinutesAgo(minutes) {
     .replace("T", " ");
 }
 
+async function releasePromoUsage(context, row, releasedPromoKeys) {
+  const promoCode = String(row.promo_code || "").trim().toUpperCase();
+
+  if (!promoCode || !row.event_id) return 0;
+
+  const groupKey = String(row.group_id || row.reg_no || row.id);
+  const key = `${row.event_id}:${promoCode}:${groupKey}`;
+
+  if (releasedPromoKeys.has(key)) return 0;
+
+  releasedPromoKeys.add(key);
+
+  const result = await context.env.DB.prepare(`
+    UPDATE event_promo_codes
+    SET
+      used_count = CASE
+        WHEN used_count > 0 THEN used_count - 1
+        ELSE 0
+      END,
+      updated_at = ?
+    WHERE event_id = ?
+      AND UPPER(code) = UPPER(?)
+  `).bind(
+    malaysiaNow(),
+    row.event_id,
+    promoCode
+  ).run();
+
+  return result.meta && result.meta.changes > 0 ? 1 : 0;
+}
+
 export async function onRequestPost(context) {
   if (!isAdmin(context)) {
     return json({ success: false, error: "UNAUTHORIZED" }, 401);
@@ -32,6 +63,8 @@ export async function onRequestPost(context) {
         r.category,
         r.payment_status,
         r.created_at,
+		r.promo_code,
+		r.promo_discount,
         e.id AS event_id
       FROM registrations r
       LEFT JOIN events e
@@ -47,6 +80,8 @@ export async function onRequestPost(context) {
     let expiredCount = 0;
     let releasedEventSlots = 0;
     let releasedCategorySlots = 0;
+	let releasedPromoCodes = 0;
+	const releasedPromoKeys = new Set();
 
     for (const row of expiredRows) {
       const updateReg = await context.env.DB.prepare(`
@@ -63,6 +98,12 @@ export async function onRequestPost(context) {
       }
 
       expiredCount++;
+	  
+	  releasedPromoCodes += await releasePromoUsage(
+	    context,
+	    row,
+	    releasedPromoKeys
+	  );
 
       const eventUpdate = await context.env.DB.prepare(`
         UPDATE events
@@ -102,6 +143,7 @@ export async function onRequestPost(context) {
       expired_count: expiredCount,
       released_event_slots: releasedEventSlots,
       released_category_slots: releasedCategorySlots,
+	  released_promo_codes: releasedPromoCodes,
       checked: expiredRows.length
     });
 

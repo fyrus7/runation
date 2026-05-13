@@ -128,6 +128,37 @@ function buildQuery() {
   return params.toString();
 }
 
+async function loadIncomeSummary() {
+  const totalEl = document.getElementById("totalIncomeText");
+  const filteredEl = document.getElementById("filteredIncomeText");
+
+  if (!totalEl || !filteredEl) return;
+
+  const query = buildQuery();
+  const url = query ? `/api/admin/income?${query}` : "/api/admin/income";
+
+  try {
+    const res = await fetch(url, {
+      headers: adminHeaders()
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || !data.success) {
+      totalEl.textContent = "RM0.00";
+      filteredEl.textContent = "RM0.00";
+      return;
+    }
+
+    totalEl.textContent = formatMoneySen(data.total_income_sen);
+    filteredEl.textContent = formatMoneySen(data.filtered_income_sen);
+
+  } catch (err) {
+    totalEl.textContent = "RM0.00";
+    filteredEl.textContent = "RM0.00";
+  }
+}
+
 function updateSummary(rows) {
   const total = rows.length;
   const paid = rows.filter(r => String(r.payment_status).toUpperCase() === "PAID").length;
@@ -279,7 +310,22 @@ function renderRows(rows) {
         <div class="muted">${row.event_slug || ""}</div>
       </td>
 
-      <td>${formatMoneySen(row.amount)}</td>
+      <td>
+  <strong>${formatMoneySen(row.amount)}</strong>
+
+  ${
+    Number(row.promo_discount || 0) > 0
+      ? `
+        <div class="muted">
+          Original: ${formatMoneySen(row.original_amount)}
+        </div>
+        <div class="muted">
+          Promo: ${row.promo_code || "-"} / -${formatMoneySen(row.promo_discount)}
+        </div>
+      `
+      : ""
+  }
+</td>
       <td>${formatDateTime(row.created_at)}</td>
       <td>${formatDateTime(row.paid_at)}</td>
 
@@ -338,6 +384,7 @@ CURRENT_ROWS = data.registrations || [];
 updateSummary(CURRENT_ROWS);
 renderRows(CURRENT_ROWS);
 loadCategoryGraph();
+loadIncomeSummary();
 
 setMessage(`${CURRENT_ROWS.length} registrations loaded.`);
 }
@@ -502,8 +549,18 @@ function formatExportValue(key, value) {
     "payment_ref"
   ]);
 
+  const moneyFields = new Set([
+    "amount",
+    "original_amount",
+    "promo_discount"
+  ]);
+
   if (forceTextFields.has(key)) {
     return escapeCsvText(value);
+  }
+
+  if (moneyFields.has(key)) {
+    return escapeCsv(formatMoneySen(value));
   }
 
   return escapeCsv(value);
@@ -531,6 +588,9 @@ function exportCsv() {
     "emergency_phone",
     "event_slug",
     "event_name",
+	"original_amount",
+	"promo_code",
+	"promo_discount",
     "amount",
     "payment_ref",
     "payment_url",
@@ -583,6 +643,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if (getAdminToken()) {
     loadEventsForFilter();
+	loadIncomeSummary();
   }
 
   const role = String(sessionStorage.getItem("RUNATION_ADMIN_ROLE") || "").toLowerCase();

@@ -178,6 +178,8 @@ const result = await context.env.DB.prepare(`
     venue,
     organizer_name,
     organizer_url,
+	bank_account_name,
+	bank_account_number,
     event_date,
 	racepack_location,
 	racepack_date,
@@ -207,7 +209,7 @@ const result = await context.env.DB.prepare(`
     created_at,
     updated_at
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 `).bind(
   slug,
   title,
@@ -216,6 +218,8 @@ const result = await context.env.DB.prepare(`
   cleanText(body.venue),
   organizerName,
   organizerUrl,
+  cleanText(body.bank_account_name),
+  cleanText(body.bank_account_number),
   cleanText(body.event_date),
   cleanText(body.racepack_location),
   cleanText(body.racepack_date),

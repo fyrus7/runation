@@ -53,6 +53,32 @@ async function releaseSlot(env, registration) {
   }
 }
 
+async function releasePromoUsage(env, registration) {
+  const promoCode = String(registration.promo_code || "").trim().toUpperCase();
+
+  if (!promoCode || !registration.event_id) return 0;
+
+  const now = malaysiaNow();
+
+  const result = await env.DB.prepare(`
+    UPDATE event_promo_codes
+    SET
+      used_count = CASE
+        WHEN used_count > 0 THEN used_count - 1
+        ELSE 0
+      END,
+      updated_at = ?
+    WHERE event_id = ?
+      AND UPPER(code) = UPPER(?)
+  `).bind(
+    now,
+    registration.event_id,
+    promoCode
+  ).run();
+
+  return result.meta && result.meta.changes > 0 ? 1 : 0;
+}
+
 export async function onRequestPost(context) {
   const auth = await requireAdmin(context);
   if (!auth.ok) return auth.response;
@@ -82,18 +108,24 @@ export async function onRequestPost(context) {
       }, 400);
     }
 
-    const registration = await context.env.DB.prepare(`
-      SELECT
-        id,
-        reg_no,
-        event_slug,
-        category,
-        payment_status,
-        paid_at
-      FROM registrations
-      WHERE reg_no = ?
-      LIMIT 1
-    `).bind(regNo).first();
+const registration = await context.env.DB.prepare(`
+  SELECT
+    r.id,
+    r.reg_no,
+    r.group_id,
+    r.event_slug,
+    r.category,
+    r.payment_status,
+    r.paid_at,
+    r.promo_code,
+    r.promo_discount,
+    e.id AS event_id
+  FROM registrations r
+  LEFT JOIN events e
+    ON e.slug = r.event_slug
+  WHERE r.reg_no = ?
+  LIMIT 1
+`).bind(regNo).first();
 
     if (!registration) {
       return json({
@@ -144,6 +176,7 @@ export async function onRequestPost(context) {
 
       if (currentStatus === "PENDING_PAYMENT") {
         await releaseSlot(context.env, registration);
+		await releasePromoUsage(context.env, registration);
       }
 
       await context.env.DB.prepare(`
@@ -170,6 +203,7 @@ export async function onRequestPost(context) {
 
       if (currentStatus === "PENDING_PAYMENT") {
         await releaseSlot(context.env, registration);
+		await releasePromoUsage(context.env, registration);
       }
 
       await context.env.DB.prepare(`

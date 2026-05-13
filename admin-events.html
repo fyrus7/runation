@@ -150,6 +150,25 @@
             <input id="organizerUrl" type="url" placeholder="https://example.com">
           </div>
 
+<div class="form-section">
+  <h3>Organizer Bank Details</h3>
+  <p class="muted">Admin only. Not shown on public event page.</p>
+
+  <label>Bank Account Name</label>
+  <input
+    id="bankAccountName"
+    type="text"
+    placeholder="Example: RUNATION EVENT SDN BHD"
+  >
+
+  <label>Bank Account Number</label>
+  <input
+    id="bankAccountNumber"
+    type="text"
+    placeholder="Example: 1234567890"
+  >
+</div>
+
           <div class="form-group">
             <label>Event Date</label>
             <input id="eventDate" type="date">
@@ -251,22 +270,62 @@
             <input id="sortOrder" type="number" value="0">
           </div>
 		  
-          <div class="form-group full">
-            <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
+<div class="form-group full">
+  <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
 
-            <h3>Categories</h3>
+  <h3>Categories</h3>
 
-            <div id="categoryEditor"></div>
+  <div id="categoryEditor"></div>
 
-            <button class="secondary" type="button" onclick="addCategoryRow()">
-              + Add Category
-            </button>
-          </div>
+  <button class="secondary" type="button" onclick="addCategoryRow()">
+    + Add Category
+  </button>
+</div>
 
-          <div class="form-group full">
-            <label>Short Description</label>
-            <textarea id="shortDescription" placeholder="Short event description"></textarea>
-          </div>
+<div class="form-group full" id="promoCodeSection">
+  <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
+
+  <h3>Promo Codes</h3>
+  <p class="muted">
+    Internal event only. Discount is fixed amount per registration order.
+  </p>
+
+  <div class="form-grid">
+    <div class="form-group">
+      <label>Code Prefix</label>
+      <input id="promoPrefixInput" placeholder="Example: LSPTK">
+      <small class="field-hint">
+        Generated code example: LSPTK-8F3K2Q
+      </small>
+    </div>
+
+    <div class="form-group">
+      <label>Discount Amount (RM)</label>
+      <input id="promoDiscountInput" type="number" min="0" step="0.01" placeholder="Example: 20">
+    </div>
+
+    <div class="form-group">
+      <label>Usage Limit</label>
+      <input id="promoLimitInput" type="number" min="0" step="1" placeholder="0 = unlimited">
+    </div>
+
+    <div class="form-group">
+      <label>&nbsp;</label>
+      <button type="button" class="secondary" id="addPromoCodeBtn">
+        Generate Promo Code
+      </button>
+    </div>
+  </div>
+
+  <div id="promoCodeList" class="muted" style="margin-top:12px;">
+    Save event first before adding promo code.
+  </div>
+</div>
+
+<div class="form-group full">
+  <label>Short Description</label>
+  <textarea id="shortDescription" placeholder="Short event description"></textarea>
+</div>
 
           <div class="form-group full">
             <label>Event Image</label>

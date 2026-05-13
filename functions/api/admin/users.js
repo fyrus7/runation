@@ -68,33 +68,42 @@ async function assignEventOwner(env, user, eventSlug) {
 }
 
 export async function onRequestGet(context) {
-  const auth = await requireMasterAdmin(context);
-  if (!auth.ok) return auth.response;
+  try {
+    const auth = await requireMasterAdmin(context);
+    if (!auth.ok) return auth.response;
 
-  const rows = await context.env.DB.prepare(`
-    SELECT
-      u.id,
-      u.username,
-      u.role,
-      u.access_mode,
-      u.event_slug,
-      u.is_active,
-      u.created_at,
-      u.updated_at,
-      (
-        SELECT COUNT(*)
-        FROM events e
-        WHERE e.owner_admin_id = u.id
-           OR lower(e.owner_username) = lower(u.username)
-      ) AS owned_event_count
-    FROM admin_users u
-    ORDER BY u.id DESC
-  `).all();
+    const rows = await context.env.DB.prepare(`
+      SELECT
+        u.id,
+        u.username,
+        u.role,
+        u.access_mode,
+        u.event_slug,
+        u.is_active,
+        u.created_at,
+        u.updated_at,
+        (
+          SELECT COUNT(*)
+          FROM events e
+          WHERE e.owner_admin_id = u.id
+             OR lower(e.owner_username) = lower(u.username)
+        ) AS owned_event_count
+      FROM admin_users u
+      ORDER BY u.id DESC
+    `).all();
 
-  return json({
-    success: true,
-    users: rows.results || []
-  });
+    return json({
+      success: true,
+      users: rows.results || []
+    });
+
+  } catch (err) {
+    return json({
+      success: false,
+      error: err.message || "LOAD_ADMIN_USERS_FAILED",
+      stack: err.stack || ""
+    }, 500);
+  }
 }
 
 export async function onRequestPost(context) {
@@ -390,20 +399,30 @@ export async function onRequestDelete(context) {
   }
 
   await context.env.DB.prepare(`
-    UPDATE admin_users
-    SET
-      is_active = 0,
-      updated_at = CURRENT_TIMESTAMP
-    WHERE id = ?
-  `).bind(id).run();
-
-  await context.env.DB.prepare(`
     DELETE FROM admin_sessions
     WHERE admin_user_id = ?
   `).bind(id).run();
 
+  await context.env.DB.prepare(`
+    UPDATE events
+    SET
+      owner_admin_id = NULL,
+      owner_username = '',
+      updated_at = CURRENT_TIMESTAMP
+    WHERE owner_admin_id = ?
+       OR lower(owner_username) = lower(?)
+  `).bind(
+    id,
+    existing.username
+  ).run();
+
+  await context.env.DB.prepare(`
+    DELETE FROM admin_users
+    WHERE id = ?
+  `).bind(id).run();
+
   return json({
     success: true,
-    message: "Admin user disabled."
+    message: "Admin user deleted."
   });
 }

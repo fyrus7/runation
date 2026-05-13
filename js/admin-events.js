@@ -10,6 +10,7 @@ const ALLOWED_EVENT_IMAGE_TYPES = [
 
 let adminToastTimer = null;
 let pendingDeleteEventId = null;
+let currentPromoEventId = null;
 
 function closeAdminToast() {
   const toast = document.getElementById("adminToast");
@@ -489,6 +490,257 @@ function getCategoriesFromForm() {
     .filter(cat => cat.name);
 }
 
+
+/* =========================
+   PROMO CODES
+========================= */
+
+function resetPromoUi(message = "Save event first before adding promo code.") {
+  currentPromoEventId = null;
+
+  setValue("promoPrefixInput", "");
+  setValue("promoDiscountInput", "");
+  setValue("promoLimitInput", "");
+
+  const box = document.getElementById("promoCodeList");
+  if (box) {
+    box.className = "muted";
+    box.innerHTML = message;
+  }
+}
+
+function formatPromoMoney(value) {
+  return `RM${Number(value || 0).toFixed(2)}`;
+}
+
+async function loadPromoCodes(eventId) {
+  currentPromoEventId = Number(eventId || 0);
+
+  const box = document.getElementById("promoCodeList");
+  if (!box) return;
+
+  if (!currentPromoEventId) {
+    resetPromoUi();
+    return;
+  }
+
+  box.className = "";
+  box.innerHTML = `<div class="muted">Loading promo codes...</div>`;
+
+  try {
+    const res = await fetch(`/api/admin/promo-codes?event_id=${encodeURIComponent(currentPromoEventId)}`, {
+      headers: adminHeaders()
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || !data.success) {
+      box.innerHTML = `<div class="muted">${escapeHtml(data?.error || "Unable to load promo codes.")}</div>`;
+      return;
+    }
+
+    renderPromoCodes(data.promo_codes || []);
+
+  } catch (err) {
+    box.innerHTML = `<div class="muted">${escapeHtml(err.message || "Unable to load promo codes.")}</div>`;
+  }
+}
+
+function renderPromoCodes(promoCodes) {
+  const box = document.getElementById("promoCodeList");
+  if (!box) return;
+
+  if (!promoCodes.length) {
+    box.innerHTML = `<div class="muted">No promo code yet.</div>`;
+    return;
+  }
+
+  box.innerHTML = promoCodes.map(promo => {
+    const id = Number(promo.id || 0);
+    const usageLimit = Number(promo.usage_limit || 0);
+    const usedCount = Number(promo.used_count || 0);
+    const active = Number(promo.is_active ?? 1);
+
+    return `
+      <div class="event-row" data-promo-id="${id}" style="margin-top:10px;">
+        <div class="event-row-top">
+          <div>
+            <h3>${escapeHtml(promo.code || "-")}</h3>
+            <div class="muted">
+              Used: ${usedCount} / ${usageLimit > 0 ? usageLimit : "Unlimited"}
+            </div>
+          </div>
+
+          <div>
+            <span class="status-pill">
+              ${active === 1 ? "Active" : "Inactive"}
+            </span>
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:12px;">
+          <div class="form-group">
+            <label>Discount RM</label>
+            <input
+              class="promo-discount-edit"
+              type="number"
+              min="0"
+              step="0.01"
+              value="${Number(promo.discount_amount || 0)}"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Usage Limit</label>
+            <input
+              class="promo-limit-edit"
+              type="number"
+              min="0"
+              step="1"
+              value="${usageLimit}"
+            >
+          </div>
+
+          <div class="form-group">
+            <label>Status</label>
+            <select class="promo-active-edit">
+              <option value="1" ${active === 1 ? "selected" : ""}>Active</option>
+              <option value="0" ${active === 0 ? "selected" : ""}>Inactive</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button type="button" class="secondary" onclick="updatePromoCode(${id})">
+            Save Promo
+          </button>
+
+          <button type="button" class="danger" onclick="deletePromoCode(${id})">
+            Delete
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+async function addPromoCode() {
+  if (!currentPromoEventId) {
+    setMessage("Save event first before adding promo code.");
+    return;
+  }
+
+  const prefix = getValue("promoPrefixInput").toUpperCase();
+  const discountAmount = Number(getValue("promoDiscountInput") || 0);
+  const usageLimit = Number(getValue("promoLimitInput") || 0);
+
+  if (!prefix) {
+    setMessage("Promo prefix is required.");
+    return;
+  }
+
+  if (discountAmount <= 0) {
+    setMessage("Discount amount is required.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/admin/promo-codes", {
+      method: "POST",
+      headers: adminHeaders(),
+      body: JSON.stringify({
+        event_id: currentPromoEventId,
+        prefix,
+        discount_amount: discountAmount,
+        usage_limit: usageLimit,
+        is_active: 1
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || !data.success) {
+      setMessage(data?.error || "Create promo code failed.");
+      return;
+    }
+
+    setValue("promoDiscountInput", "");
+    setValue("promoLimitInput", "");
+
+    await loadPromoCodes(currentPromoEventId);
+    setMessage(data.message || `Promo code created: ${data.code || ""}`);
+
+  } catch (err) {
+    setMessage(err.message || "Create promo code failed.");
+  }
+}
+
+async function updatePromoCode(id) {
+  const item = document.querySelector(`[data-promo-id="${Number(id)}"]`);
+  if (!item) return;
+
+  const discountAmount = Number(item.querySelector(".promo-discount-edit")?.value || 0);
+  const usageLimit = Number(item.querySelector(".promo-limit-edit")?.value || 0);
+  const isActive = Number(item.querySelector(".promo-active-edit")?.value || 0);
+
+  if (discountAmount <= 0) {
+    setMessage("Discount amount is required.");
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/admin/promo-code?id=${encodeURIComponent(id)}`, {
+      method: "PATCH",
+      headers: adminHeaders(),
+      body: JSON.stringify({
+        discount_amount: discountAmount,
+        usage_limit: usageLimit,
+        is_active: isActive
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || !data.success) {
+      setMessage(data?.error || "Update promo code failed.");
+      return;
+    }
+
+    await loadPromoCodes(currentPromoEventId);
+    setMessage(data.message || "Promo code updated.");
+
+  } catch (err) {
+    setMessage(err.message || "Update promo code failed.");
+  }
+}
+
+async function deletePromoCode(id) {
+  if (!confirm("Delete this promo code? Used promo code will be disabled instead.")) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/admin/promo-code?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers: adminHeaders()
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || !data.success) {
+      setMessage(data?.error || "Delete promo code failed.");
+      return;
+    }
+
+    await loadPromoCodes(currentPromoEventId);
+    setMessage(data.message || "Promo code deleted.");
+
+  } catch (err) {
+    setMessage(err.message || "Delete promo code failed.");
+  }
+}
+
+
 /* =========================
    INTERNAL EVENT FORM
 ========================= */
@@ -506,6 +758,8 @@ function resetForm() {
     "venue",
     "organizerName",
     "organizerUrl",
+	"bankAccountName",
+	"bankAccountNumber",
     "eventDate",
 	"racepackLocation",
 	"racepackDate",
@@ -532,6 +786,7 @@ setValue("postageEnabled", "0");
   if (box) box.innerHTML = "";
 
   addCategoryRow();
+  resetPromoUi();
 }
 
 function buildEventPayload() {
@@ -546,6 +801,8 @@ function buildEventPayload() {
     venue: getValue("venue"),
     organizer_name: getValue("organizerName"),
     organizer_url: getValue("organizerUrl"),
+	bank_account_name: getValue("bankAccountName"),
+	bank_account_number: getValue("bankAccountNumber"),
     event_date: getValue("eventDate"),
 	racepack_location: getValue("racepackLocation").toUpperCase(),
 	racepack_date: getValue("racepackDate"),
@@ -809,6 +1066,8 @@ async function editEvent(id) {
     setValue("venue", event.venue || "");
     setValue("organizerName", event.organizer_name || "");
     setValue("organizerUrl", event.organizer_url || "");
+	setValue("bankAccountName", event.bank_account_name || "");
+	setValue("bankAccountNumber", event.bank_account_number || "");
     setValue("eventDate", event.event_date || "");
 	setValue("racepackLocation", event.racepack_location || "");
 	setValue("racepackDate", event.racepack_date || "");
@@ -841,6 +1100,8 @@ setValue("finisherTeeEnabled", String(event.finisher_tee_enabled ?? 0));
     } else {
       addCategoryRow();
     }
+	
+	await loadPromoCodes(event.id);
 
     setTimeout(() => {
       full?.scrollIntoView({
@@ -1124,6 +1385,11 @@ document.addEventListener("DOMContentLoaded", function () {
   if (uploadBtn) {
     uploadBtn.addEventListener("click", uploadEventImage);
   }
+  
+  const addPromoBtn = document.getElementById("addPromoCodeBtn");
+if (addPromoBtn) {
+  addPromoBtn.addEventListener("click", addPromoCode);
+}
 
   const removeImageBtn = document.getElementById("removeEventImageBtn");
   if (removeImageBtn) {

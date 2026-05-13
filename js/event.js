@@ -1,4 +1,5 @@
 let additionalParticipantCount = 0;
+let appliedPromo = null;
 
 function getSlug() {
   const params = new URLSearchParams(location.search);
@@ -281,6 +282,7 @@ function renderCategories(categories) {
   }).join("");
 
   toggleFinisherTee();
+  updateOrderSummary();
 }
 
 function toggleFinisherTee() {
@@ -307,6 +309,141 @@ function getValue(id) {
 function setValue(id, value) {
   const el = document.getElementById(id);
   if (el) el.value = value ?? "";
+}
+
+function formatMoneySen(value) {
+  return `RM${(Number(value || 0) / 100).toFixed(2)}`;
+}
+
+function getCategoryPriceSenById(categoryId) {
+  const categories = window.RUNATION_CATEGORIES || [];
+  const id = Number(categoryId || 0);
+
+  const category = categories.find(cat => Number(cat.id) === id);
+
+  if (!category) return 0;
+
+  return Math.round(Number(category.price || 0) * 100);
+}
+
+function getOrderSubtotalSen() {
+  let subtotal = 0;
+
+  subtotal += getCategoryPriceSenById(getValue("categorySelect"));
+
+  document.querySelectorAll(".additional-participant-card").forEach(card => {
+    const categoryId = getAdditionalValue(card, ".additional-category");
+    subtotal += getCategoryPriceSenById(categoryId);
+  });
+
+  const event = window.RUNATION_EVENT || {};
+  const postageEnabled = Number(event.postage_enabled || 0) === 1;
+  const deliveryMethod = getValue("deliveryMethod") || "pickup";
+
+  if (postageEnabled && deliveryMethod === "postage") {
+    subtotal += Math.round(Number(event.postage_fee || 0) * 100);
+  }
+
+  return subtotal;
+}
+
+function clearAppliedPromo() {
+  appliedPromo = null;
+
+  const input = document.getElementById("promoCodeInput");
+  const message = document.getElementById("promoCodeMessage");
+
+  if (input) input.value = "";
+  if (message) message.textContent = "";
+
+  updateOrderSummary();
+}
+
+function updateOrderSummary() {
+  const subtotalSen = getOrderSubtotalSen();
+  const discountSen = appliedPromo ? Number(appliedPromo.discount_sen || 0) : 0;
+  const totalSen = Math.max(subtotalSen - discountSen, 0);
+
+  setText("summarySubtotal", formatMoneySen(subtotalSen));
+  setText("summaryDiscount", `-${formatMoneySen(discountSen)}`);
+  setText("summaryTotal", formatMoneySen(totalSen));
+
+  const discountRow = document.getElementById("summaryDiscountRow");
+
+  if (discountRow) {
+    discountRow.style.display = discountSen > 0 ? "" : "none";
+  }
+}
+
+async function applyPromoCode() {
+  const input = document.getElementById("promoCodeInput");
+  const message = document.getElementById("promoCodeMessage");
+
+  const code = String(input?.value || "").trim().toUpperCase();
+  const subtotalSen = getOrderSubtotalSen();
+  const event = window.RUNATION_EVENT || {};
+
+  appliedPromo = null;
+  updateOrderSummary();
+
+  if (message) message.textContent = "";
+
+  if (!code) {
+    if (message) message.textContent = "Enter promo code.";
+    return;
+  }
+
+  if (!event.slug) {
+    if (message) message.textContent = "Event is not ready yet.";
+    return;
+  }
+
+  if (subtotalSen <= 0) {
+    if (message) message.textContent = "Please select category first.";
+    return;
+  }
+
+  try {
+    if (message) message.textContent = "Checking promo code...";
+
+    const res = await fetch("/api/promo-validate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        event_slug: event.slug,
+        promo_code: code,
+        subtotal_sen: subtotalSen
+      })
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok || !data || !data.success) {
+      if (message) message.textContent = data?.error || "Invalid promo code.";
+      appliedPromo = null;
+      updateOrderSummary();
+      return;
+    }
+
+    appliedPromo = {
+      code: data.promo_code,
+      discount_sen: Number(data.discount_sen || 0),
+      total_sen: Number(data.total_sen || 0)
+    };
+
+    if (input) input.value = appliedPromo.code;
+    if (message) message.textContent = `Promo applied: -${formatMoneySen(appliedPromo.discount_sen)}`;
+
+    updateOrderSummary();
+
+  } catch (err) {
+    appliedPromo = null;
+    updateOrderSummary();
+
+    if (message) message.textContent = err.message || "Promo check failed.";
+  }
 }
 
 function getIdType() {
@@ -631,6 +768,8 @@ function addAdditionalParticipant() {
   toggleAdditionalEventTee(card);
   toggleAdditionalFinisherTee(card);
   renumberAdditionalParticipants();
+  clearAppliedPromo();
+  updateOrderSummary();
 }
 
 
@@ -926,6 +1065,7 @@ async function submitRegistration() {
   const payload = {
     event_id: window.RUNATION_EVENT.id,
     category_id: Number(getValue("categorySelect")),
+	promo_code: appliedPromo?.code || "",
 	participants: allParticipants,
 
     full_name: getValue("participantName"),
@@ -1045,9 +1185,16 @@ document.addEventListener("change", function (e) {
     updateIdInputMode();
   }
 
-  if (e.target.id === "categorySelect") {
-    toggleFinisherTee();
-  }
+if (e.target.id === "categorySelect") {
+  toggleFinisherTee();
+  clearAppliedPromo();
+  updateOrderSummary();
+}
+
+if (e.target.id === "deliveryMethod") {
+  clearAppliedPromo();
+  updateOrderSummary();
+}
   
   const card = e.target.closest(".additional-participant-card");
 
@@ -1058,6 +1205,8 @@ if (card) {
 
   if (e.target.classList.contains("additional-category")) {
     toggleAdditionalFinisherTee(card);
+	clearAppliedPromo();
+	updateOrderSummary();
   }
 }
 
@@ -1101,8 +1250,15 @@ document.addEventListener("click", function (e) {
     const card = e.target.closest(".additional-participant-card");
     if (card) card.remove();
     renumberAdditionalParticipants();
+	clearAppliedPromo();
+	updateOrderSummary();
     return;
   }
+  
+  if (e.target.id === "applyPromoBtn") {
+  applyPromoCode();
+  return;
+}
 
   if (e.target.id === "registerBtn") {
     submitRegistration();
@@ -1172,6 +1328,7 @@ async function loadEvent() {
 
     window.RUNATION_EVENT = event;
     window.RUNATION_CATEGORIES = categories;
+	updateOrderSummary();
 
   } catch (err) {
     console.error(err);
@@ -1217,6 +1374,27 @@ if (openRegistrationBtn && registrationSection) {
         block: "start"
       });
     }, 50);
+  });
+}
+
+const promoCodeInput = document.getElementById("promoCodeInput");
+
+if (promoCodeInput) {
+  promoCodeInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      applyPromoCode();
+    }
+  });
+
+  promoCodeInput.addEventListener("input", function () {
+    if (appliedPromo) {
+      appliedPromo = null;
+      updateOrderSummary();
+
+      const message = document.getElementById("promoCodeMessage");
+      if (message) message.textContent = "";
+    }
   });
 }
 

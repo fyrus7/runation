@@ -15,6 +15,121 @@ function cleanText(value) {
   return String(value || "").trim();
 }
 
+function cleanPromoCode(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function rmToSen(value) {
+  return Math.round(Number(value || 0) * 100);
+}
+
+function sen(value) {
+  return Math.round(Number(value || 0));
+}
+
+async function validatePromoCode(context, event, promoCode, subtotalAmount) {
+  const code = cleanPromoCode(promoCode);
+
+  if (!code) {
+    return {
+      promoId: null,
+      code: "",
+      discountAmount: 0,
+      finalAmount: subtotalAmount
+    };
+  }
+
+  const promo = await context.env.DB
+    .prepare(`
+      SELECT
+        id,
+        code,
+        discount_amount,
+        usage_limit,
+        used_count,
+        is_active
+      FROM event_promo_codes
+      WHERE event_id = ?
+        AND UPPER(code) = ?
+      LIMIT 1
+    `)
+    .bind(event.id, code)
+    .first();
+
+  if (!promo || Number(promo.is_active || 0) !== 1) {
+    throw new Error("Invalid promo code.");
+  }
+
+  const usageLimit = Number(promo.usage_limit || 0);
+  const usedCount = Number(promo.used_count || 0);
+
+  if (usageLimit > 0 && usedCount >= usageLimit) {
+    throw new Error("Promo code limit reached.");
+  }
+
+  const discountAmount = Math.min(
+    rmToSen(promo.discount_amount),
+    subtotalAmount
+  );
+
+  const finalAmount = Math.max(subtotalAmount - discountAmount, 0);
+
+  if (finalAmount < 100) {
+    throw new Error("Total after discount must be at least RM1.00.");
+  }
+
+  return {
+    promoId: promo.id,
+    code: promo.code,
+    discountAmount,
+    finalAmount
+  };
+}
+
+async function reservePromoCode(context, promoId) {
+  if (!promoId) return;
+
+  const now = malaysiaNow();
+
+  const result = await context.env.DB
+    .prepare(`
+      UPDATE event_promo_codes
+      SET
+        used_count = used_count + 1,
+        updated_at = ?
+      WHERE id = ?
+        AND is_active = 1
+        AND (usage_limit = 0 OR used_count < usage_limit)
+    `)
+    .bind(now, promoId)
+    .run();
+
+  if (!result.meta || result.meta.changes < 1) {
+    throw new Error("Promo code limit reached.");
+  }
+}
+
+async function releasePromoCode(context, promoId) {
+  if (!promoId) return;
+
+  const now = malaysiaNow();
+
+  await context.env.DB
+    .prepare(`
+      UPDATE event_promo_codes
+      SET
+        used_count = CASE
+          WHEN used_count > 0 THEN used_count - 1
+          ELSE 0
+        END,
+        updated_at = ?
+      WHERE id = ?
+    `)
+    .bind(now, promoId)
+    .run()
+    .catch(() => {});
+}
+
 function getToyyibPayExpiryDateAfterOneHour() {
   const now = new Date();
   const expiry = new Date(now.getTime() + 60 * 60 * 1000);
@@ -245,6 +360,7 @@ function getToyyibPayConfig(env, paymentMode) {
 
 export async function onRequestPost(context) {
   let groupId = null;
+  let reservedPromoId = null;
   const reservedSlots = [];
 
   try {
@@ -606,6 +722,19 @@ if (!isSandboxRegistration) {
     const postageAmount = Math.round(postageFeeRm * 100);
     const totalAmount = totalCategoryAmount + postageAmount;
 
+const promo = await validatePromoCode(
+  context,
+  event,
+  body.promo_code,
+  totalAmount
+);
+
+await reservePromoCode(context, promo.promoId);
+reservedPromoId = promo.promoId;
+
+const finalAmount = promo.finalAmount;
+const promoDiscountAmount = promo.discountAmount;
+
     const primaryParticipant = preparedParticipants[0];
 
 const participantLabel = preparedParticipants.length > 1
@@ -626,13 +755,20 @@ if (!toyyib.secretKey || !toyyib.categoryCode) {
 
 const regNos = [];
 
-    for (let i = 0; i < preparedParticipants.length; i++) {
-      const participant = preparedParticipants[i];
-      const regNo = i === 0 ? groupId : `${groupId}-${i + 1}`;
-      regNos.push(regNo);
+let remainingPromoDiscount = promoDiscountAmount;
 
-      const rowAmount = participant.categoryAmount + (i === 0 ? postageAmount : 0);
-      const rowPostageFee = i === 0 ? postageFeeRm : 0;
+for (let i = 0; i < preparedParticipants.length; i++) {
+  const participant = preparedParticipants[i];
+  const regNo = i === 0 ? groupId : `${groupId}-${i + 1}`;
+  regNos.push(regNo);
+
+  const originalRowAmount = participant.categoryAmount + (i === 0 ? postageAmount : 0);
+  const rowPromoDiscount = Math.min(remainingPromoDiscount, originalRowAmount);
+  const rowAmount = sen(originalRowAmount - rowPromoDiscount);
+
+  remainingPromoDiscount = sen(remainingPromoDiscount - rowPromoDiscount);
+
+  const rowPostageFee = i === 0 ? postageFeeRm : 0;
 
       await context.env.DB
         .prepare(`
@@ -657,6 +793,9 @@ const regNos = [];
             event_name,
 
             amount,
+			original_amount,
+			promo_code,
+			promo_discount,
             delivery_method,
             postage_fee,
             payment_status,
@@ -669,7 +808,7 @@ const regNos = [];
             paid_at,
             updated_at
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?)
         `)
         .bind(
           regNo,
@@ -692,6 +831,9 @@ const regNos = [];
           event.title,
 
           rowAmount,
+		  originalRowAmount,
+		  promo.code,
+		  rowPromoDiscount,
           deliveryMethod,
           rowPostageFee,
           "PENDING_PAYMENT",
@@ -724,7 +866,7 @@ const toyyibpayBase = toyyib.baseUrl;
     billData.append("billDescription", billDescription);
     billData.append("billPriceSetting", "1");
     billData.append("billPayorInfo", "1");
-    billData.append("billAmount", String(totalAmount));
+    billData.append("billAmount", String(finalAmount));
     billData.append("billReturnUrl", `${siteUrl}/success.html?ref=${encodeURIComponent(groupId)}`);
     billData.append("billCallbackUrl", `${siteUrl}/api/payment-callback`);
     billData.append("billExternalReferenceNo", groupId);
@@ -749,6 +891,8 @@ const toyyibpayBase = toyyib.baseUrl;
     } catch (e) {
       await deletePendingByGroupId(context, groupId);
       await rollbackReservedSlots(context, reservedSlots);
+	  await releasePromoCode(context, reservedPromoId);
+	  reservedPromoId = null;
 
       return json({
         success: false,
@@ -762,6 +906,8 @@ const toyyibpayBase = toyyib.baseUrl;
     if (!billCode) {
       await deletePendingByGroupId(context, groupId);
       await rollbackReservedSlots(context, reservedSlots);
+	  await releasePromoCode(context, reservedPromoId);
+	  reservedPromoId = null;
 
       return json({
         success: false,
@@ -809,7 +955,10 @@ const toyyibpayBase = toyyib.baseUrl;
         delivery_method: deliveryMethod,
         postage_fee: postageFeeRm,
         category: participantLabel,
-        amount: totalAmount,
+        amount: finalAmount,
+		original_amount: totalAmount,
+		promo_code: promo.code,
+		promo_discount: promoDiscountAmount,
         payment_status: "PENDING_PAYMENT",
 		payment_gateway: toyyib.gateway,
 		payment_ref: billCode,
@@ -823,6 +972,7 @@ const toyyibpayBase = toyyib.baseUrl;
     }
 
     await rollbackReservedSlots(context, reservedSlots).catch(() => {});
+	await releasePromoCode(context, reservedPromoId).catch(() => {});
 
     return json({
       success: false,

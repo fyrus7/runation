@@ -259,11 +259,52 @@
 
         <div id="additionalParticipants"></div>
 
-        <button id="addParticipantBtn" type="button" class="add-participant-btn">
-          + Add More Participant
-        </button>
+<button id="addParticipantBtn" type="button" class="add-participant-btn">
+  + Add More Participant
+</button>
 
-        <div class="registration-actions">
+<div class="order-summary-card" id="orderSummaryCard">
+  <div class="order-summary-head">
+    <p>ORDER SUMMARY</p>
+    <h3>Total Before Payment</h3>
+  </div>
+
+  <div class="order-summary-row">
+    <span>Subtotal</span>
+    <strong id="summarySubtotal">RM0.00</strong>
+  </div>
+
+  <div class="order-summary-row" id="summaryDiscountRow" style="display:none;">
+    <span>Promo Discount</span>
+    <strong id="summaryDiscount">-RM0.00</strong>
+  </div>
+
+  <div class="order-summary-row total">
+    <span>Total Pay</span>
+    <strong id="summaryTotal">RM0.00</strong>
+  </div>
+</div>
+
+<div class="promo-code-box">
+  <label for="promoCodeInput">Promo Code</label>
+
+  <div class="promo-code-row">
+    <input
+      id="promoCodeInput"
+      type="text"
+      placeholder="Enter promo code"
+      autocomplete="off"
+    >
+
+    <button id="applyPromoBtn" type="button" class="secondary">
+      Apply
+    </button>
+  </div>
+
+  <small id="promoCodeMessage" class="field-hint"></small>
+</div>
+
+<div class="registration-actions">
   <button id="registerBtn" type="button" class="register-btn">
     Proceed to Payment
   </button>
