@@ -148,7 +148,7 @@ function renderUsers() {
           </button>
 
           <button type="button" class="danger" onclick="deleteAdminUser(${Number(user.id)})">
-            Disable
+            Delete
           </button>
         </div>
       </td>
@@ -292,7 +292,7 @@ async function deleteAdminUser(id) {
     return;
   }
 
-  if (!confirm(`Disable admin user "${user.username}"?`)) {
+  if (!confirm(`Delete admin user "${user.username}"?\n\nThis will remove login sessions and unassign owned events.`)) {
     return;
   }
 
@@ -305,16 +305,16 @@ async function deleteAdminUser(id) {
     const data = await res.json().catch(() => null);
 
     if (!res.ok || !data || !data.success) {
-      setMessage(data?.error || "Disable admin user failed.");
+      setMessage(data?.error || "Delete admin user failed.");
       return;
     }
 
-    setMessage(data.message || "Admin user disabled.");
+    setMessage(data.message || "Admin user deleted.");
     resetUserForm();
     await loadAdminUsers();
 
   } catch (err) {
-    setMessage(err.message || "Disable admin user failed.");
+    setMessage(err.message || "Delete admin user failed.");
   }
 }
 
