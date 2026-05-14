@@ -1,9 +1,31 @@
 let additionalParticipantCount = 0;
 let appliedPromo = null;
-
+/*
 function getSlug() {
   const params = new URLSearchParams(location.search);
   return params.get("event") || "";
+}
+*/
+function getSlug() {
+  if (window.RUNATION_EVENT_SLUG) {
+    return String(window.RUNATION_EVENT_SLUG).trim();
+  }
+
+  const params = new URLSearchParams(location.search);
+  const querySlug = params.get("event") || params.get("slug");
+
+  if (querySlug) {
+    return String(querySlug).trim();
+  }
+
+  const parts = location.pathname.split("/").filter(Boolean);
+  const last = parts[parts.length - 1] || "";
+
+  if (last && !last.endsWith(".html")) {
+    return decodeURIComponent(last).trim();
+  }
+
+  return "";
 }
 
 function formatDate(value) {
