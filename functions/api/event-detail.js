@@ -95,7 +95,36 @@ export async function onRequestGet(context) {
     }
 
 const event = await env.DB.prepare(`
-  SELECT *
+  SELECT
+    id,
+    slug,
+    title,
+    event_type,
+    short_description,
+    venue,
+    organizer_name,
+    organizer_url,
+    event_date,
+    racepack_location,
+    racepack_date,
+    racepack_time,
+    status_mode,
+    open_at,
+    close_at,
+    total_limit,
+    used_slots,
+    show_slot_counter,
+    is_visible,
+    sort_order,
+    event_image,
+    registration_mode,
+    external_registration_url,
+    payment_mode,
+    postage_enabled,
+    postage_fee,
+    event_tee_enabled,
+    finisher_tee_enabled,
+    approval_status
   FROM events
   WHERE slug = ?
     AND COALESCE(approval_status, 'live') IN ('live', 'sandbox')
@@ -126,6 +155,7 @@ const event = await env.DB.prepare(`
       success: true,
       event: {
         ...event,
+		payment_mode: String(event.payment_mode || "online").toLowerCase(),
         postage_enabled: Number(event.postage_enabled || 0),
         postage_fee: Number(event.postage_fee || 0),
 		event_tee_enabled: Number(event.event_tee_enabled ?? 1),

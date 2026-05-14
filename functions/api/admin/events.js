@@ -164,10 +164,20 @@ const approvedAt = isMaster(admin) ? new Date().toISOString() : null;
 const createdByAdminId = isMaster(admin) ? null : admin.id;
 const createdByUsername = isMaster(admin) ? "master" : admin.username;
 
-  const organizerName = cleanText(body.organizer_name);
-  const organizerUrl = cleanText(body.organizer_url);
-  const showSlotCounter = Number(body.show_slot_counter || 0) ? 1 : 0;
-  const isVisible = Number(body.is_visible ?? 1) ? 1 : 0;
+const organizerName = cleanText(body.organizer_name);
+const organizerUrl = cleanText(body.organizer_url);
+const showSlotCounter = Number(body.show_slot_counter || 0) ? 1 : 0;
+const isVisible = Number(body.is_visible ?? 1) ? 1 : 0;
+
+let paymentMode = cleanText(body.payment_mode || "online").toLowerCase();
+
+if (!["online", "offline"].includes(paymentMode)) {
+  paymentMode = "online";
+}
+
+if (registrationMode === "external") {
+  paymentMode = "online";
+}
 
 const result = await context.env.DB.prepare(`
   INSERT INTO events (
@@ -178,12 +188,12 @@ const result = await context.env.DB.prepare(`
     venue,
     organizer_name,
     organizer_url,
-	bank_account_name,
-	bank_account_number,
+    bank_account_name,
+    bank_account_number,
     event_date,
-	racepack_location,
-	racepack_date,
-	racepack_time,
+    racepack_location,
+    racepack_date,
+    racepack_time,
     status_mode,
     open_at,
     close_at,
@@ -195,10 +205,11 @@ const result = await context.env.DB.prepare(`
     event_image,
     registration_mode,
     external_registration_url,
+    payment_mode,
     postage_enabled,
     postage_fee,
-	event_tee_enabled,
-	finisher_tee_enabled,
+    event_tee_enabled,
+    finisher_tee_enabled,
     owner_admin_id,
     owner_username,
     approval_status,
@@ -209,7 +220,7 @@ const result = await context.env.DB.prepare(`
     created_at,
     updated_at
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 `).bind(
   slug,
   title,
@@ -234,6 +245,7 @@ const result = await context.env.DB.prepare(`
   cleanText(body.event_image),
   registrationMode,
   externalRegistrationUrl,
+  paymentMode,
   Number(body.postage_enabled || 0),
   Number(body.postage_fee || 0),
   Number(body.event_tee_enabled ?? 1),

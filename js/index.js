@@ -163,7 +163,7 @@ async function loadEvents() {
               ${slotHtml}
             </div>
 
-            <a href="event.html?event=${encodeURIComponent(event.slug)}" class="event-btn">
+            <a href="/${encodeURIComponent(event.slug)}" class="event-btn">
               ${escapeHtml(getButtonText(status))}
             </a>
           </div>

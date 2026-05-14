@@ -715,7 +715,7 @@ async function updatePromoCode(id) {
 }
 
 async function deletePromoCode(id) {
-  if (!confirm("Delete this promo code? Used promo code will be disabled instead.")) {
+  if (!confirm("Delete this promo code? Registration records will keep used discount history.")) {
     return;
   }
 
@@ -776,6 +776,7 @@ function resetForm() {
 setValue("statusMode", "force_closed");
 setValue("isVisible", "1");
 setValue("showSlotCounter", "1");
+setValue("paymentMode", "online");
 setValue("eventTeeEnabled", "1");
 setValue("finisherTeeEnabled", "0");
 setValue("postageEnabled", "0");
@@ -790,9 +791,10 @@ setValue("postageEnabled", "0");
 }
 
 function buildEventPayload() {
-  return {
-    registration_mode: "internal",
-    external_registration_url: "",
+return {
+  registration_mode: "internal",
+  external_registration_url: "",
+  payment_mode: getValue("paymentMode") || "online",
 
     slug: getValue("slug"),
     title: getValue("title"),
@@ -1063,6 +1065,7 @@ async function editEvent(id) {
     setValue("slug", event.slug || "");
     setValue("title", event.title || "");
     setValue("eventType", event.event_type || "");
+	setValue("paymentMode", event.payment_mode || "online");
     setValue("venue", event.venue || "");
     setValue("organizerName", event.organizer_name || "");
     setValue("organizerUrl", event.organizer_url || "");
@@ -1238,6 +1241,9 @@ async function loadEvents() {
       const date = escapeHtml(event.event_date || "-");
       const mode = String(event.registration_mode || "internal").toLowerCase();
       const modeText = mode === "external" ? "External" : "Runation";
+	  const paymentModeText = String(event.payment_mode || "online").toLowerCase() === "offline"
+    	  ? "Offline / Manual"
+		  : "Online / ToyyibPay";
       const usedSlots = escapeHtml(event.used_slots || 0);
       const totalLimit = escapeHtml(Number(event.total_limit || 0) > 0 ? event.total_limit : "Available");
 	  const publicSlotText = Number(event.show_slot_counter || 0) === 1 ? "Shown" : "Hidden";
@@ -1255,6 +1261,7 @@ async function loadEvents() {
               <h3>${title}</h3>
               <div class="muted">Slug: ${slug}</div>
               <div class="muted">Mode: ${modeText}</div>
+			  <div class="muted">Payment: ${paymentModeText}</div>
               <div class="muted">Date: ${date}</div>
               <div class="muted">Registered: ${usedSlots} / ${totalLimit}</div>
               <div class="muted">Public Slots: ${publicSlotText}</div>

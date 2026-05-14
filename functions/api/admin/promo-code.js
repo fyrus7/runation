@@ -154,28 +154,17 @@ export async function onRequestDelete(context) {
       }, 403);
     }
 
-    if (Number(promo.used_count || 0) > 0) {
-      await context.env.DB.prepare(`
-        UPDATE event_promo_codes
-        SET
-          is_active = 0,
-          updated_at = ?
-        WHERE id = ?
-      `).bind(
-        new Date().toISOString(),
-        id
-      ).run();
-
-      return json({
-        success: true,
-        message: "Promo code already used, so it was disabled instead."
-      });
-    }
-
-    await context.env.DB.prepare(`
+    const result = await context.env.DB.prepare(`
       DELETE FROM event_promo_codes
       WHERE id = ?
     `).bind(id).run();
+
+    if (!result.meta || result.meta.changes < 1) {
+      return json({
+        success: false,
+        error: "Promo code not found."
+      }, 404);
+    }
 
     return json({
       success: true,

@@ -70,7 +70,8 @@ export async function onRequestPost(context) {
       LEFT JOIN events e
         ON e.slug = r.event_slug
       WHERE r.payment_status = 'PENDING_PAYMENT'
-        AND r.created_at <= ?
+    	  AND COALESCE(r.payment_gateway, '') != 'OFFLINE'
+		  AND r.created_at <= ?
       ORDER BY r.id ASC
       LIMIT 500
     `).bind(cutoff).all();
@@ -90,7 +91,8 @@ export async function onRequestPost(context) {
           payment_status = 'EXPIRED',
           updated_at = ?
         WHERE id = ?
-          AND payment_status = 'PENDING_PAYMENT'
+    		AND payment_status = 'PENDING_PAYMENT'
+			AND COALESCE(payment_gateway, '') != 'OFFLINE'
       `).bind(now, row.id).run();
 
       if (!updateReg.meta || updateReg.meta.changes < 1) {

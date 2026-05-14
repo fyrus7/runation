@@ -142,6 +142,20 @@ function setEventMessage(message) {
   if (el) el.textContent = message || "";
 }
 
+function isOfflinePaymentEvent(event) {
+  return String(event?.payment_mode || "online").toLowerCase() === "offline";
+}
+
+function getRegistrationNoFromResponse(data) {
+  return (
+    data?.registration?.reg_no ||
+    data?.registration?.group_id ||
+    data?.reg_no ||
+    data?.registration_no ||
+    "-"
+  );
+}
+
 function applyEventStatus(event) {
   const formBtn = document.getElementById("registerBtn");
   const openBtn = document.getElementById("openRegistrationBtn");
@@ -175,8 +189,11 @@ function applyEventStatus(event) {
   formBtn.disabled = !isOpen;
 
   if (status === "OPEN") {
-    formBtn.textContent = "Proceed to Payment";
-    setEventMessage("");
+  formBtn.textContent = isOfflinePaymentEvent(event)
+    ? "Submit Registration"
+    : "Proceed to Payment";
+
+  setEventMessage("");
   } else if (status === "UPCOMING") {
     formBtn.textContent = "Registration Not Open Yet";
     setEventMessage("Registration is not open yet.");
@@ -831,9 +848,6 @@ function clearInvalidFields() {
 }
 
 function markInvalidField(id) {
-  // Address masih required, tapi jangan merahkan field address
-  if (id === "participantAddress") return;
-
   const el = document.getElementById(id);
   if (el) el.classList.add("input-error");
 }
@@ -856,18 +870,22 @@ function validateAdditionalParticipants() {
   let isValid = true;
 
   cards.forEach(card => {
-    const required = [
-      [".additional-category", "Category"],
-      [".additional-name", "Full name"],
-      [".additional-phone", "Phone number"],
-      [".additional-gender", "Gender"],
-      [".additional-email", "Email"],
-      [".additional-emergency-name", "Emergency contact name"],
-      [".additional-emergency-phone", "Emergency contact number"]
-    ];
-	
-	const event = window.RUNATION_EVENT || {};
-	const eventTeeEnabled = Number(event.event_tee_enabled ?? 1) === 1;
+const event = window.RUNATION_EVENT || {};
+const eventTeeEnabled = Number(event.event_tee_enabled ?? 1) === 1;
+const offlinePayment = isOfflinePaymentEvent(event);
+
+const required = [
+  [".additional-category", "Category"],
+  [".additional-name", "Full name"],
+  [".additional-phone", "Phone number"],
+  [".additional-gender", "Gender"],
+  [".additional-emergency-name", "Emergency contact name"],
+  [".additional-emergency-phone", "Emergency contact number"]
+];
+
+if (!offlinePayment) {
+  required.push([".additional-email", "Email"]);
+}
 
     required.forEach(([selector]) => {
       const el = getAdditionalField(card, selector);
@@ -948,15 +966,20 @@ function validateRegistrationForm() {
 const event = window.RUNATION_EVENT || {};
 const eventTeeEnabled = Number(event.event_tee_enabled ?? 1) === 1;
 
+const offlinePayment = isOfflinePaymentEvent(event);
+
 const required = [
   ["participantName", "Full name"],
   ["participantPhone", "Phone number"],
   ["participantGender", "Gender"],
-  ["participantEmail", "Email"],
   ["categorySelect", "Category"],
   ["emergencyName", "Emergency contact name"],
   ["emergencyPhone", "Emergency contact number"]
 ];
+
+if (!offlinePayment) {
+  required.push(["participantEmail", "Email"]);
+}
 
 if (eventTeeEnabled) {
   required.push(["teeSize", "T-shirt size"]);
@@ -1127,17 +1150,34 @@ async function submitRegistration() {
       throw new Error(data.error || "REGISTRATION_FAILED");
     }
 
-    if (data.payment_url) {
-      window.location.href = data.payment_url;
-	  return;
-	}
-	
-	setEventMessage(`Registration saved. Registration No: ${data.reg_no || data.registration_no}`);
-	
-	if (btn) {
-	  btn.disabled = true;
-	  btn.textContent = "Registration Saved";
-	}
+if (data.payment_url) {
+  window.location.href = data.payment_url;
+  return;
+}
+
+if (data.offline_payment) {
+  const regNo = getRegistrationNoFromResponse(data);
+
+  setEventMessage(
+    `Registration saved. Registration No: ${regNo}. Payment status: Offline Pending.`
+  );
+
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = "Registration Saved";
+  }
+
+  return;
+}
+
+const regNo = getRegistrationNoFromResponse(data);
+
+setEventMessage(`Registration saved. Registration No: ${regNo}`);
+
+if (btn) {
+  btn.disabled = true;
+  btn.textContent = "Registration Saved";
+}
 
   } catch (err) {
     console.error(err);
@@ -1145,9 +1185,13 @@ async function submitRegistration() {
     setEventMessage(err.message || "Registration failed.");
 
     if (btn) {
-      btn.disabled = false;
-      btn.textContent = "Register Now";
-    }
+  const event = window.RUNATION_EVENT || {};
+
+  btn.disabled = false;
+  btn.textContent = isOfflinePaymentEvent(event)
+    ? "Submit Registration"
+    : "Proceed to Payment";
+}
   }
 }
 

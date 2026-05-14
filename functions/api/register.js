@@ -244,7 +244,7 @@ async function deletePendingByGroupId(context, groupId) {
     .prepare(`
       DELETE FROM registrations
       WHERE group_id = ?
-        AND payment_status = 'PENDING_PAYMENT'
+        AND payment_status IN ('PENDING_PAYMENT', 'OFFLINE_PENDING')
     `)
     .bind(groupId)
     .run();
@@ -327,12 +327,16 @@ async function rollbackExistingPendingSlot(context, eventId, categoryName) {
 
 
 function getPaymentMode(event) {
-  const manualMode = String(event.payment_mode || "auto").toLowerCase();
+  const manualMode = String(event.payment_mode || "online").toLowerCase();
   const approvalStatus = String(event.approval_status || "live").toLowerCase();
 
-  if (manualMode && manualMode !== "auto") return manualMode;
+  if (manualMode === "offline") {
+    return "offline";
+  }
 
-  if (approvalStatus === "sandbox") return "toyyibpay_sandbox";
+  if (approvalStatus === "sandbox") {
+    return "toyyibpay_sandbox";
+  }
 
   return "toyyibpay_live";
 }
@@ -407,7 +411,6 @@ const now = malaysiaNow();
         !participant.category_id ||
         !participant.full_name ||
         !participant.ic_passport ||
-        !participant.email ||
         !participant.phone ||
         !participant.gender ||
         !participant.emergency_name ||
@@ -419,7 +422,7 @@ const now = malaysiaNow();
         }, 400);
       }
 
-      if (!isValidEmail(participant.email)) {
+      if (participant.email && !isValidEmail(participant.email)) {
         return json({
           success: false,
           error: "Please enter a valid email address."
@@ -482,6 +485,20 @@ const now = malaysiaNow();
         error: "Event not found."
       }, 404);
     }
+	
+	const paymentMode = getPaymentMode(event);
+const isOfflinePayment = paymentMode === "offline";
+
+if (!isOfflinePayment) {
+  for (const participant of participants) {
+    if (!participant.email) {
+      return json({
+        success: false,
+        error: "Email is required for online payment."
+      }, 400);
+    }
+  }
+}
 	
 const eventTeeEnabled = Number(event.event_tee_enabled ?? 1) === 1;
 const finisherTeeEnabled = Number(event.finisher_tee_enabled ?? 0) === 1;
@@ -557,7 +574,6 @@ if (!isSandboxRegistration && eventStatus !== "OPEN") {
       }
 
       const category = cleanText(categoryRow.name).toUpperCase();
-      const requireFinisherTee = category.includes("21KM");
 
       if (finisherTeeEnabled && !participant.finisher_tee_size) {
         return json({
@@ -627,7 +643,7 @@ if (!isSandboxRegistration) {
         }, 409);
       }
 
-      if (existingStatus === "PENDING_PAYMENT") {
+      if (existingStatus === "PENDING_PAYMENT" || existingStatus === "OFFLINE_PENDING") {
         const recreate = body.recreate === true;
         const hasPaymentLink = existing.payment_url && existing.payment_ref;
 
@@ -656,7 +672,7 @@ if (!isSandboxRegistration) {
             DELETE FROM registrations
             WHERE event_slug = ?
               AND ic = ?
-              AND payment_status = 'PENDING_PAYMENT'
+              AND payment_status IN ('PENDING_PAYMENT', 'OFFLINE_PENDING')
           `)
           .bind(event.slug, participant.ic_passport)
           .run();
@@ -741,16 +757,33 @@ const participantLabel = preparedParticipants.length > 1
   ? `${preparedParticipants.length} Participants`
   : primaryParticipant.category;
 
-const paymentMode = getPaymentMode(event);
-const toyyib = getToyyibPayConfig(context.env, paymentMode);
 
-if (!toyyib.secretKey || !toyyib.categoryCode) {
-  await rollbackReservedSlots(context, reservedSlots);
+let toyyib = null;
+let paymentGateway = "OFFLINE";
+let paymentIsTest = 0;
+let initialPaymentStatus = "OFFLINE_PENDING";
+let initialPaymentRef = `OFFLINE-${groupId}`;
+let initialPaymentUrl = "";
 
-  return json({
-    success: false,
-    error: `ToyyibPay config missing for ${paymentMode}.`
-  }, 500);
+if (!isOfflinePayment) {
+  toyyib = getToyyibPayConfig(context.env, paymentMode);
+
+  if (!toyyib.secretKey || !toyyib.categoryCode) {
+    await rollbackReservedSlots(context, reservedSlots);
+    await releasePromoCode(context, reservedPromoId);
+    reservedPromoId = null;
+
+    return json({
+      success: false,
+      error: `ToyyibPay config missing for ${paymentMode}.`
+    }, 500);
+  }
+
+  paymentGateway = toyyib.gateway;
+  paymentIsTest = toyyib.isTest;
+  initialPaymentStatus = "PENDING_PAYMENT";
+  initialPaymentRef = "";
+  initialPaymentUrl = "";
 }
 
 const regNos = [];
@@ -836,18 +869,50 @@ for (let i = 0; i < preparedParticipants.length; i++) {
 		  rowPromoDiscount,
           deliveryMethod,
           rowPostageFee,
-          "PENDING_PAYMENT",
-		  toyyib.gateway,
-		  "",
-		  "",
-		  toyyib.isTest,
+          initialPaymentStatus,
+		  paymentGateway,
+		  initialPaymentRef,
+		  initialPaymentUrl,
+		  paymentIsTest,
 		  now,
 		  now
         )
         .run();
     }
 
-
+if (isOfflinePayment) {
+  return json({
+    success: true,
+    offline_payment: true,
+    message: "Registration saved. Please complete payment with organizer.",
+    registration: {
+      reg_no: groupId,
+      group_id: groupId,
+      reg_nos: regNos,
+      participant_count: preparedParticipants.length,
+      event_slug: event.slug,
+      event_name: event.title,
+      name: primaryParticipant.full_name,
+      ic: primaryParticipant.ic_passport,
+      email: primaryParticipant.email,
+      phone: primaryParticipant.phone,
+      gender: primaryParticipant.gender,
+      address: fallbackAddress,
+      delivery_method: deliveryMethod,
+      postage_fee: postageFeeRm,
+      category: participantLabel,
+      amount: finalAmount,
+      original_amount: totalAmount,
+      promo_code: promo.code,
+      promo_discount: promoDiscountAmount,
+      payment_status: "OFFLINE_PENDING",
+      payment_gateway: "OFFLINE",
+      payment_ref: initialPaymentRef,
+      payment_url: "",
+      is_test: 0
+    }
+  });
+}
 
 const siteUrl = context.env.SITE_URL || new URL(context.request.url).origin;
 const toyyibpayBase = toyyib.baseUrl;

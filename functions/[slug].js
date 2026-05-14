@@ -63,7 +63,7 @@ function buildMetaTags({ title, description, image, canonicalUrl }) {
 <meta name="description" content="${safeDescription}">
 
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="RunationX">
+<meta property="og:site_name" content="RUUNX">
 <meta property="og:title" content="${safeTitle}">
 <meta property="og:description" content="${safeDescription}">
 <meta property="og:image" content="${safeImage}">
@@ -131,11 +131,11 @@ export async function onRequestGet(context) {
 
   let html = await assetResponse.text();
 
-  const title = event.title || "RunationX Event";
+  const title = event.title || "RUUNX Event";
   const description =
     event.short_description ||
     event.event_type ||
-    "Register for this event on RunationX.";
+    "Register for this event on RUUNX.";
 
   const image = absoluteUrl(event.event_image, origin);
   const canonicalUrl = `${origin}/${event.slug}`;
@@ -153,7 +153,7 @@ export async function onRequestGet(context) {
 </script>`.trim();
 
   html = html
-    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)} | RunationX</title>`)
+    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${escapeHtml(title)} | RUUNX</title>`)
     .replace(/<meta\s+(property|name)=["'](?:og:|twitter:)[^>]*>\s*/gi, "")
     .replace(/<meta\s+name=["']description["'][^>]*>\s*/gi, "")
     .replace("</head>", `${metaTags}\n${slugScript}\n</head>`);

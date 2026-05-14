@@ -178,6 +178,7 @@ export async function onRequestPatch(context) {
         owner_username,
         registration_mode,
         external_registration_url
+		payment_mode
       FROM events
       WHERE id = ?
       LIMIT 1
@@ -223,6 +224,18 @@ export async function onRequestPatch(context) {
         }, 400);
       }
     }
+	
+	let paymentMode = cleanText(
+  body.payment_mode || existing.payment_mode || "online"
+).toLowerCase();
+
+if (!["online", "offline"].includes(paymentMode)) {
+  paymentMode = "online";
+}
+
+if (registrationMode === "external") {
+  paymentMode = "online";
+}
 
     const showSlotCounter = Number(body.show_slot_counter || 0) ? 1 : 0;
     const isVisible = Number(body.is_visible ?? 1) ? 1 : 0;
@@ -253,6 +266,7 @@ export async function onRequestPatch(context) {
         event_image = ?,
         registration_mode = ?,
         external_registration_url = ?,
+		payment_mode = ?,
         postage_enabled = ?,
         postage_fee = ?,
 		event_tee_enabled = ?,
@@ -283,6 +297,7 @@ export async function onRequestPatch(context) {
       cleanText(body.event_image),
       registrationMode,
       externalRegistrationUrl,
+	  paymentMode,
       Number(body.postage_enabled || 0),
       Number(body.postage_fee || 0),
 	  Number(body.event_tee_enabled ?? 1),
