@@ -3,4 +3,4 @@
 .wrangler/
 runation-backup.sql
 wrangler.backup.jsonc
-file-tree.txt
+file-tree.txt*.sql
