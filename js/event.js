@@ -123,7 +123,7 @@ function applyTeeOptions(event) {
   }
 
   if (finisherBox) {
-    finisherBox.style.display = finisherTeeEnabled ? "" : "none";
+    finisherBox.classList.toggle("is-hidden-space", !finisherTeeEnabled);
   }
 
   if (!finisherTeeEnabled && finisherSelect) {
@@ -333,10 +333,11 @@ function toggleFinisherTee() {
 
   if (!box) return;
 
-  box.style.display = finisherTeeEnabled ? "block" : "none";
+  box.classList.toggle("is-hidden-space", !finisherTeeEnabled);
 
   if (!finisherTeeEnabled && finisherSelect) {
     finisherSelect.value = "";
+    finisherSelect.classList.remove("input-error");
   }
 }
 
@@ -645,7 +646,7 @@ function toggleAdditionalFinisherTee(card) {
 
   if (!box) return;
 
-  box.style.display = finisherTeeEnabled ? "block" : "none";
+  box.classList.toggle("is-hidden-space", !finisherTeeEnabled);
 
   if (!finisherTeeEnabled && finisherSelect) {
     finisherSelect.value = "";
@@ -696,37 +697,48 @@ function addAdditionalParticipant() {
     </div>
 
     <div class="form-grid">
-      <div class="form-group">
-        <label>Category</label>
-        <select class="additional-category">
-          ${getAdditionalCategoryOptionsHtml()}
-        </select>
-      </div>
+<div class="form-group additional-category-field form-group-full">
+  <label>Category</label>
+  <select class="additional-category">
+    ${getAdditionalCategoryOptionsHtml()}
+  </select>
+</div>
 
-      <div class="form-group">
-        <label>Full Name</label>
-        <input class="additional-name" type="text" placeholder="Enter full name">
-      </div>
+<div class="form-group additional-name-field">
+  <label>Full Name</label>
+  <input class="additional-name" type="text" placeholder="Enter full name">
+</div>
 
-      <div class="form-group">
-        <label>ID Type</label>
-        <select class="additional-id-type">
-          <option value="ic">IC</option>
-          <option value="passport">Passport</option>
-        </select>
+<div class="form-group additional-id-type-field">
+  <label>ID Type</label>
+  <select class="additional-id-type">
+    <option value="ic">IC</option>
+    <option value="passport">Passport</option>
+  </select>
+</div>
 
-        <label class="field-sub-label additional-ic-label">IC Number</label>
-        <input
-          class="additional-ic"
-          type="text"
-          placeholder="12 digit IC number"
-          inputmode="numeric"
-          maxlength="12"
-          autocomplete="off"
-        >
-      </div>
+<div class="form-group additional-gender-field">
+  <label>Gender</label>
+  <select class="additional-gender">
+    <option value="">Select gender</option>
+    <option value="MEN">Men</option>
+    <option value="WOMEN">Women</option>
+  </select>
+</div>
 
-      <div class="form-group">
+<div class="form-group additional-ic-field">
+  <label class="additional-ic-label">IC Number</label>
+  <input
+    class="additional-ic"
+    type="text"
+    placeholder="12 digit IC number"
+    inputmode="numeric"
+    maxlength="12"
+    autocomplete="off"
+  >
+</div>
+
+      <div class="form-group additional-phone-field">
         <label>Phone Number</label>
         <input
           class="additional-phone"
@@ -737,21 +749,12 @@ function addAdditionalParticipant() {
         >
       </div>
 
-      <div class="form-group">
-        <label>Gender</label>
-        <select class="additional-gender">
-          <option value="">Select gender</option>
-          <option value="MEN">Men</option>
-          <option value="WOMEN">Women</option>
-        </select>
-      </div>
-
-      <div class="form-group">
+      <div class="form-group additional-email-field">
         <label>Email</label>
         <input class="additional-email" type="email" placeholder="Enter email">
       </div>
 
-      <div class="form-group additional-tee-box">
+      <div class="form-group additional-tee-box additional-event-tee-field">
         <label>T-Shirt Size</label>
         <select class="additional-tee-size">
           <option value="">Select size</option>
@@ -767,7 +770,7 @@ function addAdditionalParticipant() {
         </select>
       </div>
 
-      <div class="form-group additional-finisher-box" style="display:none;">
+      <div class="form-group additional-finisher-box additional-finisher-tee-field is-hidden-space">
         <label>Finisher Tee Size</label>
         <select class="additional-finisher-size">
           <option value="">Select finisher tee size</option>
@@ -783,12 +786,12 @@ function addAdditionalParticipant() {
         </select>
       </div>
 
-      <div class="form-group">
+      <div class="form-group additional-emergency-name-field">
         <label>Emergency Contact Name</label>
         <input class="additional-emergency-name" type="text" placeholder="Emergency contact name">
       </div>
 
-      <div class="form-group">
+      <div class="form-group additional-emergency-phone-field">
         <label>Emergency Contact Number</label>
         <input
           class="additional-emergency-phone"

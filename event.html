@@ -14,7 +14,7 @@
 <header class="event-header">
   <div class="event-header-inner">
     <a href="index.html" class="event-brand">
-      <span class="event-logo">R</span>
+      <span class="event-logo">RX</span>
       <div>
         <strong>RUUNX</strong>
         <small>Running Event Platform</small>
@@ -90,18 +90,18 @@
   <small>Racepack Collection</small>
 
   <div class="racepack-list">
-    <div>
-      <span>Location</span>
+    <div class="racepack-field">
+      <small>Location</small>
       <strong id="racepackLocation">T.B.C</strong>
     </div>
 
-    <div>
-      <span>Date</span>
+    <div class="racepack-field">
+      <small>Date</small>
       <strong id="racepackDate">T.B.C</strong>
     </div>
 
-    <div>
-      <span>Time</span>
+    <div class="racepack-field">
+      <small>Time</small>
       <strong id="racepackTime">T.B.C</strong>
     </div>
   </div>
@@ -146,30 +146,41 @@
         </div>
 
         <div class="form-grid">
-          <div class="form-group">
+          <div class="form-group main-name-field">
             <label for="participantName">Full Name</label>
             <input id="participantName" type="text" placeholder="Enter full name">
           </div>
 
-          <div class="form-group">
-            <label for="participantIdType">ID Type</label>
-            <select id="participantIdType">
-              <option value="ic">IC</option>
-              <option value="passport">Passport</option>
-            </select>
+<div class="form-group main-id-type-field">
+  <label for="participantIdType">ID Type</label>
+  <select id="participantIdType">
+    <option value="ic">IC</option>
+    <option value="passport">Passport</option>
+  </select>
+</div>
 
-            <label for="participantIc" id="participantIcLabel" class="field-sub-label">IC Number</label>
-            <input
-              id="participantIc"
-              type="text"
-              placeholder="12 digit IC number"
-              inputmode="numeric"
-              maxlength="12"
-              autocomplete="off"
-            >
+<div class="form-group main-ic-field">
+  <label for="participantIc" id="participantIcLabel">IC Number</label>
+  <input
+    id="participantIc"
+    type="text"
+    placeholder="12 digit IC number"
+    inputmode="numeric"
+    maxlength="12"
+    autocomplete="off"
+  >
+</div>
+		  
+          <div class="form-group main-gender-field">
+            <label for="participantGender">Gender</label>
+            <select id="participantGender">
+              <option value="">Select gender</option>
+              <option value="MEN">Men</option>
+              <option value="WOMEN">Women</option>
+            </select>
           </div>
 
-          <div class="form-group">
+          <div class="form-group main-phone-field">
             <label for="participantPhone">Phone Number</label>
             <input
               id="participantPhone"
@@ -180,16 +191,7 @@
             >
           </div>
 
-          <div class="form-group">
-            <label for="participantGender">Gender</label>
-            <select id="participantGender">
-              <option value="">Select gender</option>
-              <option value="MEN">Men</option>
-              <option value="WOMEN">Women</option>
-            </select>
-          </div>
-
-          <div class="form-group">
+          <div class="form-group main-email-field">
             <label for="participantEmail">Email</label>
             <input id="participantEmail" type="email" placeholder="Enter email">
           </div>
@@ -208,7 +210,7 @@
             <textarea id="participantAddress" placeholder="Required only if postage selected"></textarea>
           </div>
 
-          <div class="form-group" id="eventTeeBox">
+          <div class="form-group main-event-tee-field" id="eventTeeBox">
             <label for="teeSize">T-Shirt Size</label>
             <select id="teeSize">
               <option value="">Select size</option>
@@ -224,7 +226,7 @@
             </select>
           </div>
 
-          <div class="form-group" id="finisherTeeBox" style="display:none;">
+          <div class="form-group main-finisher-tee-field is-hidden-space" id="finisherTeeBox">
             <label for="finisherTeeSize">Finisher Tee Size</label>
             <select id="finisherTeeSize">
               <option value="">Select finisher tee size</option>
@@ -240,12 +242,12 @@
             </select>
           </div>
 
-          <div class="form-group">
+          <div class="form-group main-emergency-name-field">
             <label for="emergencyName">Emergency Contact Name</label>
             <input id="emergencyName" type="text" placeholder="Emergency contact name">
           </div>
 
-          <div class="form-group">
+          <div class="form-group main-emergency-phone-field">
             <label for="emergencyPhone">Emergency Contact Number</label>
             <input
               id="emergencyPhone"
@@ -255,6 +257,7 @@
               autocomplete="off"
             >
           </div>
+		  </div>
         </div>
 
         <div id="additionalParticipants"></div>
@@ -314,8 +317,9 @@
   </button>
 </div>
 
+<div class="registration-divider"></div>
+
         <div id="eventMessage" class="event-message"></div>
-      </div>
     </div>
   </section>
 </main>
