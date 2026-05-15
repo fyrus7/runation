@@ -911,3 +911,8 @@ body.event-page * {
     padding: 0 14px;
   }
 }
+
+#eventOrganizerWebsite[hidden],
+.organizer-link:empty {
+  display: none !important;
+}
