@@ -254,17 +254,9 @@ function renderOrganizerDetails(event) {
 
   const organizerName = String(event.organizer_name || "").trim();
   const rawUrl = String(event.organizer_url || "").trim();
-  const mode = String(event.registration_mode || "internal").toLowerCase();
+  const finalUrl = normalizeWebsiteUrl(rawUrl);
 
-  const shouldShowUrl =
-    mode !== "external" &&
-    rawUrl &&
-    rawUrl !== "-" &&
-    rawUrl !== "#" &&
-    rawUrl.toLowerCase() !== "t.b.c" &&
-    rawUrl.toLowerCase() !== "tbc";
-
-  if (!organizerName && !shouldShowUrl) {
+  if (!organizerName && !rawUrl) {
     if (card) card.hidden = true;
     return;
   }
@@ -277,15 +269,13 @@ function renderOrganizerDetails(event) {
 
   if (!link) return;
 
-  if (!shouldShowUrl) {
+  if (!rawUrl) {
     link.textContent = "";
     link.removeAttribute("href");
     link.hidden = true;
     link.classList.add("is-empty");
     return;
   }
-
-  const finalUrl = normalizeWebsiteUrl(rawUrl);
 
   link.hidden = false;
   link.textContent = rawUrl.replace(/^https?:\/\//i, "").replace(/\/$/, "");
