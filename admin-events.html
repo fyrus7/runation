@@ -85,13 +85,13 @@
     </div>
 
     <div class="admin-events-content">
-      <section class="admin-panel">
-        <div class="panel-head">
-          <div>
-            <h2>Event Setup</h2>
-            <p>Create a Runation registration event or list an external event.</p>
-          </div>
-        </div>
+      <section class="admin-panel event-setup-panel">
+  <div class="panel-head">
+    <div>
+      <h2>Event Setup</h2>
+      <p>Create a Runation registration event or list an external event.</p>
+    </div>
+  </div>
 
         <div class="button-row">
           <button type="button" onclick="showFullEventForm()">
@@ -129,6 +129,11 @@
             <label>Title</label>
             <input id="title" placeholder="Event title">
           </div>
+		  
+          <div class="form-group">
+            <label>Event Date</label>
+            <input id="eventDate" type="date">
+          </div>
 
           <div class="form-group">
             <label>Event Type</label>
@@ -151,9 +156,6 @@
           </div>
 
 <div class="form-section">
-  <h3>Organizer Bank Details</h3>
-  <p class="muted">Admin only. Not shown on public event page.</p>
-
   <label>Bank Account Name</label>
   <input
     id="bankAccountName"
@@ -169,10 +171,7 @@
   >
 </div>
 
-          <div class="form-group">
-            <label>Event Date</label>
-            <input id="eventDate" type="date">
-          </div>
+
 
           <div class="form-group">
             <label>Racepack Location</label>
@@ -223,9 +222,6 @@
               <option value="1">Show on home</option>
               <option value="0">Hide from home</option>
             </select>
-            <small class="field-hint">
-              If total limit is 0, public card will show Available.
-            </small>
           </div>
 
           <div class="form-group">
@@ -453,33 +449,17 @@
           </div>
 
           <div class="form-group">
-            <label>Slots</label>
-            <input id="externalSlots" type="number" placeholder="Example: 5000">
-            <small class="field-hint">
-              Leave empty if not applicable.
-            </small>
-          </div>
-
-          <div class="form-group">
-            <label>Landing Availability Display</label>
-            <select id="externalShowSlotCounter">
-              <option value="1">Show on home</option>
-              <option value="0">Hide from home</option>
-            </select>
-            <small class="field-hint">
-              If slots are empty or 0, public card will show Available.
-            </small>
-          </div>
-
-          <div class="form-group">
             <label>Organizer Name</label>
             <input id="externalOrganizerName" placeholder="Organizer name">
           </div>
-
-          <div class="form-group">
-            <label>Organizer Website</label>
-            <input id="externalOrganizerUrl" type="url" placeholder="https://example.com">
-          </div>
+		  
+		  <div class="form-group">
+  <label>Landing Availability Display</label>
+  <select id="externalShowSlotCounter">
+    <option value="1">Show on home</option>
+    <option value="0">Hide from home</option>
+  </select>
+</div>
 
           <div class="form-group full">
             <label>Short Description</label>

@@ -150,7 +150,7 @@ function renderApprovalButton(event) {
   if (approvalStatus === "sandbox") {
     return `
       <button class="secondary" type="button" onclick="eventApprovalAction(${id}, 'approve')">
-        Approve Live
+        Sandbox
       </button>
     `;
   }
@@ -158,7 +158,7 @@ function renderApprovalButton(event) {
   if (approvalStatus === "live") {
     return `
       <button class="secondary" type="button" onclick="eventApprovalAction(${id}, 'return_to_sandbox')">
-        Return Sandbox
+        Live
       </button>
     `;
   }
@@ -813,7 +813,7 @@ return {
     open_at: toIsoMalaysia(getValue("openAt")),
     close_at: toIsoMalaysia(getValue("closeAt")),
     total_limit: Number(getValue("totalLimit") || 0),
-    show_slot_counter: Number(getValue("showSlotCounter") || 0),
+    show_slot_counter: Number(getValue("showSlotCounter") || 1),
     is_visible: Number(getValue("isVisible") || 1),
     sort_order: Number(getValue("sortOrder") || 0),
     event_image: getValue("eventImage"),
@@ -879,13 +879,11 @@ function resetExternalEventForm() {
 	"externalRacepackTimeFrom",
 	"externalRacepackTimeTo",
     "externalCategories",
-    "externalSlots",
     "externalOrganizerName",
-    "externalOrganizerUrl",
     "externalShortDescription",
     "externalEventImage"
   ].forEach(id => setValue(id, ""));
-
+  
   setValue("externalShowSlotCounter", "1");
 }
 
@@ -928,10 +926,8 @@ function populateExternalEventForm(event, categories) {
       .toUpperCase()
   );
 
-  setValue("externalSlots", Number(event.total_limit || 0) || "");
-  setValue("externalShowSlotCounter", String(event.show_slot_counter ?? 1));
   setValue("externalOrganizerName", event.organizer_name || "");
-  setValue("externalOrganizerUrl", event.organizer_url || "");
+  setValue("externalShowSlotCounter", String(event.show_slot_counter ?? 1));
   setValue("externalShortDescription", event.short_description || "");
   setValue("externalEventImage", event.event_image || "");
 
@@ -951,8 +947,7 @@ async function saveExternalEvent() {
   const externalUrl = normalizeUrl(getValue("externalRegistrationUrl"));
   const categoriesText = getValue("externalCategories").toUpperCase();
   const externalEventType = getValue("externalEventType");
-  const externalSlots = Number(getValue("externalSlots") || 0);
-  const externalShowSlotCounter = Number(getValue("externalShowSlotCounter") || 0);
+  const externalShowSlotCounter = Number(getValue("externalShowSlotCounter") || 1);
 
   if (!slug || !title || !externalUrl) {
     setMessage("Event URL, title, and external registration URL are required.");
@@ -976,7 +971,7 @@ async function saveExternalEvent() {
     status_mode: "force_open",
     open_at: "",
     close_at: "",
-    total_limit: externalSlots,
+    total_limit: 0,
     show_slot_counter: externalShowSlotCounter,
     is_visible: 1,
     sort_order: 0,
@@ -986,7 +981,7 @@ async function saveExternalEvent() {
     postage_fee: 0,
 
     organizer_name: getValue("externalOrganizerName"),
-    organizer_url: getValue("externalOrganizerUrl"),
+	organizer_url: "",
 
     categories: categoriesText
       ? [
@@ -1079,7 +1074,7 @@ async function editEvent(id) {
     setValue("openAt", fromIsoToDatetimeLocal(event.open_at));
     setValue("closeAt", fromIsoToDatetimeLocal(event.close_at));
     setValue("totalLimit", event.total_limit || 0);
-    setValue("showSlotCounter", String(event.show_slot_counter ?? 0));
+	setValue("showSlotCounter", String(event.show_slot_counter ?? 1));
     setValue("isVisible", String(event.is_visible ?? 1));
     setValue("sortOrder", event.sort_order || 0);
     setValue("shortDescription", event.short_description || "");
@@ -1279,7 +1274,7 @@ async function loadEvents() {
             <button type="button" onclick="editEvent(${Number(event.id)})">Edit</button>
 
             <a href="/${encodeURIComponent(event.slug)}" target="_blank">
-  <button class="secondary" type="button">Open Page</button>
+  <button class="secondary" type="button">View</button>
 </a>
 
 ${renderApprovalButton(event)}

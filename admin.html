@@ -40,31 +40,6 @@
       </div>
     </div>
 
-    <section class="admin-stat-grid">
-      <div class="admin-stat-card">
-        <span>Total</span>
-        <strong id="sumTotal">0</strong>
-        <small>Loaded registrations</small>
-      </div>
-
-      <div class="admin-stat-card paid-card">
-        <span>Paid</span>
-        <strong id="sumPaid">0</strong>
-        <small>Payment completed</small>
-      </div>
-
-      <div class="admin-stat-card pending-card">
-        <span>Pending</span>
-        <strong id="sumPending">0</strong>
-        <small>Awaiting payment</small>
-      </div>
-
-      <div class="admin-stat-card">
-        <span>Failed</span>
-        <strong id="sumFailed">0</strong>
-        <small>Failed transactions</small>
-      </div>
-    </section>
 
     <section class="admin-panel" style="margin-bottom:20px;">
       <div class="panel-head">
@@ -94,39 +69,55 @@
       </div>
 
       <div class="button-row">
-        <button type="button" class="secondary" onclick="expirePending()">Expire Pending &gt; 1 Hour</button>
+        <button type="button" class="secondary" onclick="expirePending()">Expire &gt; 1 Hour</button>
         <button type="button" class="secondary" onclick="exportCsv()">Export CSV</button>
         <button type="button" class="danger" onclick="deleteCurrentList()">Delete Current List</button>
       </div>
 
-      <div id="adminMessage" class="muted" style="margin-top:12px;"></div>
-	  
-	  <section class="admin-panel" id="incomePanel" style="margin-bottom:20px;">
-  <div class="panel-head">
-    <div>
-      <h2>Income</h2>
-      <p>Paid registrations only. Filtered income follows the selected event and search.</p>
-    </div>
-  </div>
-
-  <section class="admin-stat-grid">
-    <div class="admin-stat-card paid-card">
-      <span>Total Income</span>
-      <strong id="totalIncomeText">RM0.00</strong>
-      <small>All paid registrations</small>
-    </div>
-
-    <div class="admin-stat-card">
-      <span>Filtered Income</span>
-      <strong id="filteredIncomeText">RM0.00</strong>
-      <small>Selected event / current filter</small>
-    </div>
-  </section>
-</section>
-
+            <div id="adminMessage" class="muted" style="margin-top:12px;"></div>
     </section>
 
-    <section class="admin-panel" id="categoryGraphCard" style="margin-bottom:20px;">
+    <section class="admin-stat-grid income-stat-grid">
+      <div class="admin-stat-card paid-card">
+        <span>Total Income</span>
+        <strong id="totalIncomeText">RM0.00</strong>
+        <small>All paid registrations</small>
+      </div>
+
+      <div class="admin-stat-card">
+        <span>Filtered Income</span>
+        <strong id="filteredIncomeText">RM0.00</strong>
+        <small>Selected event / current filter</small>
+      </div>
+    </section>
+	
+    <section class="admin-stat-grid">
+      <div class="admin-stat-card">
+        <span>Total</span>
+        <strong id="sumTotal">0</strong>
+        <small>Loaded registrations</small>
+      </div>
+
+      <div class="admin-stat-card paid-card">
+        <span>Paid</span>
+        <strong id="sumPaid">0</strong>
+        <small>Payment completed</small>
+      </div>
+
+      <div class="admin-stat-card pending-card">
+        <span>Pending</span>
+        <strong id="sumPending">0</strong>
+        <small>Awaiting payment</small>
+      </div>
+
+      <div class="admin-stat-card">
+        <span>Failed</span>
+        <strong id="sumFailed">0</strong>
+        <small>Failed transactions</small>
+      </div>
+    </section>
+
+    <section class="admin-panel compact-panel" id="categoryGraphCard">
       <div class="panel-head">
         <div>
           <h2>Category Progress</h2>
