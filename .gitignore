@@ -6,3 +6,4 @@ wrangler.backup.jsonc
 file-tree.txt*.sql
 file-tree.txt
 *.sql
+dev-phone.bat
