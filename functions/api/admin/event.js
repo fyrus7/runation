@@ -122,12 +122,14 @@ async function getEventWithCategories(env, id) {
   `).bind(id).all();
 
   return {
-    event: {
-      ...event,
-      status: calculateEventStatus(event)
-    },
-    categories: categories.results || []
-  };
+  event: {
+    ...event,
+    admin_fee_enabled: Number(event.admin_fee_enabled || 0),
+    admin_fee_amount: Number(event.admin_fee_amount ?? 3),
+    status: calculateEventStatus(event)
+  },
+  categories: categories.results || []
+};
 }
 
 export async function onRequestGet(context) {
@@ -171,18 +173,20 @@ export async function onRequestPatch(context) {
     }
 
     const existing = await context.env.DB.prepare(`
-      SELECT
-        id,
-        slug,
-        owner_admin_id,
-        owner_username,
-        registration_mode,
-        external_registration_url
-		payment_mode
-      FROM events
-      WHERE id = ?
-      LIMIT 1
-    `).bind(id).first();
+  SELECT
+    id,
+    slug,
+    owner_admin_id,
+    owner_username,
+    registration_mode,
+    external_registration_url,
+    payment_mode,
+    admin_fee_enabled,
+    admin_fee_amount
+  FROM events
+  WHERE id = ?
+  LIMIT 1
+`).bind(id).first();
 
     if (!existing) {
       return json({ success: false, error: "EVENT_NOT_FOUND" }, 404);
@@ -237,8 +241,23 @@ if (registrationMode === "external") {
   paymentMode = "online";
 }
 
-    const showSlotCounter = Number(body.show_slot_counter || 0) ? 1 : 0;
-    const isVisible = Number(body.is_visible ?? 1) ? 1 : 0;
+const adminFeeEnabled = Number(body.admin_fee_enabled || 0) ? 1 : 0;
+
+let adminFeeAmount = 3;
+
+if (isMaster(admin)) {
+  const rawAdminFeeAmount = Number(
+    body.admin_fee_amount ?? existing.admin_fee_amount ?? 3
+  );
+
+  adminFeeAmount =
+    Number.isFinite(rawAdminFeeAmount) && rawAdminFeeAmount >= 0
+      ? Math.round(rawAdminFeeAmount * 100) / 100
+      : 3;
+}
+
+const showSlotCounter = Number(body.show_slot_counter || 0) ? 1 : 0;
+const isVisible = Number(body.is_visible ?? 1) ? 1 : 0;
 
     await context.env.DB.prepare(`
       UPDATE events
@@ -269,6 +288,8 @@ if (registrationMode === "external") {
 		payment_mode = ?,
         postage_enabled = ?,
         postage_fee = ?,
+		admin_fee_enabled = ?,
+		admin_fee_amount = ?,
 		event_tee_enabled = ?,
 		finisher_tee_enabled = ?,
         updated_at = CURRENT_TIMESTAMP
@@ -300,6 +321,8 @@ if (registrationMode === "external") {
 	  paymentMode,
       Number(body.postage_enabled || 0),
       Number(body.postage_fee || 0),
+	  adminFeeEnabled,
+	  adminFeeAmount,
 	  Number(body.event_tee_enabled ?? 1),
 	  Number(body.finisher_tee_enabled ?? 0),
       id

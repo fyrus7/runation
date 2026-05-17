@@ -122,6 +122,8 @@ const event = await env.DB.prepare(`
     payment_mode,
     postage_enabled,
     postage_fee,
+	admin_fee_enabled,
+    admin_fee_amount,
     event_tee_enabled,
     finisher_tee_enabled,
     approval_status
@@ -158,6 +160,8 @@ const event = await env.DB.prepare(`
 		payment_mode: String(event.payment_mode || "online").toLowerCase(),
         postage_enabled: Number(event.postage_enabled || 0),
         postage_fee: Number(event.postage_fee || 0),
+		admin_fee_enabled: Number(event.admin_fee_enabled || 0),
+		admin_fee_amount: Number(event.admin_fee_amount ?? 3),
 		event_tee_enabled: Number(event.event_tee_enabled ?? 1),
 		finisher_tee_enabled: Number(event.finisher_tee_enabled ?? 0),
         show_slot_counter: Number(event.show_slot_counter || 0),

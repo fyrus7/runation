@@ -387,6 +387,21 @@ function getOrderSubtotalSen() {
   return subtotal;
 }
 
+function getAdminFeeSen() {
+  const event = window.RUNATION_EVENT || {};
+  const enabled = Number(event.admin_fee_enabled || 0) === 1;
+
+  if (!enabled) return 0;
+
+  const amount = Number(event.admin_fee_amount ?? 3);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 0;
+  }
+
+  return Math.round(amount * 100);
+}
+
 function clearAppliedPromo() {
   appliedPromo = null;
 
@@ -401,17 +416,26 @@ function clearAppliedPromo() {
 
 function updateOrderSummary() {
   const subtotalSen = getOrderSubtotalSen();
+  const adminFeeSen = getAdminFeeSen();
   const discountSen = appliedPromo ? Number(appliedPromo.discount_sen || 0) : 0;
-  const totalSen = Math.max(subtotalSen - discountSen, 0);
+
+  const afterDiscountSen = Math.max(subtotalSen - discountSen, 0);
+  const totalSen = afterDiscountSen + adminFeeSen;
 
   setText("summarySubtotal", formatMoneySen(subtotalSen));
   setText("summaryDiscount", `-${formatMoneySen(discountSen)}`);
+  setText("summaryAdminFee", formatMoneySen(adminFeeSen));
   setText("summaryTotal", formatMoneySen(totalSen));
 
   const discountRow = document.getElementById("summaryDiscountRow");
+  const adminFeeRow = document.getElementById("summaryAdminFeeRow");
 
   if (discountRow) {
     discountRow.style.display = discountSen > 0 ? "" : "none";
+  }
+
+  if (adminFeeRow) {
+    adminFeeRow.style.display = adminFeeSen > 0 ? "" : "none";
   }
 }
 

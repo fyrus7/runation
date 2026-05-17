@@ -27,7 +27,7 @@ function sen(value) {
   return Math.round(Number(value || 0));
 }
 
-async function validatePromoCode(context, event, promoCode, subtotalAmount) {
+async function validatePromoCode(context, event, promoCode, subtotalAmount, extraFeeAmount = 0) {
   const code = cleanPromoCode(promoCode);
 
   if (!code) {
@@ -74,7 +74,7 @@ async function validatePromoCode(context, event, promoCode, subtotalAmount) {
 
   const finalAmount = Math.max(subtotalAmount - discountAmount, 0);
 
-  if (finalAmount < 100) {
+  if (finalAmount + sen(extraFeeAmount) < 100) {
     throw new Error("Total after discount must be at least RM1.00.");
   }
 
@@ -735,20 +735,35 @@ if (!isSandboxRegistration) {
     const prefix = event.slug || "RUN";
     groupId = makeRegNo(prefix);
 
-    const postageAmount = Math.round(postageFeeRm * 100);
-    const totalAmount = totalCategoryAmount + postageAmount;
+const postageAmount = Math.round(postageFeeRm * 100);
+
+const adminFeeEnabled = Number(event.admin_fee_enabled || 0) === 1;
+const rawAdminFeeRm = adminFeeEnabled
+  ? Number(event.admin_fee_amount ?? 3)
+  : 0;
+
+const adminFeeRm =
+  Number.isFinite(rawAdminFeeRm) && rawAdminFeeRm > 0
+    ? rawAdminFeeRm
+    : 0;
+
+const adminFeeAmount = rmToSen(adminFeeRm);
+
+const subtotalAmount = totalCategoryAmount + postageAmount;
+const originalTotalAmount = subtotalAmount + adminFeeAmount;
 
 const promo = await validatePromoCode(
   context,
   event,
   body.promo_code,
-  totalAmount
+  subtotalAmount,
+  adminFeeAmount
 );
 
 await reservePromoCode(context, promo.promoId);
 reservedPromoId = promo.promoId;
 
-const finalAmount = promo.finalAmount;
+const finalAmount = promo.finalAmount + adminFeeAmount;
 const promoDiscountAmount = promo.discountAmount;
 
     const primaryParticipant = preparedParticipants[0];
@@ -795,13 +810,16 @@ for (let i = 0; i < preparedParticipants.length; i++) {
   const regNo = i === 0 ? groupId : `${groupId}-${i + 1}`;
   regNos.push(regNo);
 
-  const originalRowAmount = participant.categoryAmount + (i === 0 ? postageAmount : 0);
-  const rowPromoDiscount = Math.min(remainingPromoDiscount, originalRowAmount);
-  const rowAmount = sen(originalRowAmount - rowPromoDiscount);
+const rowDiscountableAmount = participant.categoryAmount + (i === 0 ? postageAmount : 0);
+const rowAdminFeeAmount = i === 0 ? adminFeeAmount : 0;
+const originalRowAmount = rowDiscountableAmount + rowAdminFeeAmount;
 
-  remainingPromoDiscount = sen(remainingPromoDiscount - rowPromoDiscount);
+const rowPromoDiscount = Math.min(remainingPromoDiscount, rowDiscountableAmount);
+const rowAmount = sen(originalRowAmount - rowPromoDiscount);
 
-  const rowPostageFee = i === 0 ? postageFeeRm : 0;
+remainingPromoDiscount = sen(remainingPromoDiscount - rowPromoDiscount);
+
+const rowPostageFee = i === 0 ? postageFeeRm : 0;
 
       await context.env.DB
         .prepare(`
@@ -902,7 +920,7 @@ if (isOfflinePayment) {
       postage_fee: postageFeeRm,
       category: participantLabel,
       amount: finalAmount,
-      original_amount: totalAmount,
+      original_amount: originalTotalAmount,
       promo_code: promo.code,
       promo_discount: promoDiscountAmount,
       payment_status: "OFFLINE_PENDING",
@@ -920,7 +938,7 @@ const toyyibpayBase = toyyib.baseUrl;
 
     const billName = limitText(event.title || "Runation", 30);
     const billDescription = limitText(
-      `${event.title} ${participantLabel} Registration${postageAmount > 0 ? " + Postage" : ""}`,
+      `${event.title} ${participantLabel} Registration${postageAmount > 0 ? " + Postage" : ""}${adminFeeAmount > 0 ? " + Admin Fee" : ""}`,
       100
     );
 
@@ -1019,9 +1037,10 @@ const toyyibpayBase = toyyib.baseUrl;
         address: fallbackAddress,
         delivery_method: deliveryMethod,
         postage_fee: postageFeeRm,
+		admin_fee: adminFeeRm,
         category: participantLabel,
         amount: finalAmount,
-		original_amount: totalAmount,
+		original_amount: originalTotalAmount,
 		promo_code: promo.code,
 		promo_discount: promoDiscountAmount,
         payment_status: "PENDING_PAYMENT",

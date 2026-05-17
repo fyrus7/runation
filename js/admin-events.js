@@ -99,6 +99,21 @@ function isExternalOnlyAdmin() {
   return getAdminAccessMode() === "external_only";
 }
 
+function syncAdminFeeAccess() {
+  const amountInput = document.getElementById("adminFeeAmount");
+  if (!amountInput) return;
+
+  if (isMasterAdmin()) {
+    amountInput.disabled = false;
+    amountInput.classList.remove("is-readonly");
+    return;
+  }
+
+  amountInput.value = "3";
+  amountInput.disabled = true;
+  amountInput.classList.add("is-readonly");
+}
+
 function getApprovalStatus(event) {
   return String(event.approval_status || "live").toLowerCase();
 }
@@ -249,6 +264,38 @@ function normalizeUrl(url) {
   return `https://${value}`;
 }
 
+function generateSlugFromTitle(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+}
+
+function syncSlugFromTitle() {
+  const editingId = getValue("editingId");
+  const currentSlug = getValue("slug");
+  const titleSlug = generateSlugFromTitle(getValue("title"));
+
+  if (!titleSlug) return;
+
+  // Create new event: always auto-generate from title.
+  if (!editingId) {
+    setValue("slug", titleSlug);
+    return;
+  }
+
+  // Edit existing event: only fill if slug is empty.
+  // This avoids breaking old registration URLs/filters accidentally.
+  if (!currentSlug) {
+    setValue("slug", titleSlug);
+  }
+}
+
 /* =========================
    FORM SHOW / HIDE
 ========================= */
@@ -394,12 +441,14 @@ function removeEventImage() {
 
 async function uploadEventImage() {
   const fileInput = document.getElementById("eventImageFile");
-  const slug = getValue("slug");
+  syncSlugFromTitle();
 
-  if (!slug) {
-    setImageStatus("Fill slug first before upload image.", true);
-    return;
-  }
+const slug = getValue("slug") || generateSlugFromTitle(getValue("title"));
+
+if (!slug) {
+  setImageStatus("Fill title first before upload image.", true);
+  return;
+}
 
   if (!fileInput || !fileInput.files || !fileInput.files[0]) {
     setImageStatus("Choose image first.", true);
@@ -751,27 +800,27 @@ function resetForm() {
 
   setValue("editingId", "");
 
-  [
-    "slug",
-    "title",
-    "eventType",
-    "venue",
-    "organizerName",
-    "organizerUrl",
-	"bankAccountName",
-	"bankAccountNumber",
-    "eventDate",
-	"racepackLocation",
-	"racepackDate",
-	"racepackTimeFrom",
-	"racepackTimeTo",
-    "openAt",
-    "closeAt",
-    "totalLimit",
-    "sortOrder",
-    "shortDescription",
-    "postageFee"
-  ].forEach(id => setValue(id, ""));
+[
+  "slug",
+  "title",
+  "eventType",
+  "venue",
+  "organizerName",
+  "organizerUrl",
+  "bankAccountName",
+  "bankAccountNumber",
+  "eventDate",
+  "racepackLocation",
+  "racepackDate",
+  "racepackTimeFrom",
+  "racepackTimeTo",
+  "openAt",
+  "closeAt",
+  "totalLimit",
+  "sortOrder",
+  "shortDescription",
+  "postageFee"
+].forEach(id => setValue(id, ""));
 
 setValue("statusMode", "force_closed");
 setValue("isVisible", "1");
@@ -780,6 +829,10 @@ setValue("paymentMode", "online");
 setValue("eventTeeEnabled", "1");
 setValue("finisherTeeEnabled", "0");
 setValue("postageEnabled", "0");
+setValue("adminFeeEnabled", "0");
+setValue("adminFeeAmount", "3");
+
+syncAdminFeeAccess();
 
   clearEventImageInput();
 
@@ -796,7 +849,7 @@ return {
   external_registration_url: "",
   payment_mode: getValue("paymentMode") || "online",
 
-    slug: getValue("slug"),
+    slug: getValue("slug") || generateSlugFromTitle(getValue("title")),
     title: getValue("title"),
     event_type: getValue("eventType"),
     short_description: getValue("shortDescription"),
@@ -816,9 +869,11 @@ return {
     show_slot_counter: Number(getValue("showSlotCounter") || 1),
     is_visible: Number(getValue("isVisible") || 1),
     sort_order: Number(getValue("sortOrder") || 0),
-    event_image: getValue("eventImage"),
+event_image: getValue("eventImage"),
 postage_enabled: Number(getValue("postageEnabled") || 0),
 postage_fee: Number(getValue("postageFee") || 0),
+admin_fee_enabled: Number(getValue("adminFeeEnabled") || 0),
+admin_fee_amount: Number(getValue("adminFeeAmount") || 3),
 event_tee_enabled: Number(getValue("eventTeeEnabled") || 0),
 finisher_tee_enabled: Number(getValue("finisherTeeEnabled") || 0),
 categories: getCategoriesFromForm()
@@ -829,10 +884,15 @@ async function saveEvent() {
   const id = getValue("editingId");
   const payload = buildEventPayload();
 
-  if (!payload.slug || !payload.title) {
-    setMessage("Event URL and title are required.");
-    return;
-  }
+  if (!payload.title) {
+  setMessage("Event title is required.");
+  return;
+}
+
+if (!payload.slug) {
+  setMessage("Unable to generate event URL from title.");
+  return;
+}
 
   const url = id ? `/api/admin/event?id=${encodeURIComponent(id)}` : "/api/admin/events";
   const method = id ? "PATCH" : "POST";
@@ -976,11 +1036,13 @@ async function saveExternalEvent() {
     is_visible: 1,
     sort_order: 0,
 
-    event_image: getValue("externalEventImage"),
-    postage_enabled: 0,
-    postage_fee: 0,
+event_image: getValue("externalEventImage"),
+postage_enabled: 0,
+postage_fee: 0,
+admin_fee_enabled: 0,
+admin_fee_amount: 3,
 
-    organizer_name: getValue("externalOrganizerName"),
+organizer_name: getValue("externalOrganizerName"),
 	organizer_url: "",
 
     categories: categoriesText
@@ -1080,6 +1142,10 @@ async function editEvent(id) {
     setValue("shortDescription", event.short_description || "");
 setValue("postageEnabled", String(event.postage_enabled ?? 0));
 setValue("postageFee", event.postage_fee || "");
+setValue("adminFeeEnabled", String(event.admin_fee_enabled ?? 0));
+setValue("adminFeeAmount", Number(event.admin_fee_amount ?? 3).toFixed(2));
+syncAdminFeeAccess();
+
 setValue("eventTeeEnabled", String(event.event_tee_enabled ?? 1));
 setValue("finisherTeeEnabled", String(event.finisher_tee_enabled ?? 0));
 
@@ -1248,6 +1314,10 @@ async function loadEvents() {
       const postageText = Number(event.postage_enabled || 0) === 1
         ? `On - RM${Number(event.postage_fee || 0).toFixed(2)}`
         : "Off";
+		
+	  const adminFeeText = Number(event.admin_fee_enabled || 0) === 1
+        ? `On - RM${Number(event.admin_fee_amount ?? 3).toFixed(2)}`
+		: "Off";
 
       return `
         <div class="event-row">
@@ -1263,6 +1333,7 @@ async function loadEvents() {
               ${renderApprovalText(event)}
               <div class="muted">Image: ${imageText}</div>
               <div class="muted">Postage: ${postageText}</div>
+			  <div class="muted">Admin Fee: ${adminFeeText}</div>
             </div>
 
             <div>
@@ -1374,9 +1445,10 @@ function applyAdminRoleVisibility() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  resetForm();
-  resetExternalEventForm();
-  hideEventForms();
+resetForm();
+resetExternalEventForm();
+hideEventForms();
+syncAdminFeeAccess();
   
   if (isExternalOnlyAdmin()) {
 	  showExternalEventForm();
@@ -1397,6 +1469,13 @@ if (addPromoBtn) {
   if (removeImageBtn) {
     removeImageBtn.addEventListener("click", removeEventImage);
   }
+  
+  const titleInput = document.getElementById("title");
+if (titleInput) {
+  titleInput.addEventListener("input", function () {
+    syncSlugFromTitle();
+  });
+}
 
   const imageInput = document.getElementById("eventImageFile");
   if (imageInput) {

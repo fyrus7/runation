@@ -84,12 +84,14 @@ export async function onRequestGet(context) {
     ).all();
   }
 
-  const events = (result.results || []).map(event => ({
+const events = (result.results || []).map(event => ({
   ...event,
   total_limit: Number(event.total_limit || 0),
   used_slots: Number(event.used_slots || 0),
   show_slot_counter: Number(event.show_slot_counter || 0),
   is_visible: Number(event.is_visible || 0),
+  admin_fee_enabled: Number(event.admin_fee_enabled || 0),
+  admin_fee_amount: Number(event.admin_fee_amount ?? 3),
   status: calculateEventStatus(event)
 }));
 
@@ -179,6 +181,19 @@ if (registrationMode === "external") {
   paymentMode = "online";
 }
 
+const adminFeeEnabled = Number(body.admin_fee_enabled || 0) ? 1 : 0;
+
+let adminFeeAmount = 3;
+
+if (isMaster(admin)) {
+  const rawAdminFeeAmount = Number(body.admin_fee_amount ?? 3);
+
+  adminFeeAmount =
+    Number.isFinite(rawAdminFeeAmount) && rawAdminFeeAmount >= 0
+      ? Math.round(rawAdminFeeAmount * 100) / 100
+      : 3;
+}
+
 const result = await context.env.DB.prepare(`
   INSERT INTO events (
     slug,
@@ -208,6 +223,8 @@ const result = await context.env.DB.prepare(`
     payment_mode,
     postage_enabled,
     postage_fee,
+	admin_fee_enabled,
+    admin_fee_amount,
     event_tee_enabled,
     finisher_tee_enabled,
     owner_admin_id,
@@ -220,7 +237,7 @@ const result = await context.env.DB.prepare(`
     created_at,
     updated_at
   )
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 `).bind(
   slug,
   title,
@@ -248,6 +265,8 @@ const result = await context.env.DB.prepare(`
   paymentMode,
   Number(body.postage_enabled || 0),
   Number(body.postage_fee || 0),
+  adminFeeEnabled,
+  adminFeeAmount,
   Number(body.event_tee_enabled ?? 1),
   Number(body.finisher_tee_enabled ?? 0),
   ownerAdminId,

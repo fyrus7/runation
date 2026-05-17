@@ -12,6 +12,25 @@ const billcode =
 
 const box = document.getElementById("statusBox");
 
+function formatMoney(value) {
+  const amount = Number(value || 0);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return "";
+  }
+
+  return `RM${amount.toFixed(2)}`;
+}
+
+function getPaidAmount(result) {
+  return (
+    result.total_amount ||
+    result.amount ||
+    result.registration?.amount ||
+    0
+  );
+}
+
 function okButton(eventSlug) {
   const href = eventSlug
     ? `event.html?event=${encodeURIComponent(eventSlug)}`
@@ -48,6 +67,7 @@ async function verifyPayment() {
     }
 
     const eventSlug = result.event_slug || "";
+	const paidAmountText = formatMoney(getPaidAmount(result));
 
     if (result.paid) {
       box.innerHTML = `
@@ -61,6 +81,11 @@ async function verifyPayment() {
               ? `<p><b>Participants:</b> ${result.participant_count}</p>`
               : ""
           }
+		  ${
+			  paidAmountText
+			    ? `<p><b>Total Paid:</b> ${paidAmountText}</p>`
+				: ""
+		  }
           <p>Your registration has been confirmed.</p>
           ${okButton(eventSlug)}
         </div>

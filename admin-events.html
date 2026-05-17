@@ -115,15 +115,7 @@
         </div>
 
         <input id="editingId" type="hidden">
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Event URL</label>
-            <input id="slug" placeholder="example: running">
-            <small class="field-hint">
-              This will become: ?event=running
-            </small>
-          </div>
+        <input id="slug" type="hidden">
 
           <div class="form-group">
             <label>Title</label>
@@ -248,23 +240,46 @@
   </select>
 </div>
 
-          <div class="form-group">
-            <label>Postage</label>
-            <select id="postageEnabled">
-              <option value="0">Off</option>
-              <option value="1">On</option>
-            </select>
-          </div>
+<div class="form-group">
+  <label>Postage</label>
+  <select id="postageEnabled">
+    <option value="0">Off</option>
+    <option value="1">On</option>
+  </select>
+</div>
 
-          <div class="form-group">
-            <label>Postage Fee</label>
-            <input id="postageFee" type="number" step="0.01" placeholder="Example: 10.00">
-          </div>
+<div class="form-group">
+  <label>Postage Fee</label>
+  <input id="postageFee" type="number" step="0.01" placeholder="Example: 10.00">
+</div>
 
-          <div class="form-group">
-            <label>Sort Order</label>
-            <input id="sortOrder" type="number" value="0">
-          </div>
+<div class="form-group">
+  <label>Admin Fee</label>
+  <select id="adminFeeEnabled">
+    <option value="0">Off</option>
+    <option value="1">On</option>
+  </select>
+</div>
+
+<div class="form-group">
+  <label>Admin Fee Amount</label>
+  <input
+    id="adminFeeAmount"
+    type="number"
+    min="0"
+    step="0.01"
+    value="3"
+    placeholder="Example: 3.00"
+  >
+  <small class="field-hint">
+    Master admin can edit. Event admin uses fixed RM3.
+  </small>
+</div>
+
+<div class="form-group">
+  <label>Sort Order</label>
+  <input id="sortOrder" type="number" value="0">
+</div>
 		  
 <div class="form-group full">
   <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">

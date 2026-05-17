@@ -52,14 +52,16 @@ export async function onRequestPost(context) {
     }
 
     const event = await context.env.DB.prepare(`
-      SELECT
-        id,
-        slug,
-        registration_mode
-      FROM events
-      WHERE lower(slug) = ?
-      LIMIT 1
-    `).bind(eventSlug).first();
+  SELECT
+    id,
+    slug,
+    registration_mode,
+    admin_fee_enabled,
+    admin_fee_amount
+  FROM events
+  WHERE lower(slug) = ?
+  LIMIT 1
+`).bind(eventSlug).first();
 
     if (!event) {
       return json({
@@ -110,26 +112,38 @@ export async function onRequestPost(context) {
     }
 
     const discountSen = Math.min(
-      toSenFromRM(promo.discount_amount),
-      subtotalSen
-    );
+  toSenFromRM(promo.discount_amount),
+  subtotalSen
+);
 
-    const totalSen = Math.max(subtotalSen - discountSen, 0);
+const adminFeeEnabled = Number(event.admin_fee_enabled || 0) === 1;
+const rawAdminFeeRm = adminFeeEnabled
+  ? Number(event.admin_fee_amount ?? 3)
+  : 0;
 
-    if (totalSen < 100) {
-      return json({
-        success: false,
-        error: "Total after discount must be at least RM1.00."
-      }, 400);
-    }
+const adminFeeSen =
+  Number.isFinite(rawAdminFeeRm) && rawAdminFeeRm > 0
+    ? toSenFromRM(rawAdminFeeRm)
+    : 0;
+
+const totalAfterDiscountSen = Math.max(subtotalSen - discountSen, 0);
+const totalSen = totalAfterDiscountSen + adminFeeSen;
+
+if (totalSen < 100) {
+  return json({
+    success: false,
+    error: "Total after discount must be at least RM1.00."
+  }, 400);
+}
 
     return json({
-      success: true,
-      promo_code: promo.code,
-      subtotal_sen: subtotalSen,
-      discount_sen: discountSen,
-      total_sen: totalSen
-    });
+  success: true,
+  promo_code: promo.code,
+  subtotal_sen: subtotalSen,
+  discount_sen: discountSen,
+  admin_fee_sen: adminFeeSen,
+  total_sen: totalSen
+});
 
   } catch (err) {
     return json({
