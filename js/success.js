@@ -12,14 +12,14 @@ const billcode =
 
 const box = document.getElementById("statusBox");
 
-function formatMoney(value) {
-  const amount = Number(value || 0);
+function formatMoneySen(value) {
+  const amountSen = Number(value || 0);
 
-  if (!Number.isFinite(amount) || amount <= 0) {
+  if (!Number.isFinite(amountSen) || amountSen <= 0) {
     return "";
   }
 
-  return `RM${amount.toFixed(2)}`;
+  return `RM${(amountSen / 100).toFixed(2)}`;
 }
 
 function getPaidAmount(result) {
@@ -67,7 +67,7 @@ async function verifyPayment() {
     }
 
     const eventSlug = result.event_slug || "";
-	const paidAmountText = formatMoney(getPaidAmount(result));
+	const paidAmountText = formatMoneySen(getPaidAmount(result));
 
     if (result.paid) {
       box.innerHTML = `
