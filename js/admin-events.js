@@ -277,23 +277,13 @@ function generateSlugFromTitle(value) {
 }
 
 function syncSlugFromTitle() {
-  const editingId = getValue("editingId");
-  const currentSlug = getValue("slug");
   const titleSlug = generateSlugFromTitle(getValue("title"));
+  setValue("slug", titleSlug);
+}
 
-  if (!titleSlug) return;
-
-  // Create new event: always auto-generate from title.
-  if (!editingId) {
-    setValue("slug", titleSlug);
-    return;
-  }
-
-  // Edit existing event: only fill if slug is empty.
-  // This avoids breaking old registration URLs/filters accidentally.
-  if (!currentSlug) {
-    setValue("slug", titleSlug);
-  }
+function syncExternalSlugFromTitle() {
+  const titleSlug = generateSlugFromTitle(getValue("externalTitle"));
+  setValue("externalSlug", titleSlug);
 }
 
 /* =========================
@@ -849,7 +839,7 @@ return {
   external_registration_url: "",
   payment_mode: getValue("paymentMode") || "online",
 
-    slug: getValue("slug") || generateSlugFromTitle(getValue("title")),
+    slug: generateSlugFromTitle(getValue("title")),
     title: getValue("title"),
     event_type: getValue("eventType"),
     short_description: getValue("shortDescription"),
@@ -958,7 +948,7 @@ function populateExternalEventForm(event, categories) {
   setValue("externalEditingId", event.id || "");
   setValue("externalCategoryId", firstCategory.id || "");
 
-  setValue("externalSlug", event.slug || "");
+  setValue("externalSlug", generateSlugFromTitle(event.title || ""));
   setValue("externalRegistrationUrl", event.external_registration_url || "");
   setValue("externalTitle", event.title || "");
   
@@ -1005,14 +995,21 @@ async function saveExternalEvent() {
   const slug = getValue("externalSlug").toLowerCase();
   const title = getValue("externalTitle");
   const externalUrl = normalizeUrl(getValue("externalRegistrationUrl"));
+  
+  setValue("externalSlug", slug);
   const categoriesText = getValue("externalCategories").toUpperCase();
   const externalEventType = getValue("externalEventType");
   const externalShowSlotCounter = Number(getValue("externalShowSlotCounter") || 1);
 
-  if (!slug || !title || !externalUrl) {
-    setMessage("Event URL, title, and external registration URL are required.");
-    return;
-  }
+  if (!title || !externalUrl) {
+  setMessage("Title and external registration URL are required.");
+  return;
+}
+
+if (!slug) {
+  setMessage("Unable to generate event URL from title.");
+  return;
+}
 
   const payload = {
     registration_mode: "external",
@@ -1474,6 +1471,13 @@ if (addPromoBtn) {
 if (titleInput) {
   titleInput.addEventListener("input", function () {
     syncSlugFromTitle();
+  });
+}
+
+const externalTitleInput = document.getElementById("externalTitle");
+if (externalTitleInput) {
+  externalTitleInput.addEventListener("input", function () {
+    syncExternalSlugFromTitle();
   });
 }
 

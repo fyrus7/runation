@@ -116,7 +116,8 @@
 
         <input id="editingId" type="hidden">
         <input id="slug" type="hidden">
-
+		
+		<div class="form-grid">
           <div class="form-group">
             <label>Title</label>
             <input id="title" placeholder="Event title">
@@ -136,33 +137,31 @@
             <label>Venue</label>
             <input id="venue" placeholder="Venue">
           </div>
+		  
 
-          <div class="form-group">
-            <label>Organizer Name</label>
-            <input id="organizerName" placeholder="Organizer name">
-          </div>
+<div class="form-divider"></div>
 
-          <div class="form-group">
-            <label>Organizer Website</label>
-            <input id="organizerUrl" type="url" placeholder="https://example.com">
-          </div>
-
-<div class="form-section">
-  <label>Bank Account Name</label>
-  <input
-    id="bankAccountName"
-    type="text"
-    placeholder="Example: RUNATION EVENT SDN BHD"
-  >
-
-  <label>Bank Account Number</label>
-  <input
-    id="bankAccountNumber"
-    type="text"
-    placeholder="Example: 1234567890"
-  >
+<div class="form-group">
+  <label>Status Mode</label>
+  <select id="statusMode">
+    <option value="force_closed">Force Closed</option>
+    <option value="force_open">Force Open</option>
+  </select>
 </div>
 
+<div class="desktop-grid-spacer"></div>
+
+<div class="form-group">
+  <label>Open At</label>
+  <input id="openAt" type="datetime-local">
+</div>
+
+<div class="form-group">
+  <label>Close At</label>
+  <input id="closeAt" type="datetime-local">
+</div>
+
+<div class="form-divider"></div>
 
 
           <div class="form-group">
@@ -184,45 +183,29 @@
             <label>Racepack Time To</label>
             <input id="racepackTimeTo" type="time">
           </div>
+		  
+		  <div class="form-divider"></div>
 
-          <div class="form-group">
-            <label>Status Mode</label>
-            <select id="statusMode">
-              <option value="force_closed">Force Closed</option>
-              <option value="force_open">Force Open</option>
-            </select>
-          </div>
 
-          <div class="form-group">
-            <label>Open At</label>
-            <input id="openAt" type="datetime-local">
-          </div>
-
-          <div class="form-group">
-            <label>Close At</label>
-            <input id="closeAt" type="datetime-local">
-          </div>
 <!--
           <div class="form-group">
             <label>Total Limit</label>
             <input id="totalLimit" type="number" placeholder="0 = unlimited">
           </div>
 -->
+
+
           <div class="form-group">
-            <label>Landing Availability Display</label>
+            <label>Homepage Slots Availability</label>
             <select id="showSlotCounter">
               <option value="1">Show on home</option>
               <option value="0">Hide from home</option>
             </select>
           </div>
+		  
+		  <div class="form-divider"></div>
 
-          <div class="form-group">
-            <label>Visible</label>
-            <select id="isVisible">
-              <option value="1">Visible</option>
-              <option value="0">Hidden</option>
-            </select>
-          </div>
+
 		  
 <div class="form-group">
   <label>Event T-Shirt</label>
@@ -240,6 +223,8 @@
   </select>
 </div>
 
+<div class="form-divider"></div>
+
 <div class="form-group">
   <label>Postage</label>
   <select id="postageEnabled">
@@ -252,6 +237,8 @@
   <label>Postage Fee</label>
   <input id="postageFee" type="number" step="0.01" placeholder="Example: 10.00">
 </div>
+
+<div class="form-divider"></div>
 
 <div class="form-group">
   <label>Admin Fee</label>
@@ -271,10 +258,49 @@
     value="3"
     placeholder="Example: 3.00"
   >
-  <small class="field-hint">
-    Master admin can edit. Event admin uses fixed RM3.
-  </small>
 </div>
+
+<div class="form-divider"></div>
+
+          <div class="form-group">
+            <label>Visible (show/hide to public)</label>
+            <select id="isVisible">
+              <option value="1">Visible</option>
+              <option value="0">Hidden</option>
+            </select>
+          </div>
+		  
+		  <div class="form-divider"></div>
+
+          <div class="form-group">
+            <label>Organizer Name</label>
+            <input id="organizerName" placeholder="Organizer name">
+          </div>
+
+          <div class="form-group">
+            <label>Organizer Website</label>
+            <input id="organizerUrl" type="url" placeholder="https://example.com">
+          </div>
+
+<div class="form-group">
+  <label>Bank Account Name</label>
+  <input
+    id="bankAccountName"
+    type="text"
+    placeholder="Example: RUNATION EVENT SDN BHD"
+  >
+</div>
+
+<div class="form-group">
+  <label>Bank Account Number</label>
+  <input
+    id="bankAccountNumber"
+    type="text"
+    placeholder="Example: 1234567890"
+  >
+</div>
+
+<div class="form-divider"></div>
 
 <div class="form-group">
   <label>Sort Order</label>
@@ -282,7 +308,7 @@
 </div>
 		  
 <div class="form-group full">
-  <hr style="border:none;border-top:1px solid #e6edf6;margin:18px 0;">
+  <div class="form-divider"></div>
 
   <h3>Categories</h3>
 
@@ -399,16 +425,10 @@
         </div>
 
         <input id="externalEditingId" type="hidden">
-        <input id="externalCategoryId" type="hidden">
-
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Event URL</label>
-            <input id="externalSlug" placeholder="example: external-run">
-            <small class="field-hint">
-              This will become: ?event=external-run
-            </small>
-          </div>
+		<input id="externalCategoryId" type="hidden">
+		<input id="externalSlug" type="hidden">
+		
+		<div class="form-grid">
 
           <div class="form-group">
             <label>External Registration URL</label>
@@ -417,6 +437,8 @@
               Register Now button will redirect to this URL.
             </small>
           </div>
+		  
+		  <div class="form-divider"></div>
 
           <div class="form-group">
             <label>Title</label>
@@ -437,6 +459,8 @@
             <label>Event Date</label>
             <input id="externalEventDate" type="date">
           </div>
+		  
+		  <div class="form-divider"></div>
 
           <div class="form-group">
             <label>Racepack Location</label>
@@ -457,6 +481,8 @@
             <label>Racepack Time To</label>
             <input id="externalRacepackTimeTo" type="time">
           </div>
+		  
+		  <div class="form-divider"></div>
 
           <div class="form-group">
             <label>Categories</label>
@@ -468,8 +494,10 @@
             <input id="externalOrganizerName" placeholder="Organizer name">
           </div>
 		  
+		  <div class="form-divider"></div>
+		  
 		  <div class="form-group">
-  <label>Landing Availability Display</label>
+  <label>Homepage Slots Availability</label>
   <select id="externalShowSlotCounter">
     <option value="1">Show on home</option>
     <option value="0">Hide from home</option>

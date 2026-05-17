@@ -310,6 +310,23 @@ textarea:focus {
   background: #fff;
 }
 
+
+.form-divider {
+  grid-column: 1 / -1;
+  height: 1px;
+  background: #e6edf6;
+  margin: 10px 0 4px;
+}
+
+.desktop-grid-spacer {
+  display: none;
+}
+
+@media (min-width: 700px) {
+  .desktop-grid-spacer {
+    display: block;
+  }
+}
 /* ==========================
    BUTTONS
 ========================== */
